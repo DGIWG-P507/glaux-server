@@ -55,9 +55,14 @@ Record relevant approved-tool/environment constraints separately below.
 
 {{verification}}
 
+Identify the controlling source, independent expected answer and plausible wrong behavior these checks must catch. Apply CONTRIBUTING's behavioral red–green, test-quality and honest-execution rules, with an appropriate explanation where runtime checks do not apply.
+
 <!--
 Convert the leaf's Done criteria into concrete unchecked checkboxes.
 Include applicable negative, access, failure and non-mutation cases.
+Use exact identities/values and forbidden effects or disclosures where applicable.
+Identify relevant fault/mutation and property/fuzz checks under Guide §8.1.1;
+do not invent tools, score quotas or results. Keep longer common rules linked.
 A prerequisite-inspection or verification task may deliver evidence rather than code;
 explain inapplicable checks instead of inventing builds or claiming tests passed.
 Exact commands can be recorded during execution once the implementation exists.
@@ -66,11 +71,11 @@ Exact commands can be recorded during execution once the implementation exists.
 ## Common completion checklist
 
 - [ ] Work stayed within the authorized issue and approved scope; prerequisites were verified before dependent work.
-- [ ] Task-specific acceptance checks passed; required checks are not missing, skipped or relabeled as success.
-- [ ] Applicable tests use independent expected results; failures, unrun checks and justified inapplicability are recorded honestly.
+- [ ] Task-specific acceptance checks passed; required checks actually executed and are not missing, filtered out, skipped or relabeled as success.
+- [ ] Applicable tests use independent expected results and demonstrate detection of relevant wrong behavior; behavioral red–green evidence or an appropriate alternative is recorded, with failures, retry outcomes, unrun checks and justified inapplicability stated honestly.
 - [ ] Relevant documentation, fixtures, dependency pins and any contributor/assistant instructions were updated.
 - [ ] Existing work, user data and credentials were protected; no implicit software installation or unapproved external effects occurred.
-- [ ] The linked PR received assistant review and applicable checks, blocking findings were resolved, and the change was merged without bypassing repository controls.
+- [ ] The linked PR received assistant review of implementation and tests, including expected answers, assertions and execution evidence; applicable checks passed, blocking findings were resolved, and the change was merged without bypassing repository controls.
 - [ ] Execution evidence and final commit/PR links are recorded below or in a linked issue comment; only complete work is closed, with a handoff before the next issue.
 
 ## Execution record
@@ -79,8 +84,10 @@ Exact commands can be recorded during execution once the implementation exists.
 
 - Changes and deliverables:
 - Branch / PR / final commit:
+- What was proved and why the relevant wrong behavior would be caught:
+- Behavioral red–green evidence or appropriate alternative:
 - Checks run, commands, relevant versions/configuration/fixtures, and results:
-- Failures, checks not run, justified inapplicability and remaining limitations:
+- Failures and retry outcomes, checks not run, justified inapplicability and what remains unknown:
 - Assistant review and resolution:
 - Outcome: complete or still open/blocked, with the precise remaining work:
 - Next dependency-ready issue (not authorization to begin it):
