@@ -8,4 +8,8 @@ Glaux Server is the central authority node for secure sensor discovery, observat
 
 ## Conformance
 
-Conformance is validated through an explicit **conformance test harness** and implementation profiles aligned to OGC and NATO interoperability requirements.
+Conformance is a planned implementation and verification target, not a current claim. The repository is being prepared for implementation; no server code or executed conformance evidence is present yet.
+
+## Planning and contributions
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the approved Goal, Implementation Guide and Roadmap, the [implementation-task template](.github/ISSUE_TEMPLATE/implementation_task.md), and the one-issue-per-iteration branch/PR workflow. Publish and verify the complete Roadmap issue set before starting implementation.
