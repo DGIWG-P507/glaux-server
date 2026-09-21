@@ -27,3 +27,9 @@ Standards conformance remains an implementation and verification target, not a c
 - [Roadmap](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-roadmap.md) — Implementation order, task-to-issue links, and current progress.
 - [Implementation issues](https://github.com/DGIWG-P507/glaux-server/issues) — The published work to be completed.
 - [Contributing](CONTRIBUTING.md) — Working rules, the task template, and the one-issue-per-iteration branch/PR workflow.
+
+## License
+
+Original Glaux Server code and accompanying documentation in this repository are licensed under the [Apache License, Version 2.0](LICENSE) (`Apache-2.0`), unless explicitly identified otherwise. The project lead approved this choice on 21 September 2026.
+
+Third-party dependencies, standards/schema artifacts and other externally sourced material retain their own licences and required notices. This licence does not grant access to, or license, data held by a running server; it does not relicense the separate parent Glaux planning repository.
