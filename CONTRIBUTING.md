@@ -6,7 +6,7 @@ This repository implements the approved Glaux Server plan. These instructions ma
 
 Original Glaux Server code and accompanying documentation in this repository use [Apache-2.0](LICENSE), unless explicitly identified otherwise. Contributions intentionally submitted for inclusion follow section 5 of that licence; identify any different terms or third-party material before inclusion, and contribute only material you are authorised to submit. No separate contributor agreement or copyright assignment is introduced here.
 
-Keep third-party licences and notices with their source material; the project licence does not relicense dependencies or the OGC standards/schema corpus. When issue #4 creates the Rust packages, use the SPDX expression `Apache-2.0` for original project package metadata, not `MIT OR Apache-2.0`. Retain the existing dependency/licence inventory and review work in #6 and later tasks; no manifest, dependency approval or implementation is created by this documentation update.
+Keep third-party licences and notices with their source material; the project licence does not relicense dependencies or the OGC standards/schema corpus. Original workspace package metadata uses the SPDX expression `Apache-2.0`, not `MIT OR Apache-2.0`. The initial workspace has no third-party Cargo dependencies; the pinned checkout action retains its MIT licence. Retain the dependency/licence inventory and review work in #6 and later tasks.
 
 ## Controlling documents
 
@@ -44,6 +44,10 @@ On 21 September 2026 the project lead selected GitHub-hosted Linux for initial b
 When each owning issue is authorised, provision only its needed pinned tools and disposable services inside GitHub-hosted jobs, using synthetic test data and least-privilege permissions; never operational credentials or a user database. Record actual execution on the reviewed head before merging code. Actions being enabled is not a passing run; missing/failed runs leave the issue open. No company-laptop installation, paid runner upgrade, Oracle/Fly provisioning, self-hosted runner or persistent deployment is authorised by this choice. If the selected route actually fails, record the specific failure before proposing a different environment.
 
 ## Branches, pull requests and review
+
+Use the current [build/test commands](docs/setup.md#current-build-and-test-commands) when changing the workspace. The checked-in workflow runs those bootstrap checks on the exact PR head; do not describe it as testing the synthetic merge commit or as enforcing merge protection. Any base movement must be reconciled and re-tested before merge. Cargo's normal workspace test command includes applicable doctests. The domain/standards libraries currently contain no behavior or executable examples; zero tests there are disclosed, not a conformance claim. The required executable regression is checked for discovery before tests run.
+
+The small `scripts/check-bootstrap.py` inventory checks this initial package graph; update it with the controlling Guide and review when a later issue introduces legitimate dependencies or tests. Do not delete or weaken a guard merely to make an unexpected dependency or missing test pass.
 
 The project lead selected the branch/PR policy on September 18, 2026 and approved the explicit separate-review procedure and required-check enforcement decision on September 21, 2026:
 

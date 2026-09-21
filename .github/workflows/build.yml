@@ -1,0 +1,57 @@
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  rust-bootstrap:
+    name: Rust bootstrap
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CARGO_TERM_COLOR: never
+      RUST_BACKTRACE: "1"
+      TESTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Check out the exact task commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1; MIT
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Identify the checked-out commit and runner
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$TESTED_HEAD"
+          printf 'Tested commit: %s\nRunner image: %s %s\n' "$TESTED_HEAD" "$ImageOS" "$ImageVersion"
+          uname -a
+          cc --version
+          python3 --version
+      - name: Select the pinned toolchain on the hosted runner
+        shell: bash
+        run: |
+          bootstrap_toolchain="$(python3 -c 'import tomllib; print(tomllib.load(open("rust-toolchain.toml", "rb"))["toolchain"]["channel"])')"
+          rustup toolchain install "$bootstrap_toolchain" --profile minimal --component rustfmt
+          rustup show active-toolchain
+          rustc --version --verbose
+          cargo --version --verbose
+          rustfmt --version
+      - name: Verify formatting and lockfile reproduction
+        shell: bash
+        run: |
+          cargo fmt --all --check
+          cargo generate-lockfile --offline
+          git diff --exit-code -- Cargo.lock
+      - name: Build all three packages
+        run: cargo build --workspace --locked --offline
+      - name: Check package boundaries and test discovery
+        run: python3 scripts/check-bootstrap.py
+      - name: Run initial tests and applicable doctests
+        shell: bash
+        run: |
+          cargo test --workspace --locked --offline -- --nocapture | tee "$RUNNER_TEMP/bootstrap-tests.log"
+          grep -Fxq 'test unfinished_server_does_not_report_success ... ok' "$RUNNER_TEMP/bootstrap-tests.log"

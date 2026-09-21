@@ -6,14 +6,14 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Pre-implementation — 21 September 2026.**
+**Initial build foundation — 21 September 2026.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
 - Apache-2.0 licensing and the contributor/review workflow are in place. Required automated-check enforcement is approved but still awaits implementation under [issue #6](https://github.com/DGIWG-P507/glaux-server/issues/6).
-- This repository currently contains documentation, the licence and contributor instructions—not a Rust workspace, runnable server or automated test suite. Server implementation and runtime verification have not started.
+- The initial three-package Rust workspace and GitHub build/test workflow are present. They establish the build foundation, not a runnable CSAPI service: resource behavior, HTTP endpoints and database integration remain unimplemented. [PR #312](https://github.com/DGIWG-P507/glaux-server/pull/312) records actual runs, limitations and review.
 
-The [setup inspection](docs/setup.md) records the selected **GitHub-hosted build/test path**. Actions is enabled, but the first workflow and Rust build have not been created or run. [#4: establish the Rust workspace](https://github.com/DGIWG-P507/glaux-server/issues/4) also establishes the minimum hosted build/test workflow; #5 adds temporary PostgreSQL/PostGIS testing, and #6 completes the checks and merge enforcement. No Rust/database installation on the company laptop or permanent cloud service is required for this path. Working build/run instructions will accompany the implementation. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records decisions; issues and setup notes carry execution status.
+Use the [build/test instructions](docs/setup.md#current-build-and-test-commands) and the [Build workflow](https://github.com/DGIWG-P507/glaux-server/actions/workflows/build.yml). Builds run on GitHub-hosted Linux; no Rust/database installation on the company laptop or permanent cloud service is required. #5 adds temporary PostgreSQL/PostGIS testing, and #6 completes the check suite and merge enforcement. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records planning decisions; issues and PRs record execution.
 
 ## Planned capabilities
 
@@ -42,7 +42,7 @@ One deployable **Rust service** will use Axum/Tokio for HTTP and asynchronous wo
 
 Live publication will use an optional Server-Sent Events (SSE) interface as a Glaux extension and outbound MQTT 5 for the selected experimental Part 3 binding. The basic reference server is designed to be exercised without first completing other Glaux applications or installing enterprise identity infrastructure; broker-backed features have their own dependencies.
 
-Verification will combine standards-derived expectations, real database tests and independent-client exercises, including failure and access-control cases. Exact dependency versions and reproducible commands will be pinned when the initial build is established; research-time versions are not a tested build.
+Verification will combine standards-derived expectations, real database tests and independent-client exercises, including failure and access-control cases. The initial build pins Rust 1.98.1 and its workspace lockfile; it has no third-party Cargo dependencies yet. Axum/Tokio, SQLx and other libraries are added and verified by their owning tasks, not included merely to fill out the bootstrap. These packages currently define boundaries, not the planned resource model or server capabilities.
 
 ## Project documents
 
