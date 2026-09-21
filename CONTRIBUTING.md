@@ -2,6 +2,12 @@
 
 This repository implements the approved Glaux Server plan. These instructions make the existing planning rules easy to find; they do not add a separate requirements or governance system.
 
+## License and contributions
+
+Original Glaux Server code and accompanying documentation in this repository use [Apache-2.0](LICENSE), unless explicitly identified otherwise. Contributions intentionally submitted for inclusion follow section 5 of that licence; identify any different terms or third-party material before inclusion, and contribute only material you are authorised to submit. No separate contributor agreement or copyright assignment is introduced here.
+
+Keep third-party licences and notices with their source material; the project licence does not relicense dependencies or the OGC standards/schema corpus. When issue #4 creates the Rust packages, use the SPDX expression `Apache-2.0` for original project package metadata, not `MIT OR Apache-2.0`. Retain the existing dependency/licence inventory and review work in #6 and later tasks; no manifest, dependency approval or implementation is created by this documentation update.
+
 ## Controlling documents
 
 - [Goal and Definition](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-goal-and-definition.md): intended outcome and scope.
