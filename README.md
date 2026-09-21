@@ -9,7 +9,7 @@ This repository is home to the server implementation. Research and planning docu
 **Pre-implementation — 21 September 2026.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
-- The approved technical follow-ups are documented, and all **286 implementation tasks** are published and linked from the Roadmap. These are planned tasks, not completed software.
+- The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
 - Apache-2.0 licensing and the contributor/review workflow are in place. Required automated-check enforcement is approved but still awaits implementation under [issue #6](https://github.com/DGIWG-P507/glaux-server/issues/6).
 - This repository currently contains documentation, the licence and contributor instructions—not a Rust workspace, runnable server or automated test suite. Server implementation and runtime verification have not started.
 
@@ -32,7 +32,7 @@ These describe the intended completed server. For the capability-by-capability *
 - **Core target:** OGC API - Connected Systems Parts 1 and 2, version 1.0, with applicable SensorML 3.0 and SWE Common 3.0 requirements. The completion target is all 25 direct CSAPI conformance classes and their applicable prerequisites.
 - **Explicit experiments:** draft CSAPI Part 3 publish/subscribe and a bounded Part 4 subset—static sampling points, curves and surfaces. These use pinned draft revisions and are not claims of approved-standard conformance.
 - **Additional filtering:** OGC API - Features Part 3 and CQL2 for direct sampling geometry applicable at observation time and typed scalar results within a datastream—not arbitrary joins or a general analytics service.
-- **Deferred:** a Part 5 wire implementation, including Protobuf. Required SWE Binary support remains in scope.
+- **Experimental Protobuf:** a [bounded OSH-targeted Part 5 subset](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#431-experimental-part-5-protobuf-subset) for flat scalar records, selected observation and command operations, and outbound native observation MQTT. It targets pinned peer revisions, is disabled by default, and requires interoperability proof. It is not full OSH compatibility or approved Part 5 conformance; required SWE Binary remains in scope.
 
 Exact dependencies, interpretations and experimental boundaries are defined in the [Goal](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-goal-and-definition.md#4-standardization-basis) and [Implementation Guide](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#1-purpose-and-scope-baseline). **Conformance is an implementation and verification target, not a current claim.**
 
