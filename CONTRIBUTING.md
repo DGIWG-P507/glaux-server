@@ -35,15 +35,28 @@ An oversized or blocked issue remains open. State the precise blocker or remaini
 
 ## Branches, pull requests and review
 
-The project lead selected this policy on September 18, 2026:
+The project lead selected the branch/PR policy on September 18, 2026 and approved the explicit separate-review procedure and required-check enforcement decision on September 21, 2026:
 
 - Use one task branch and linked PR per implementation issue, such as `task/1.1.1-prerequisites`; target `main`. Keep unrelated work out of the PR.
-- Run applicable checks and obtain an assistant review of the actual diff, acceptance evidence and scope, explicitly including test setup, expected answers, assertions and demonstrated failure sensitivity. Review whether plausible wrong behavior could still pass, rather than accepting test names or a green job label. Record the review and resolve blocking findings; do not represent an assistant review as independent human approval.
+- Run applicable checks and obtain a separate assistant review using the procedure below. Review the actual diff, acceptance evidence and scope, explicitly including test setup, expected answers, assertions and demonstrated failure sensitivity. Review whether plausible wrong behavior could still pass, rather than accepting test names or a green job label. Record the review and resolve blocking findings; do not represent an assistant review as independent human approval.
 - The assistant may merge after task-specific acceptance criteria, applicable checks and review pass. A separate human-approval pause is not mandatory unless the project lead requests it or repository controls require it. Do not bypass protections or merge against a different, unreviewed head.
 - Missing required checks are not a pass. For documentation or early prerequisite work before CI exists, record the actual applicable checks and why runtime checks are inapplicable; do not invent a successful CI run.
 - Merge before closing the completed issue, then record final commit/PR and verification evidence in it. A failed or blocked PR/issue remains open. Any automatic closing reference must not close incomplete work.
 
-This policy does not itself configure branch protection, required reviewers or CI. Respect whatever controls actually exist. It does not authorize installations, production deployment, new scope or additional issues. The issue-template preparation is a documentation-only setup change, not completion of a Roadmap implementation task.
+### Separate assistant review
+
+1. Once the change and applicable check evidence are ready, the implementing assistant launches a separate reviewer agent/session without waiting for another user prompt. The reviewer must not be the agent that authored the change. Give it the issue and approved amendments, relevant controlling sources, base/head commits, actual changed files/diff and check results. It must inspect those materials, not merely endorse the implementer's summary. Keep review scoped to this change and its affected behavior; do not reopen the whole-project review.
+2. The reviewer reports concrete findings with locations and reasons, or explicitly reports no blocking findings, and states any incomplete coverage or unverified assumptions. Record its agent/session identity, provider/model when actually known (otherwise say not exposed), reviewed head commit SHA, outcome and finding resolutions in the PR description or a linked PR comment. A separate session using the same model can share blind spots; it is not independent human approval or a formal GitHub approval unless such an approval actually exists.
+3. Address blocking findings and rerun affected checks. After any further change, obtain reviewer coverage of the additional diff and its effect on the earlier review, and record the new reviewed head SHA. Recheck the live PR head and applicable checks immediately before merging; use an expected-head guard where supported. Do not merge a different, unreviewed commit.
+4. If the review cannot be launched, does not return, is interrupted or incomplete, or leaves a blocking finding unresolved, keep the PR open and report the precise remaining work. Do not substitute the author's own review, silence, a pending request or an unchecked checklist for completion. Resume from the recorded commit/evidence after an interruption rather than silently skipping the step.
+
+[AGENTS.md](AGENTS.md) makes this procedure a persistent instruction for assistant sessions. The PR holds the review record; the issue's execution record links it. Existing published issues already link these current contributor instructions and need not have their historical bodies rewritten to repeat the procedure. This is session-triggered review, not an enabled GitHub AI service or a mechanically enforced review-completion gate.
+
+### Required automated checks
+
+The project lead approved requiring PRs and passing automated checks on `main`, with assistant merging after checks and review, no new mandatory human-approval pause, and no routine bypass. Implement and verify that enforcement under [issue #6](https://github.com/DGIWG-P507/glaux-server/issues/6), once its prerequisites and real formatting, lint, build and initial unit/database checks exist. Select actual check names from working runs, not placeholder names. Verify that a failed or missing required result prevents merging and that absent, unexpectedly empty, filtered or skipped required execution cannot produce a false successful result. Record effective settings and evidence, restore the passing configuration, and leave the task blocked if required administration access is unavailable rather than weakening controls. Establish enforcement before dependent code merges such as #7.
+
+This approval is a decision to implement those controls in #6, not evidence that they are already enabled. The earlier documentation/prerequisite rule applies while CI is being established; it does not waive applicable checks or existing protections. No Codex cloud review service, additional required human reviewer, installation, production deployment or extra implementation issue is authorised here. This documentation setup does not execute or complete #6 or any other Roadmap task.
 
 ## Verification, safety and completion
 

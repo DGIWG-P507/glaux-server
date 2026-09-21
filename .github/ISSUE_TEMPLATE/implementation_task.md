@@ -75,7 +75,7 @@ Exact commands can be recorded during execution once the implementation exists.
 - [ ] Applicable tests use independent expected results and demonstrate detection of relevant wrong behavior; behavioral red–green evidence or an appropriate alternative is recorded, with failures, retry outcomes, unrun checks and justified inapplicability stated honestly.
 - [ ] Relevant documentation, fixtures, dependency pins and any contributor/assistant instructions were updated.
 - [ ] Existing work, user data and credentials were protected; no implicit software installation or unapproved external effects occurred.
-- [ ] The linked PR received assistant review of implementation and tests, including expected answers, assertions and execution evidence; applicable checks passed, blocking findings were resolved, and the change was merged without bypassing repository controls.
+- [ ] The linked PR received completed separate-assistant review under CONTRIBUTING, covering implementation and tests, including expected answers, assertions and execution evidence; the review record identifies the reviewed head SHA, applicable checks passed, blocking findings were resolved, and that reviewed change was merged without bypassing repository controls.
 - [ ] Execution evidence and final commit/PR links are recorded below or in a linked issue comment; only complete work is closed, with a handoff before the next issue.
 
 ## Execution record
@@ -88,6 +88,6 @@ Exact commands can be recorded during execution once the implementation exists.
 - Behavioral red–green evidence or appropriate alternative:
 - Checks run, commands, relevant versions/configuration/fixtures, and results:
 - Failures and retry outcomes, checks not run, justified inapplicability and what remains unknown:
-- Assistant review and resolution:
+- Separate assistant review: PR record link, reviewer identity (provider/model when known), reviewed head SHA, outcome, limitations and finding resolutions:
 - Outcome: complete or still open/blocked, with the precise remaining work:
 - Next dependency-ready issue (not authorization to begin it):
