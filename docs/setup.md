@@ -1,53 +1,59 @@
-# Development setup: initial prerequisite inspection
+# Development setup: GitHub-hosted builds and tests
 
-**Inspected:** 21 September 2026, approximately 22:13 UTC.<br>
+**Inspection:** 21 September 2026; local probes approximately 22:13 UTC, GitHub checks approximately 22:26–22:28 UTC.<br>
 **Task:** [1.1.1 / issue #3](https://github.com/DGIWG-P507/glaux-server/issues/3).<br>
-**Result:** checkout/prerequisite inspection complete; the current session is not ready for the Rust build or database tasks.
+**Result:** inspection complete. GitHub-hosted Linux is the lead-selected build/test path and Actions is enabled. No Rust build, workflow or database test has run.
 
-This is an inventory, not installation instructions or a successful build report. It uses [Goal v1.10](https://github.com/DGIWG-P507/glaux/blob/1432876b10aa6eb19b832102cd28c0689f535669/Docs/Plans/glaux-server/glaux-server-goal-and-definition.md), [Guide v1.21 §§2.1, 2.4 and 4.12](https://github.com/DGIWG-P507/glaux/blob/1432876b10aa6eb19b832102cd28c0689f535669/Docs/Plans/glaux-server/glaux-server-implementation-guide.md), and [Roadmap v1.36 task 1.1.1](https://github.com/DGIWG-P507/glaux/blob/1432876b10aa6eb19b832102cd28c0689f535669/Docs/Plans/glaux-server/glaux-server-roadmap.md#phase-1-running-foundation-and-first-registration). The historical preparation pins in issue #3 remain intact; current CONTRIBUTING and these approved sources control execution.
+The earlier pending notes treated missing laptop tools as a project blocker. That inference is withdrawn. The company laptop need not run Rust, Docker or PostgreSQL for this path, and the lead need not supply a permanent database or another cloud machine before #4.
 
-## Checkout inspected
+Use current [CONTRIBUTING](../CONTRIBUTING.md) and [Roadmap v1.37](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-roadmap.md#phase-1-running-foundation-and-first-registration) for the approved sequencing. The inspection's unchanged design sources are [Goal v1.10 and Guide v1.21](https://github.com/DGIWG-P507/glaux/tree/1432876b10aa6eb19b832102cd28c0689f535669/Docs/Plans/glaux-server), particularly Guide §§2.1, 2.4 and 4.12. Original issue preparation pins remain historical sources; the dated hosted-development amendments control the changed task allocation.
 
-- Repository: `DGIWG-P507/glaux-server`, fetched `origin/main` at `0723ec2194e7d80057ce466e2d602f4bd8abfcfd`.
-- Initial branch: `main`, equal to `origin/main`. Initial tracked changes and untracked files: none. No existing server work was overwritten.
-- Tracked files at that baseline: `README.md`, `LICENSE`, `CONTRIBUTING.md`, `AGENTS.md`, and `.github/ISSUE_TEMPLATE/implementation_task.md`.
-- No Cargo workspace, toolchain pin, lockfile, Rust sources, tests, migrations, database settings, Compose file, CI workflows or earlier setup notes exist at the inspected baseline. These are later deliverables, not failed existing components.
-- This session used the existing server checkout under the Windows temporary directory, separate from the planning checkout. It is not an established durable development location. Confirm an appropriate persistent checkout in the selected approved environment before later build work; no checkout was moved by this inspection. User-specific paths are intentionally not published.
-- Documentation work uses branch `task/1.1.1-prerequisites`. The task PR records the reviewed head, before/after status, actual checks and final merge. The separate planning checkout's unrelated PITON document is out of scope and remains untouched.
+## What runs where
 
-## Observed availability and approval
+- **GitHub repository:** durable code, issues, pull requests and workflow definitions.
+- **GitHub-hosted Linux job:** a fresh checkout, pinned Rust/native prerequisites and actual build/tests. #5 adds a temporary, isolated PostgreSQL/PostGIS service for synthetic test data.
+- **Company laptop:** editing/Git access only for this approach. No compiler, local database, container runtime or WSL installation is required.
+- **Persistent deployment:** a separate later decision. No Oracle Cloud, Fly.io, paid runner upgrade or self-hosted runner is required or provisioned here.
 
-The host reports Windows x64 (`Microsoft Windows 10.0.26200`) and PowerShell `7.6.6`. These identify this inspection session, not a tested supported-build platform.
+GitHub documents [hosted runners](https://docs.github.com/en/actions/concepts/runners/github-hosted-runners), [Rust build/test workflows](https://docs.github.com/en/actions/tutorials/build-and-test-code/rust), and [PostgreSQL service containers on Ubuntu](https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers). The [PostGIS container project](https://github.com/postgis/docker-postgis) supplies a PostGIS-enabled option to pin and test in #5. These establish a supported approach, not successful Glaux execution.
 
-| Prerequisite or option | What was actually observed | Consequence / approval boundary |
+## GitHub availability inspected
+
+Repository: `DGIWG-P507/glaux-server`, main at `0723ec2194e7d80057ce466e2d602f4bd8abfcfd`.
+
+| Read-only check | Observed result | Meaning |
 |---|---|---|
-| Git | `git --version` returned `2.55.0.windows.5`; fetch and repository inspection worked. | Sufficient for this authorised documentation workflow; not evidence of Rust or database readiness. |
-| Rust compiler, Cargo and rustup | No `rustc`, `cargo` or `rustup` application on PATH. No corresponding executables in the configured/default Cargo bin location and no installed toolchains in the configured/default rustup toolchain directory. | No usable Rust toolchain discovered by these probes. An approved environment with Rust stable and Cargo is needed for #4; exact versions are pinned only after verification there. |
-| Native build tools | No `cl`, `link`, `clang`, `clang-cl`, `gcc`, `cmake`, `ninja` or `make` on PATH. The standard Visual Studio Installer `vswhere.exe` location was absent; selected uninstall registrations showed Git and VS Code, not a Visual Studio C++ build installation. No Windows SDK root was returned from the inspected Windows Kits registration. | A working native toolchain/linker for the selected Rust target is not established. VS Code is an editor, not proof of a compiler. The alternatives listed are probes, not a requirement to install every tool; #4 establishes actual platform/dependency needs. |
-| PostgreSQL tools/service | No `psql`, `pg_config`, `postgres` or `pg_isready` application on PATH; no matching PostgreSQL Windows service was returned. | No local database tool/service discovered through these probes. This does not establish that no remote or differently named service exists. |
-| Approved PostgreSQL/PostGIS target | The checkout documents no approved test endpoint; the selected database environment-variable names below were absent. No approved alternative target was supplied for this inspection. No connection or SQL was attempted. | Availability, approval, PostgreSQL version and PostGIS installation remain unverified. #5 requires a designated isolated test service and real connectivity/PostGIS/lifecycle evidence, not a guessed endpoint. |
-| Container option | No `docker` or `podman` application on PATH and no matching Windows service returned. Selected uninstall registrations did not identify either product. | No container runtime established here. A local container runtime is not required merely to inspect the project or use an otherwise approved PostgreSQL/PostGIS service. The eventual Compose example remains a planned deliverable. |
-| WSL option | The Windows `wsl.exe` launcher exists, but the current user's Lxss registration root is absent and no registered distribution was found there. No distribution was started or inspected internally. | A launcher is not evidence of an approved Linux development environment, installed Rust or a running database. Other users, VMs and remote environments were not surveyed. |
-| Organisational approval | This read-only inspection was authorised. No Rust/native-toolchain or database-service approval record/target was provided. | Approval is **unconfirmed**, not inferred from presence and not recorded as refusal. Obtain the appropriate organisational direction before installations or using an additional environment. |
+| `GET /repos/DGIWG-P507/glaux-server/actions/permissions` | HTTP 200; `enabled: true`, `allowed_actions: all`, `sha_pinning_required: false` | Repository policy permits Actions. The last value does not waive project action/dependency pinning. |
+| `GET .../actions/permissions/workflow` | HTTP 200; default workflow permissions `read`; workflow PR-review approval `false` | Preserve least privilege. This is about the workflow token, not the separate assistant-review procedure. |
+| `GET .../actions/workflows` and `GET .../actions/runs?per_page=100` | Both listed totals: zero | No listed workflow or run demonstrates build readiness. This does not survey deleted historical runs. |
+| Main branch and effective rules | `protected: false`; rulesets including parents and effective main rules both empty | Required-check enforcement is not enabled; #6 still owns configuration and proof. No absent check is a pass. |
 
-These are bounded discovery results, not a machine-wide software audit. PATH, configured/default Rust directories, selected development-software registry entries, standard VS/SDK locations, matching services and current-user WSL registrations do not cover every custom installation or remote environment.
+The connector rejected some read endpoints and anonymous permissions access required authentication. The existing noninteractive Git credential was used only in process memory for authenticated read-only metadata requests; no credential was printed, written, changed or published. No settings were changed and no workflow/job was created or triggered.
 
-## Checks performed and limits
+This confirms permitted use, not future runner availability, toolchain/dependency compatibility, a tested database image or execution success. #4/#5 must establish those facts through actual runs and retain failures honestly. No permission to bypass repository controls is implied.
 
-The expected inventory came from the Guide: native Rust development, the selected build dependencies and PostgreSQL/PostGIS, with an eventual Compose deployment example. Inspection compared that expectation with direct observations:
+## Checkout and local inventory retained
 
-- `git status --short --branch`, `git rev-parse HEAD`, `git fetch origin main`, `git rev-parse origin/main`, `git ls-files`, `git diff --exit-code`, `git diff --cached --exit-code` and `git ls-files --others --exclude-standard` established baseline identity and the clean server checkout.
-- `Get-Command -CommandType Application -All` checked the named executables. `git --version` supplied the Git version; absent Rust/database/container commands were not invoked.
-- `Test-Path` and directory listings checked only the configured/default Cargo binaries and rustup toolchains, the standard `vswhere.exe` location, and the named WSL registration. Selected registry reads checked VS/SDK, Rust, Git, PostgreSQL/PostGIS and container registrations; matching-service queries did not start or stop services.
-- Only **presence**, never values, was checked for `DATABASE_URL`, `TEST_DATABASE_URL`, `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `PGSERVICE` and `PGSERVICEFILE`. All were absent. No credential store, connection file or password value was opened; no network endpoint or local port was probed for database access.
-- After the inspection and before authoring these notes, tracked and untracked server status remained clean. The intended delivery changes are this file and the README link/status; the PR verifies that boundary and link/whitespace consistency.
+- Initial server branch `main` equalled the inspected `origin/main`; tracked changes and untracked files were absent. Read-only inspection left it clean.
+- Five files existed: `README.md`, `LICENSE`, `CONTRIBUTING.md`, `AGENTS.md`, and `.github/ISSUE_TEMPLATE/implementation_task.md`. No Cargo workspace, toolchain pin, lockfile, Rust source, tests, migration, database configuration, Compose or CI workflow existed.
+- This session reused an existing temporary server checkout, separate from the planning checkout. The remote repository is the durable source; future hosted jobs check it out afresh. A permanent local development checkout is not a prerequisite. No checkout was moved.
+- Windows x64 reported `Microsoft Windows 10.0.26200`, PowerShell `7.6.6`, Git `2.55.0.windows.5`. Git fetch/inspection worked.
+- No `rustup`, `rustc`, `cargo`, `cl`, `link`, `clang`, `clang-cl`, `gcc`, `cmake`, `ninja` or `make` application was discovered on PATH. Configured/default Cargo binaries and installed rustup toolchains were absent. Standard VS Installer/Windows SDK checks did not establish a native build environment.
+- No `psql`, `pg_config`, `postgres`, `pg_isready`, `docker` or `podman` application was discovered on PATH; matching Windows services were absent. Selected uninstall registrations found Git and VS Code, not those build/database/container installations.
+- The `wsl.exe` launcher existed but the current-user Lxss registration was absent; no distribution was started. This is not a machine-wide audit of custom/other-user/remote installations.
+- Only presence, never values, was checked for `DATABASE_URL`, `TEST_DATABASE_URL`, `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `PGSERVICE` and `PGSERVICEFILE`; all were absent. No database credential file, network target or SQL connection was opened.
+- These local findings remain accurate but do not block GitHub-hosted development. No company-laptop installation is approved by the hosted choice.
 
-No package installation, toolchain activation/download, dependency resolution, workspace creation, build, container startup, database connection/reset/migration, service change or runtime test was performed. Behavioural red–green, mutation and fuzz checks are inapplicable to this inspection-only task. No available executable, empty test suite or missing CI result is represented as a passing build, database test or conformance result.
+The inventory used git status/revision/file listings, named `Get-Command` probes, bounded `Test-Path`/directory/registry/service reads and presence-only environment checks. The PR records the reviewed commits and static/link checks. Work is confined to setup/README/contributor documentation and companion planning/issue amendments; the unrelated planning PITON document and archived research/review evidence are untouched.
 
-## What is needed next
+## Next tasks and acceptance boundary
 
-1. **Before #4's build:** identify an approved environment accessible to the implementer, with Rust stable/Cargo and the native build tools appropriate to its selected target. Confirm whether that is this machine after the organisation's normal installation process, or an already approved development environment elsewhere. Also establish a durable checkout location. Do not choose or install versions merely from these notes; #4 must build/test and record the actual pins.
-2. **Before #5's database work:** designate an approved isolated PostgreSQL/PostGIS test service and its permitted lifecycle. Supply access through the approved secret mechanism, not issue comments, public documents or chat. #5 will verify versions, PostGIS, migrations, isolation and safe setup/cleanup; inspection establishes none of those results.
-3. **Keep #6's required-check work separate:** the approved CI/enforcement decision is not a configured or passing check. #6 follows its build/database prerequisites and must prove real checks and effective enforcement.
+1. **#4 — initial Rust build:** create the three approved workspace packages and minimum hosted Linux PR workflow together. Pin the actually tested toolchain, dependencies and actions; record the runner image. Run the existing build/initial-test checks and disposable failing-assertion proof against the actual task commits. Nothing is built by this inspection.
+2. **#5 — database harness:** extend that same workflow with a pinned disposable PostgreSQL/PostGIS service, synthetic fixtures and the existing connection/PostGIS/isolation/setup/reset/cleanup failure checks. No existing user database or permanent cloud endpoint is needed. Never expose operational credentials.
+3. **#6 — full initial CI and enforcement:** extend, do not duplicate, the bootstrap workflow. Complete formatting/lint/build/unit/database coverage, clean reproduction, dependency/licence inventory and the full false-green tests; configure/prove the approved PR/required-check policy before dependent #7 merges.
 
-Issue #3 can close when these inspection notes are reviewed and merged, even though prerequisites are missing. [#4](https://github.com/DGIWG-P507/glaux-server/issues/4) is next in the task graph, but is **not execution-ready in the inspected session**. A future `proceed` does not authorise installation or waive the missing environment; identify the approved path first. [#5](https://github.com/DGIWG-P507/glaux-server/issues/5) remains dependent on #4 and its own approved database.
+The order remains #3 → #4 → #5 → #6, one authorised issue per iteration. When the owning issue is authorised, its needed pinned tools/services can be provisioned inside disposable GitHub jobs; that is not permission for laptop installations, production access or persistent paid infrastructure. The eventual native/Compose reference instructions remain required deliverables.
+
+Issue #3 closes only after its inspection documentation passes separate review and merges. #4 is the next candidate after that closure and a subsequent `proceed`; unknown runtime results are work for #4, not a demand for IT to equip the laptop. A failed or unavailable hosted run must remain a recorded failure/unrun result and leave its owning issue open.
+
+No package/toolchain installation, Rust source, build workflow, container start, database connection/reset/migration or runtime test occurred in this inspection/correction. Behavioural red–green, mutation and fuzz tests are inapplicable to this documentation deliverable. Static inspection, source comparisons, link/whitespace checks and separate review do not constitute a successful build or conformance result.
