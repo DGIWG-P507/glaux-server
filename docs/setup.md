@@ -41,7 +41,7 @@ The three packages are the exact initial production set in [Guide v1.21 §2.2](h
 
 ## What the initial checks establish
 
-The workflow checks formatting and lockfile reproduction, compiles the three packages, checks their actual resolved edges and required test discovery, then executes workspace tests. No step swallows failures or uses retry-until-green. Setup/compiler errors are failures, not behavioral-red evidence.
+The workflow checks formatting and lockfile reproduction, compiles the three packages, checks their actual resolved edges and required test discovery, then executes workspace tests. Its Bash pipefail preserves Cargo failure through the diagnostic tee; a final exact success-line check requires the named regression to actually pass, so discovering an ignored test cannot produce success. The temporary log stays inside the disposable job. No step swallows failures or uses retry-until-green. Setup/compiler errors are failures, not behavioral-red evidence.
 
 The startup expectation is independently authored in `tests/bootstrap.rs`: exit 2, no standard output and the exact limitation on standard error. In [run 35664583178](https://github.com/DGIWG-P507/glaux-server/actions/runs/35664583178), a silent-success placeholder compiled, the required test was discovered and ran, and its exit-code assertion failed (`Some(0)` versus `Some(2)`); Cargo exited 101 and the job failed. The implementation was then changed to meet the unchanged assertion. This is a narrow bootstrap regression/failure-propagation proof, not a conformance or full CI-quality claim.
 

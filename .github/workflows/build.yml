@@ -51,4 +51,7 @@ jobs:
       - name: Check package boundaries and test discovery
         run: python3 scripts/check-bootstrap.py
       - name: Run initial tests and applicable doctests
-        run: cargo test --workspace --locked --offline -- --nocapture
+        shell: bash
+        run: |
+          cargo test --workspace --locked --offline -- --nocapture | tee "$RUNNER_TEMP/bootstrap-tests.log"
+          grep -Fxq 'test unfinished_server_does_not_report_success ... ok' "$RUNNER_TEMP/bootstrap-tests.log"
