@@ -13,7 +13,7 @@ This repository is home to the server implementation. Research and planning docu
 - Apache-2.0 licensing and the contributor/review workflow are in place. Required automated-check enforcement is approved but still awaits implementation under [issue #6](https://github.com/DGIWG-P507/glaux-server/issues/6).
 - This repository currently contains documentation, the licence and contributor instructions—not a Rust workspace, runnable server or automated test suite. Server implementation and runtime verification have not started.
 
-The next implementation task is [#3: inspect the checkout and approved prerequisites](https://github.com/DGIWG-P507/glaux-server/issues/3). Build, configuration, run and test instructions will be added with the working implementation. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records the current decisions and handoff; optional editorial cleanup remains separate from implementation.
+The [initial prerequisite inspection](docs/setup.md) records the checkout and tools actually available. Git works, but an approved usable Rust/build environment and PostgreSQL/PostGIS test target are not established in the inspected session. [#4: establish the Rust workspace](https://github.com/DGIWG-P507/glaux-server/issues/4) is next after the inspection, but its build cannot proceed until the approved toolchain is available. Nothing was installed. Build, configuration, run and test instructions will be added with the working implementation. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records planning decisions; the issues and these setup notes carry execution status.
 
 ## Planned capabilities
 
