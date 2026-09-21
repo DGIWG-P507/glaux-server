@@ -1,0 +1,8 @@
+{
+  "image": "postgis/postgis@sha256:7e00e8c3539fdd43f513b98806c8204714dcd09dea683c259e333d7690317119",
+  "platform": "linux/amd64",
+  "postgres_version_num": 180006,
+  "postgis_version": "3.6.4",
+  "pgdata": "/var/lib/postgresql/18/docker",
+  "tmpfs": "/var/lib/postgresql"
+}

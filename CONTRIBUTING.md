@@ -49,6 +49,8 @@ Use the current [build/test commands](docs/setup.md#current-build-and-test-comma
 
 The small `scripts/check-bootstrap.py` inventory checks this initial package graph; update it with the controlling Guide and review when a later issue introduces legitimate dependencies or tests. Do not delete or weaken a guard merely to make an unexpected dependency or missing test pass.
 
+For database-harness changes, also run the [disposable database tests](docs/database-tests.md) in the authorised hosted Linux environment. They use Python's standard library and the pinned image's psql, not an application SQLx adapter. Keep the exact image/version checks, owned-target validation, fixture/reset isolation and fatal setup/cleanup errors; never supply a user database or broaden cleanup to unrelated containers/volumes. A Rust-only green result does not cover these required database checks.
+
 The project lead selected the branch/PR policy on September 18, 2026 and approved the explicit separate-review procedure and required-check enforcement decision on September 21, 2026:
 
 - Use one task branch and linked PR per implementation issue, such as `task/1.1.1-prerequisites`; target `main`. Keep unrelated work out of the PR.

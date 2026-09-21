@@ -55,3 +55,13 @@ jobs:
         run: |
           cargo test --workspace --locked --offline -- --nocapture | tee "$RUNNER_TEMP/bootstrap-tests.log"
           grep -Fxq 'test unfinished_server_does_not_report_success ... ok' "$RUNNER_TEMP/bootstrap-tests.log"
+      - name: Fetch the pinned disposable database image
+        shell: bash
+        run: |
+          docker version
+          python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness import PIN, docker; print(PIN); print(docker("pull", "--platform", PIN["platform"], PIN["image"], timeout=180))'
+      - name: Exercise real database lifecycle and failure cases
+        shell: bash
+        run: |
+          python3 -u scripts/test_database.py 2>&1 | tee "$RUNNER_TEMP/database-tests.log"
+          grep -Fxq 'Database lifecycle: 7 passed; 0 failed; 0 skipped' "$RUNNER_TEMP/database-tests.log"
