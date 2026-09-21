@@ -1,59 +1,64 @@
 # Development setup: GitHub-hosted builds and tests
 
-**Inspection:** 21 September 2026; local probes approximately 22:13 UTC, GitHub checks approximately 22:26–22:28 UTC.<br>
-**Task:** [1.1.1 / issue #3](https://github.com/DGIWG-P507/glaux-server/issues/3).<br>
-**Result:** inspection complete. GitHub-hosted Linux is the lead-selected build/test path and Actions is enabled. No Rust build, workflow or database test has run.
+## Current build and test commands
 
-The earlier pending notes treated missing laptop tools as a project blocker. That inference is withdrawn. The company laptop need not run Rust, Docker or PostgreSQL for this path, and the lead need not supply a permanent database or another cloud machine before #4.
+The initial workspace belongs to [issue #4 / task 1.1.2](https://github.com/DGIWG-P507/glaux-server/issues/4). [PR #312](https://github.com/DGIWG-P507/glaux-server/pull/312) records the actual tested commits, initial failures, final passing run and separate-review outcome. This is a build foundation, **not a working CSAPI service**.
 
-Use current [CONTRIBUTING](../CONTRIBUTING.md) and [Roadmap v1.37](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-roadmap.md#phase-1-running-foundation-and-first-registration) for the approved sequencing. The inspection's unchanged design sources are [Goal v1.10 and Guide v1.21](https://github.com/DGIWG-P507/glaux/tree/1432876b10aa6eb19b832102cd28c0689f535669/Docs/Plans/glaux-server), particularly Guide §§2.1, 2.4 and 4.12. Original issue preparation pins remain historical sources; the dated hosted-development amendments control the changed task allocation.
+Run from the workspace root in GitHub-hosted Linux or an already approved Rust environment:
 
-## What runs where
+```text
+cargo build --workspace --locked --offline
+python3 scripts/check-bootstrap.py
+cargo test --workspace --locked --offline
+cargo fmt --all --check
+```
 
-- **GitHub repository:** durable code, issues, pull requests and workflow definitions.
-- **GitHub-hosted Linux job:** a fresh checkout, pinned Rust/native prerequisites and actual build/tests. #5 adds a temporary, isolated PostgreSQL/PostGIS service for synthetic test data.
-- **Company laptop:** editing/Git access only for this approach. No compiler, local database, container runtime or WSL installation is required.
-- **Persistent deployment:** a separate later decision. No Oracle Cloud, Fly.io, paid runner upgrade or self-hosted runner is required or provisioned here.
+The Python helper needs Python 3.11+ and only its standard library. It checks this initial package graph/licence metadata and required test discovery; it is not needed just to compile the Rust packages. Cargo's normal workspace test command includes applicable doctests. There are no executable documentation examples or domain/codec behaviors yet, so those targets currently report zero tests; that is explicitly not domain/standards verification. The executable has one initial integration test.
 
-GitHub documents [hosted runners](https://docs.github.com/en/actions/concepts/runners/github-hosted-runners), [Rust build/test workflows](https://docs.github.com/en/actions/tutorials/build-and-test-code/rust), and [PostgreSQL service containers on Ubuntu](https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers). The [PostGIS container project](https://github.com/postgis/docker-postgis) supplies a PostGIS-enabled option to pin and test in #5. These establish a supported approach, not successful Glaux execution.
+The `glaux-server` binary deliberately writes `glaux-server: bootstrap only; no server commands are implemented yet.` to standard error and exits with code 2. It does not bind a listener, accept commands or access storage. A successful build, or the names of the packages, is not proof of any planned server capability. Do not treat `cargo run -p glaux-server` as a successful server startup at this stage.
 
-## GitHub availability inspected
+## Packages and dependency boundary
 
-Repository: `DGIWG-P507/glaux-server`, main at `0723ec2194e7d80057ce466e2d602f4bd8abfcfd`.
-
-| Read-only check | Observed result | Meaning |
+| Package | Current local dependencies | Current implementation |
 |---|---|---|
-| `GET /repos/DGIWG-P507/glaux-server/actions/permissions` | HTTP 200; `enabled: true`, `allowed_actions: all`, `sha_pinning_required: false` | Repository policy permits Actions. The last value does not waive project action/dependency pinning. |
-| `GET .../actions/permissions/workflow` | HTTP 200; default workflow permissions `read`; workflow PR-review approval `false` | Preserve least privilege. This is about the workflow token, not the separate assistant-review procedure. |
-| `GET .../actions/workflows` and `GET .../actions/runs?per_page=100` | Both listed totals: zero | No listed workflow or run demonstrates build readiness. This does not survey deleted historical runs. |
-| Main branch and effective rules | `protected: false`; rulesets including parents and effective main rules both empty | Required-check enforcement is not enabled; #6 still owns configuration and proof. No absent check is a pass. |
+| `glaux-domain` | None | Library boundary only; resource rules belong to later issues. |
+| `glaux-standards` | `glaux-domain` | Library boundary only; no schemas, validators or codecs yet. |
+| `glaux-server` | Both libraries | Explicit unfinished-startup diagnostic and its process-level test. |
 
-The connector rejected some read endpoints and anonymous permissions access required authentication. The existing noninteractive Git credential was used only in process memory for authenticated read-only metadata requests; no credential was printed, written, changed or published. No settings were changed and no workflow/job was created or triggered.
+The three packages are the exact initial production set in [Guide v1.21 §2.2](https://github.com/DGIWG-P507/glaux/blob/f2d9f912b1a75c14315b4555b21ae545fd6caaee/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#22-component-boundaries). No extra empty publication, tasking, policy or other subsystem packages are created. The libraries are not padded with invented domain behavior just to increase test counts.
 
-This confirms permitted use, not future runner availability, toolchain/dependency compatibility, a tested database image or execution success. #4/#5 must establish those facts through actual runs and retain failures honestly. No permission to bypass repository controls is implied.
+`scripts/check-bootstrap.py` compares Cargo's resolved graph with independently specified Guide-derived edges, checks original-package licence/edition/toolchain metadata and requires the named executable regression to be discovered exactly once. This is the initial graph inventory, not a prohibition on all future third-party dependencies. Later owning issues must update it deliberately against their approved changes.
 
-## Checkout and local inventory retained
+## Pins and hosted execution
 
-- Initial server branch `main` equalled the inspected `origin/main`; tracked changes and untracked files were absent. Read-only inspection left it clean.
-- Five files existed: `README.md`, `LICENSE`, `CONTRIBUTING.md`, `AGENTS.md`, and `.github/ISSUE_TEMPLATE/implementation_task.md`. No Cargo workspace, toolchain pin, lockfile, Rust source, tests, migration, database configuration, Compose or CI workflow existed.
-- This session reused an existing temporary server checkout, separate from the planning checkout. The remote repository is the durable source; future hosted jobs check it out afresh. A permanent local development checkout is not a prerequisite. No checkout was moved.
-- Windows x64 reported `Microsoft Windows 10.0.26200`, PowerShell `7.6.6`, Git `2.55.0.windows.5`. Git fetch/inspection worked.
-- No `rustup`, `rustc`, `cargo`, `cl`, `link`, `clang`, `clang-cl`, `gcc`, `cmake`, `ninja` or `make` application was discovered on PATH. Configured/default Cargo binaries and installed rustup toolchains were absent. Standard VS Installer/Windows SDK checks did not establish a native build environment.
-- No `psql`, `pg_config`, `postgres`, `pg_isready`, `docker` or `podman` application was discovered on PATH; matching Windows services were absent. Selected uninstall registrations found Git and VS Code, not those build/database/container installations.
-- The `wsl.exe` launcher existed but the current-user Lxss registration was absent; no distribution was started. This is not a machine-wide audit of custom/other-user/remote installations.
-- Only presence, never values, was checked for `DATABASE_URL`, `TEST_DATABASE_URL`, `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `PGSERVICE` and `PGSERVICEFILE`; all were absent. No database credential file, network target or SQL connection was opened.
-- These local findings remain accurate but do not block GitHub-hosted development. No company-laptop installation is approved by the hosted choice.
+- Rust **1.98.1**, edition 2024, resolver 3, pinned by [rust-toolchain.toml](../rust-toolchain.toml). Package `rust-version` matches the actually selected toolchain; no compatibility with older compilers is claimed. [Official release](https://blog.rust-lang.org/2026/09/03/Rust-1.98.1/).
+- [Cargo.lock](../Cargo.lock) contains only the three original Apache-2.0 packages at `0.1.0`. There are no third-party Cargo dependencies/features yet. CI regenerates this initial lockfile offline and checks it is unchanged, then builds/tests with `--locked --offline`. Offline describes Cargo operations after toolchain provisioning, not the entire GitHub job.
+- The only external action is [checkout v7.0.1](https://github.com/actions/checkout/tree/3d3c42e5aac5ba805825da76410c181273ba90b1), pinned to `3d3c42e5aac5ba805825da76410c181273ba90b1`; its licence is MIT. Rust toolchain and runner software retain their own upstream terms. The full inventory work remains in #6.
+- The [Build workflow](../.github/workflows/build.yml) uses standard `ubuntu-24.04` hosted runners, a 10-minute job limit, `contents: read`, no persisted checkout credentials and no production secrets. It runs on pull requests and main pushes, not `pull_request_target`. No paid runner upgrade or self-hosted machine is introduced.
+- On a PR, checkout selects its exact head SHA, verifies/logs that identity and tests it rather than the synthetic merge commit. Reconcile any base movement and re-test before merging. Main pushes test the merged commit. Separate assistant review and future required-check enforcement are distinct from these runs.
+- The job explicitly installs the repository's toolchain pin using rustup **inside the disposable runner**, then logs compiler/Cargo/rustfmt/native-compiler/Python versions and the actual image identity. The runner label is rolling, not an immutable VM pin. Initial observed image: `ubuntu24 20260907.300.1`, Rust/Cargo `1.98.1`, rustfmt `1.9.0-stable`, GCC `13.3.0`, Python `3.12.3`; use the relevant run's log as evidence.
+- No tool was installed on the company laptop. GitHub is the durable source and hosted jobs use fresh checkouts. The temporary local checkout is an editing convenience, not a prerequisite for a permanent development machine.
 
-The inventory used git status/revision/file listings, named `Get-Command` probes, bounded `Test-Path`/directory/registry/service reads and presence-only environment checks. The PR records the reviewed commits and static/link checks. Work is confined to setup/README/contributor documentation and companion planning/issue amendments; the unrelated planning PITON document and archived research/review evidence are untouched.
+## What the initial checks establish
 
-## Next tasks and acceptance boundary
+The workflow checks formatting and lockfile reproduction, compiles the three packages, checks their actual resolved edges and required test discovery, then executes workspace tests. No step swallows failures or uses retry-until-green. Setup/compiler errors are failures, not behavioral-red evidence.
 
-1. **#4 — initial Rust build:** create the three approved workspace packages and minimum hosted Linux PR workflow together. Pin the actually tested toolchain, dependencies and actions; record the runner image. Run the existing build/initial-test checks and disposable failing-assertion proof against the actual task commits. Nothing is built by this inspection.
-2. **#5 — database harness:** extend that same workflow with a pinned disposable PostgreSQL/PostGIS service, synthetic fixtures and the existing connection/PostGIS/isolation/setup/reset/cleanup failure checks. No existing user database or permanent cloud endpoint is needed. Never expose operational credentials.
-3. **#6 — full initial CI and enforcement:** extend, do not duplicate, the bootstrap workflow. Complete formatting/lint/build/unit/database coverage, clean reproduction, dependency/licence inventory and the full false-green tests; configure/prove the approved PR/required-check policy before dependent #7 merges.
+The startup expectation is independently authored in `tests/bootstrap.rs`: exit 2, no standard output and the exact limitation on standard error. In [run 35664583178](https://github.com/DGIWG-P507/glaux-server/actions/runs/35664583178), a silent-success placeholder compiled, the required test was discovered and ran, and its exit-code assertion failed (`Some(0)` versus `Some(2)`); Cargo exited 101 and the job failed. The implementation was then changed to meet the unchanged assertion. This is a narrow bootstrap regression/failure-propagation proof, not a conformance or full CI-quality claim.
 
-The order remains #3 → #4 → #5 → #6, one authorised issue per iteration. When the owning issue is authorised, its needed pinned tools/services can be provisioned inside disposable GitHub jobs; that is not permission for laptop installations, production access or persistent paid infrastructure. The eventual native/Compose reference instructions remain required deliverables.
+The preceding [run 35664492990](https://github.com/DGIWG-P507/glaux-server/actions/runs/35664492990) stopped at formatting, so its build/tests were skipped. It is retained as a real initial failure, not counted as the intended red test. The log also prompted replacing deprecated implicit rustup installation with an explicit hosted install. Final passing/review/merge evidence belongs to PR #312, including any later corrections; a stale green run cannot cover a changed head.
 
-Issue #3 closes only after its inspection documentation passes separate review and merges. #4 is the next candidate after that closure and a subsequent `proceed`; unknown runtime results are work for #4, not a demand for IT to equip the laptop. A failed or unavailable hosted run must remain a recorded failure/unrun result and leave its owning issue open.
+Database, HTTP, schemas, resource behavior, codecs, brokers, property/fuzz/mutation campaigns and conformance checks have not been implemented or passed. There is no need to fabricate those tests for this build-only task; their existing owners retain them.
 
-No package/toolchain installation, Rust source, build workflow, container start, database connection/reset/migration or runtime test occurred in this inspection/correction. Behavioural red–green, mutation and fuzz tests are inapplicable to this documentation deliverable. Static inspection, source comparisons, link/whitespace checks and separate review do not constitute a successful build or conformance result.
+## Next tasks and boundaries
+
+[#5](https://github.com/DGIWG-P507/glaux-server/issues/5) extends this workflow with a pinned disposable PostgreSQL/PostGIS harness and real isolation/lifecycle/failure checks. It does not need a permanent database, Oracle/Fly account use or a laptop container runtime.
+
+[#6](https://github.com/DGIWG-P507/glaux-server/issues/6) completes the initial formatting/lint/build/unit/database suite, dependency/licence inventory, clean reproduction and full false-green checks; it implements/proves the approved required-check enforcement before dependent #7 merges. The bootstrap job does not complete #6 or mechanically enforce separate review. The eventual native/Compose reference instructions remain deliverables.
+
+Issue #4 closes only after its applicable run passes on the separately reviewed head and the change merges. The next `proceed` then authorises #5 only. No local installation, persistent cloud provisioning, production access or repository-control change is implicit.
+
+## Initial inspection record
+
+The [completed #3 setup snapshot](https://github.com/DGIWG-P507/glaux-server/blob/150bb7cd438009441b416c7157a46fb8bccd82ae/docs/setup.md) retains the original clean checkout, local Git/tool inventory and authenticated read-only GitHub settings checks. It records the corrected decision: missing laptop build tools do not block hosted development. Actions was enabled but had zero listed workflows/runs at that earlier inspection; that historical zero is superseded by the actual #4 runs above, not erased.
+
+Planning remains [Goal v1.10, Guide v1.21 and Roadmap v1.37](https://github.com/DGIWG-P507/glaux/tree/f2d9f912b1a75c14315b4555b21ae545fd6caaee/Docs/Plans/glaux-server), with the dated issue amendments controlling the hosted sequencing. Research/review archives and the unrelated planning PITON file are unchanged.

@@ -19,10 +19,13 @@ def require(condition, message):
 
 def cargo(*args):
     result = subprocess.run(
-        ["cargo", *args], check=True, text=True, capture_output=True
+        ["cargo", *args], check=False, text=True, capture_output=True
     )
     # Preserve Cargo diagnostics as well as the parsed output.
     print(result.stderr, end="", file=sys.stderr)
+    if result.returncode:
+        print(result.stdout, end="")
+        result.check_returncode()
     return result.stdout
 
 
