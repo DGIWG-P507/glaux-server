@@ -1,0 +1,13 @@
+[package]
+name = "glaux-server"
+description = "OGC API Connected Systems reference server, initial build only"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+glaux-domain.workspace = true
+glaux-standards.workspace = true

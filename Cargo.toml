@@ -1,0 +1,15 @@
+[workspace]
+members = ["crates/glaux-domain", "crates/glaux-standards", "crates/glaux-server"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98.1"
+license = "Apache-2.0"
+repository = "https://github.com/DGIWG-P507/glaux-server"
+publish = false
+
+[workspace.dependencies]
+glaux-domain = { path = "crates/glaux-domain" }
+glaux-standards = { path = "crates/glaux-standards" }
