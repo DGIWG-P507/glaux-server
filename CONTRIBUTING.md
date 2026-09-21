@@ -15,7 +15,7 @@ Keep third-party licences and notices with their source material; the project li
 - [Roadmap](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-roadmap.md): task scope, dependencies, publication and execution workflow.
 - [Initial Planning Guidance](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Governance/initial-planning-guidance.md): planning-document authority and change rules.
 
-Read the relevant sections rather than treating a summary or peer implementation as controlling authority. Goal v1.7 and Guide v1.2 remain the historical preparation baseline of the initial issues; current planning is Goal v1.10, Guide v1.21 and Roadmap v1.35. Follow their approved revisions and dated issue amendments. The Roadmap's §5 governs implementation issues; research-report approval procedures are not additional implementation gates. If an issue conflicts with a controlling source, identify the conflict and resolve it through the existing change process instead of silently changing scope.
+Read the relevant sections rather than treating a summary or peer implementation as controlling authority. Goal v1.7 and Guide v1.2 remain the historical preparation baseline of the initial issues; current planning is Goal v1.10, Guide v1.21 and Roadmap v1.36. Follow their approved revisions and dated issue amendments. The Roadmap's §5 governs implementation issues; research-report approval procedures are not additional implementation gates. If an issue conflicts with a controlling source, identify the conflict and resolve it through the existing change process instead of silently changing scope.
 
 ## Creating implementation issues
 
