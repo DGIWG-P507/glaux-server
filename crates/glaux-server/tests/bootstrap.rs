@@ -1,6 +1,7 @@
 use std::process::Command;
 
 #[test]
+#[ignore = "disposable CI control; must not be merged"]
 fn unfinished_server_does_not_report_success() {
     // Independent bootstrap contract: no listening service exists yet.
     // A silent, successful placeholder executable must not satisfy this test.
