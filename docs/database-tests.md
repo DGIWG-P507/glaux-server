@@ -75,6 +75,14 @@ The tests print the fixed synthetic fixture inputs; randomness only gives the
 container its collision-resistant ownership identity, which is logged. Database
 or host wall-clock time is not an expected observation value.
 
+The first [hosted run 35668773321](https://github.com/DGIWG-P507/glaux-server/actions/runs/35668773321)
+used a deliberately ineffective reset. Image provisioning, actual SQL identity,
+extension migration and Rust checks succeeded; two stale-marker assertions then
+failed (`f` instead of independently expected `t`). All seven tests ran and their
+owned containers were removed. Reset was implemented without weakening those
+assertions. [PR #313](https://github.com/DGIWG-P507/glaux-server/pull/313) preserves
+the failing head, subsequent passing execution and separate-review record.
+
 ## Pin provenance and limits
 
 [database-image.json](../scripts/database-image.json) pins Linux/amd64 to:

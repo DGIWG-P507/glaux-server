@@ -161,9 +161,8 @@ class DisposablePostgis:
             self.validate_target()
             if fault:
                 self.probe("SELECT 1/0;", database=CONTROL)
-            # Deliberate first-run defect: leaves old mutable fixtures in place.
-            # The independently written reset test must fail before this is fixed.
-            self.ready = True
+            self.probe("DROP DATABASE " + TARGET + ";", database=CONTROL)
+            self.setup()
         except HarnessError as error:
             raise HarnessError(f"Reset failed; fixtures unavailable: {error}") from error
 
