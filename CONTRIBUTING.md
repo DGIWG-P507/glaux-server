@@ -15,7 +15,7 @@ Keep third-party licences and notices with their source material; the project li
 - [Roadmap](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-roadmap.md): task scope, dependencies, publication and execution workflow.
 - [Initial Planning Guidance](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Governance/initial-planning-guidance.md): planning-document authority and change rules.
 
-Read the relevant sections rather than treating a summary or peer implementation as controlling authority. Goal v1.7 and Guide v1.2 remain the historical preparation baseline of the initial issues; current planning is Goal v1.10, Guide v1.21 and Roadmap v1.36. Follow their approved revisions and dated issue amendments. The Roadmap's §5 governs implementation issues; research-report approval procedures are not additional implementation gates. If an issue conflicts with a controlling source, identify the conflict and resolve it through the existing change process instead of silently changing scope.
+Read the relevant sections rather than treating a summary or peer implementation as controlling authority. Goal v1.7 and Guide v1.2 remain the historical preparation baseline of the initial issues; current planning is Goal v1.10, Guide v1.21 and Roadmap v1.37. Follow their approved revisions and dated issue amendments. The Roadmap's §5 governs implementation issues; research-report approval procedures are not additional implementation gates. If an issue conflicts with a controlling source, identify the conflict and resolve it through the existing change process instead of silently changing scope.
 
 ## Creating implementation issues
 
@@ -32,6 +32,16 @@ Automated publication must populate the same Markdown body explicitly, omitting 
 For the project lead's assisted workflow, each `proceed` authorizes one dependency-ready implementation issue after complete issue publication. State the selected issue and intended result, inspect the current checkout and prerequisites, implement and verify the bounded change, update relevant documentation, and record evidence. Stop after its handoff; do not continue down the queue automatically.
 
 An oversized or blocked issue remains open. State the precise blocker or remaining work and explicitly correct the issue/Roadmap if necessary; do not omit obligations, close partial work or invent a passed check. Missing tools may be a valid result of the prerequisite-inspection issue, while still blocking later build or database issues.
+
+## Initial GitHub-hosted build and test path
+
+On 21 September 2026 the project lead selected GitHub-hosted Linux for initial builds/tests. The company laptop is an editing/Git interface, not a required Rust/database host. See [setup inspection and limits](docs/setup.md) and Roadmap v1.37. This does not remove the eventual native/Compose reference instructions.
+
+- #4 establishes the three-package workspace and minimum PR workflow that actually builds/tests it on a hosted Linux runner. It records the tested Rust toolchain/lockfile, runner image and action pins, suite outcomes and the existing disposable failing-assertion proof. This is the narrow exception to its original CI exclusion.
+- #5 extends that workflow only enough to run its isolated pinned PostgreSQL/PostGIS harness and required lifecycle/failure checks. It needs no permanent cloud database or local installation.
+- #6 extends the existing workflow into the complete initial check suite, clean-setup reproduction, dependency/licence inventory, full false-green checks and actual required-check enforcement. Earlier jobs are not completion of #6. The order and prerequisites remain #3 → #4 → #5 → #6.
+
+When each owning issue is authorised, provision only its needed pinned tools and disposable services inside GitHub-hosted jobs, using synthetic test data and least-privilege permissions; never operational credentials or a user database. Record actual execution on the reviewed head before merging code. Actions being enabled is not a passing run; missing/failed runs leave the issue open. No company-laptop installation, paid runner upgrade, Oracle/Fly provisioning, self-hosted runner or persistent deployment is authorised by this choice. If the selected route actually fails, record the specific failure before proposing a different environment.
 
 ## Branches, pull requests and review
 
