@@ -6,14 +6,14 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build foundation — 21 September 2026.**
+**Initial build and database-test foundation — 21 September 2026.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
 - Apache-2.0 licensing and the contributor/review workflow are in place. Required automated-check enforcement is approved but still awaits implementation under [issue #6](https://github.com/DGIWG-P507/glaux-server/issues/6).
-- The initial three-package Rust workspace and GitHub build/test workflow are present. They establish the build foundation, not a runnable CSAPI service: resource behavior, HTTP endpoints and database integration remain unimplemented. [PR #312](https://github.com/DGIWG-P507/glaux-server/pull/312) records actual runs, limitations and review.
+- The initial three-package Rust workspace and GitHub build/test workflow are present. The [disposable database harness](docs/database-tests.md) adds actual PostgreSQL/PostGIS identity, initial-extension migration, isolation and lifecycle-failure checks. This is not a runnable CSAPI service: resource behavior, HTTP endpoints and Rust application storage remain unimplemented. [PR #312](https://github.com/DGIWG-P507/glaux-server/pull/312) and [issue #5](https://github.com/DGIWG-P507/glaux-server/issues/5) record actual execution, limitations and review.
 
-Use the [build/test instructions](docs/setup.md#current-build-and-test-commands) and the [Build workflow](https://github.com/DGIWG-P507/glaux-server/actions/workflows/build.yml). Builds run on GitHub-hosted Linux; no Rust/database installation on the company laptop or permanent cloud service is required. #5 adds temporary PostgreSQL/PostGIS testing, and #6 completes the check suite and merge enforcement. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records planning decisions; issues and PRs record execution.
+Use the [build/test instructions](docs/setup.md#current-build-and-test-commands) and the [Build workflow](https://github.com/DGIWG-P507/glaux-server/actions/workflows/build.yml). Builds and disposable database tests run on GitHub-hosted Linux; no Rust/database installation on the company laptop or permanent cloud service is required. #6 completes the check suite and merge enforcement. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records planning decisions; issues and PRs record execution.
 
 ## Planned capabilities
 

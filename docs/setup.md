@@ -13,7 +13,7 @@ cargo test --workspace --locked --offline
 cargo fmt --all --check
 ```
 
-The Python helper needs Python 3.11+ and only its standard library. It checks this initial package graph/licence metadata and required test discovery; it is not needed just to compile the Rust packages. Cargo's normal workspace test command includes applicable doctests. There are no executable documentation examples or domain/codec behaviors yet, so those targets currently report zero tests; that is explicitly not domain/standards verification. The executable has one initial integration test.
+The Python helper needs Python 3.11+ and only its standard library. It checks this initial package graph/licence metadata and required test discovery; it is not needed just to compile the Rust packages. Cargo's normal workspace test command includes applicable doctests. There are no executable documentation examples or domain/codec behaviors yet, so those targets currently report zero tests; that is explicitly not domain/standards verification. The executable has one initial integration test. These commands alone do not execute the separate [real database lifecycle tests](database-tests.md); the hosted workflow runs those too under #5.
 
 The `glaux-server` binary deliberately writes `glaux-server: bootstrap only; no server commands are implemented yet.` to standard error and exits with code 2. It does not bind a listener, accept commands or access storage. A successful build, or the names of the packages, is not proof of any planned server capability. Do not treat `cargo run -p glaux-server` as a successful server startup at this stage.
 
@@ -47,15 +47,15 @@ The startup expectation is independently authored in `tests/bootstrap.rs`: exit 
 
 The preceding [run 35664492990](https://github.com/DGIWG-P507/glaux-server/actions/runs/35664492990) stopped at formatting, so its build/tests were skipped. It is retained as a real initial failure, not counted as the intended red test. The log also prompted replacing deprecated implicit rustup installation with an explicit hosted install. Final passing/review/merge evidence belongs to PR #312, including any later corrections; a stale green run cannot cover a changed head.
 
-Database, HTTP, schemas, resource behavior, codecs, brokers, property/fuzz/mutation campaigns and conformance checks have not been implemented or passed. There is no need to fabricate those tests for this build-only task; their existing owners retain them.
+HTTP, resource schemas/behavior, codecs, brokers and conformance checks remain unimplemented. #5 adds the [real PostgreSQL/PostGIS lifecycle harness](database-tests.md), using the image's own client and a minimal explicit extension migration. It does not prove the future Rust SQLx adapter, resource queries, full restore or application storage; those owners retain their checks.
 
 ## Next tasks and boundaries
 
-[#5](https://github.com/DGIWG-P507/glaux-server/issues/5) extends this workflow with a pinned disposable PostgreSQL/PostGIS harness and real isolation/lifecycle/failure checks. It does not need a permanent database, Oracle/Fly account use or a laptop container runtime.
+[#5](https://github.com/DGIWG-P507/glaux-server/issues/5) adds the pinned disposable PostgreSQL/PostGIS harness and real isolation/lifecycle/failure checks to the existing workflow. See [its command, safety boundary, exact pin and licence notes](database-tests.md). Each test target is created and removed within the hosted job, with no exposed database port or user-data mount. The issue/PR records actual run evidence and any initial failures; code presence alone is not acceptance.
 
 [#6](https://github.com/DGIWG-P507/glaux-server/issues/6) completes the initial formatting/lint/build/unit/database suite, dependency/licence inventory, clean reproduction and full false-green checks; it implements/proves the approved required-check enforcement before dependent #7 merges. The bootstrap job does not complete #6 or mechanically enforce separate review. The eventual native/Compose reference instructions remain deliverables.
 
-Issue #4 closes only after its applicable run passes on the separately reviewed head and the change merges. The next `proceed` then authorises #5 only. No local installation, persistent cloud provisioning, production access or repository-control change is implicit.
+Issue #4 is complete. Issue #5 closes only after its own checks pass on the separately reviewed head and the change merges; only a subsequent `proceed` authorises #6. No local installation, persistent cloud provisioning or production access is implicit.
 
 ## Initial inspection record
 
