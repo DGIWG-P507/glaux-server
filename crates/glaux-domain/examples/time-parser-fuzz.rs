@@ -35,7 +35,13 @@ fn leap_year(year: i32) -> bool {
 
 fn month_days(year: i32, month: u32) -> u32 {
     match month {
-        2 => if leap_year(year) { 29 } else { 28 },
+        2 => {
+            if leap_year(year) {
+                29
+            } else {
+                28
+            }
+        }
         4 | 6 | 9 | 11 => 30,
         _ => 31,
     }
@@ -48,7 +54,10 @@ fn days_from_epoch(year: i32, month: u32, day: u32) -> i64 {
     } else {
         -(year..1970).map(days_in_year).sum::<i64>()
     };
-    years + (1..month).map(|value| i64::from(month_days(year, value))).sum::<i64>()
+    years
+        + (1..month)
+            .map(|value| i64::from(month_days(year, value)))
+            .sum::<i64>()
         + i64::from(day - 1)
 }
 
@@ -70,7 +79,12 @@ struct Case {
 }
 
 fn rejected(text: &str) -> Case {
-    Case { bytes: text.as_bytes().to_vec(), expected: None, malformed_utf8: false, boundary: false }
+    Case {
+        bytes: text.as_bytes().to_vec(),
+        expected: None,
+        malformed_utf8: false,
+        boundary: false,
+    }
 }
 
 fn valid(
@@ -83,8 +97,13 @@ fn valid(
 ) -> Case {
     let (year, month, day) = date;
     let (hour, minute, second) = time;
-    let decimal = if digits.is_empty() { String::new() } else { format!(".{digits}") };
-    let text = format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}{decimal}{zone}");
+    let decimal = if digits.is_empty() {
+        String::new()
+    } else {
+        format!(".{digits}")
+    };
+    let text =
+        format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}{decimal}{zone}");
     Case {
         bytes: text.into_bytes(),
         expected: Some(Expected {
@@ -112,13 +131,28 @@ fn zone(offset: i32) -> String {
 fn generate(seed: u64) -> Vec<Case> {
     let mut generator = Generator(seed);
     let invalid = [
-        "", "1970-01-01", "1970-01-01T00:00:00", "1970-01-01 00:00:00Z",
-        "1970-01-01T24:00:00Z", "1970-01-01T00:00:61Z", "1970-00-01T00:00:00Z",
-        "1970-13-01T00:00:00Z", "1970-01-00T00:00:00Z", "2000-04-31T00:00:00Z",
-        "1970-01-01T00:00:00.Z", "1970-01-01T00:00:00,1Z", "1970-01-01T00:00:00+0000",
-        "1970-01-01T00:00:00+24:00", "1970-01-01T00:00:00+00:60", "1970-01-01T00:60:00Z",
-        " 1970-01-01T00:00:00Z", "1970-01-01T00:00:00Z\n", "1970-01-01T00:00:00Z\0",
-        "1970-01-01T00:00:00Z/..", "１０００-01-01T00:00:00Z", "10000-01-01T00:00:00Z",
+        "",
+        "1970-01-01",
+        "1970-01-01T00:00:00",
+        "1970-01-01 00:00:00Z",
+        "1970-01-01T24:00:00Z",
+        "1970-01-01T00:00:61Z",
+        "1970-00-01T00:00:00Z",
+        "1970-13-01T00:00:00Z",
+        "1970-01-00T00:00:00Z",
+        "2000-04-31T00:00:00Z",
+        "1970-01-01T00:00:00.Z",
+        "1970-01-01T00:00:00,1Z",
+        "1970-01-01T00:00:00+0000",
+        "1970-01-01T00:00:00+24:00",
+        "1970-01-01T00:00:00+00:60",
+        "1970-01-01T00:60:00Z",
+        " 1970-01-01T00:00:00Z",
+        "1970-01-01T00:00:00Z\n",
+        "1970-01-01T00:00:00Z\0",
+        "1970-01-01T00:00:00Z/..",
+        "１０００-01-01T00:00:00Z",
+        "10000-01-01T00:00:00Z",
     ];
     let longest_digits = format!("{}1", "0".repeat(MAX_TIMESTAMP_BYTES - 22));
     let mut boundaries = [
@@ -126,8 +160,22 @@ fn generate(seed: u64) -> Vec<Case> {
         rejected(&format!("1970-01-01T00:00:00.{longest_digits}0Z")),
         valid((0, 1, 1), (0, 0, 0), 1439, "", "+23:59", false),
         valid((9999, 12, 31), (23, 59, 59), -1439, "", "-23:59", false),
-        valid((1969, 12, 31), (23, 59, 59), 0, "999999999999999999999999999999", "Z", false),
-        valid((1970, 1, 1), (0, 0, 0), 0, "000000000000000000000000000001", "Z", false),
+        valid(
+            (1969, 12, 31),
+            (23, 59, 59),
+            0,
+            "999999999999999999999999999999",
+            "Z",
+            false,
+        ),
+        valid(
+            (1970, 1, 1),
+            (0, 0, 0),
+            0,
+            "000000000000000000000000000001",
+            "Z",
+            false,
+        ),
     ];
     for case in &mut boundaries {
         case.boundary = true;
@@ -143,7 +191,14 @@ fn generate(seed: u64) -> Vec<Case> {
             let offset = i32::try_from(generator.bounded(2879)).unwrap() - 1439;
             let digits = format!("{:018}1", generator.next() % 1_000_000_000_000_000_000);
             match index % 8 {
-                0 => valid((year, month, day), (hour, minute, second), offset, "", &zone(offset), false),
+                0 => valid(
+                    (year, month, day),
+                    (hour, minute, second),
+                    offset,
+                    "",
+                    &zone(offset),
+                    false,
+                ),
                 1 => valid((1969, 12, 31), (23, 59, 59), 0, &digits, "Z", false),
                 2 => rejected(invalid[(index / 8) % invalid.len()]),
                 3 => Case {
@@ -176,15 +231,28 @@ fn generate(seed: u64) -> Vec<Case> {
                 }
                 6 => boundaries[(index / 8) % boundaries.len()].clone(),
                 _ => {
-                    let offset = if (index / 8).is_multiple_of(4) { 0 } else { offset % 720 };
+                    let offset = if (index / 8).is_multiple_of(4) {
+                        0
+                    } else {
+                        offset % 720
+                    };
                     let local_minutes = 720 + offset;
                     let zone_text = if offset == 0 {
                         ["Z", "z", "-00:00", "+00:00"][(index / 32) % 4].to_owned()
-                    } else { zone(offset) };
+                    } else {
+                        zone(offset)
+                    };
                     valid(
                         (year, month, day),
-                        (u32::try_from(local_minutes / 60).unwrap(), u32::try_from(local_minutes % 60).unwrap(), second),
-                        offset, &digits, &zone_text, false,
+                        (
+                            u32::try_from(local_minutes / 60).unwrap(),
+                            u32::try_from(local_minutes % 60).unwrap(),
+                            second,
+                        ),
+                        offset,
+                        &digits,
+                        &zone_text,
+                        false,
                     )
                 }
             }
@@ -238,7 +306,10 @@ fn main() {
         let repeated = ExactInstant::parse_rfc3339(text);
         assert_eq!(actual.is_ok(), repeated.is_ok(), "case={index}");
         let Some(expected) = &case.expected else {
-            assert!(actual.is_err(), "seed={SEED:#x} case={index} input={text:?}");
+            assert!(
+                actual.is_err(),
+                "seed={SEED:#x} case={index} input={text:?}"
+            );
             assert!(text.parse::<ExactInstant>().is_err());
             rejected += 1;
             continue;
@@ -246,13 +317,21 @@ fn main() {
         let instant = actual.unwrap_or_else(|error| panic!("case={index}: {error:?}"));
         assert_eq!(instant, repeated.unwrap());
         assert_eq!(instant, text.parse::<ExactInstant>().unwrap());
-        assert_eq!(instant.civil_second(), expected.civil_second, "case={index}");
+        assert_eq!(
+            instant.civil_second(),
+            expected.civil_second,
+            "case={index}"
+        );
         assert_eq!(instant.is_leap_second(), expected.leap);
         assert_eq!(instant.source_lexeme(), text);
         assert_eq!(instant.fraction_digits(), expected.fraction.len());
         assert_eq!(instant.offset_seconds(), expected.offset_seconds);
         assert_eq!(instant.offset_known(), expected.known_numeric_offset);
-        let fraction_text = if expected.fraction.is_empty() { "0".to_owned() } else { format!("0.{}", expected.fraction) };
+        let fraction_text = if expected.fraction.is_empty() {
+            "0".to_owned()
+        } else {
+            format!("0.{}", expected.fraction)
+        };
         let expected_fraction = ExactNumber::parse_json_number(&fraction_text).unwrap();
         assert_eq!(instant.fraction(), &expected_fraction);
         assert_eq!(instant.fraction_decimal(), fraction_text);
@@ -289,7 +368,8 @@ fn main() {
          valid={valid}; rejected={rejected}; malformed_utf8={malformed}; boundary={boundary}; \
          pre_epoch={pre_epoch}; leap={leap}; known_offsets={known_offsets}; unknown_offsets={unknown_offsets}; \
          distinct_inputs={}; distinct_values={}",
-        distinct_inputs.len(), distinct_values.len()
+        distinct_inputs.len(),
+        distinct_values.len()
     );
     println!("Required time-parser fuzz invariants passed: 2048 cases.");
 }

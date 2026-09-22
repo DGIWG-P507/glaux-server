@@ -35,7 +35,13 @@ fn leap_year(year: i32) -> bool {
 
 fn month_days(year: i32, month: u32) -> u32 {
     match month {
-        2 => if leap_year(year) { 29 } else { 28 },
+        2 => {
+            if leap_year(year) {
+                29
+            } else {
+                28
+            }
+        }
         4 | 6 | 9 | 11 => 30,
         _ => 31,
     }
@@ -48,7 +54,10 @@ fn days_from_epoch(year: i32, month: u32, day: u32) -> i64 {
     } else {
         -(year..1970).map(days_in_year).sum::<i64>()
     };
-    years + (1..month).map(|value| i64::from(month_days(year, value))).sum::<i64>()
+    years
+        + (1..month)
+            .map(|value| i64::from(month_days(year, value)))
+            .sum::<i64>()
         + i64::from(day - 1)
 }
 
@@ -73,11 +82,21 @@ impl CivilCase {
 
     fn lexeme(&self) -> String {
         let offset = self.offset_minutes.unsigned_abs();
-        let sign = if self.offset_minutes < 0 || self.unknown_offset { '-' } else { '+' };
+        let sign = if self.offset_minutes < 0 || self.unknown_offset {
+            '-'
+        } else {
+            '+'
+        };
         format!(
             "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}{sign}{:02}:{:02}",
-            self.year, self.month, self.day, self.hour, self.minute, self.second,
-            offset / 60, offset % 60
+            self.year,
+            self.month,
+            self.day,
+            self.hour,
+            self.minute,
+            self.second,
+            offset / 60,
+            offset % 60
         )
     }
 }
@@ -98,7 +117,9 @@ fn generate(seed: u64) -> Vec<CivilCase> {
                 second: generator.bounded(60),
                 // Year-edge offset crossings are covered only by the lexical
                 // year contract; no artificial operational +/-14h limit.
-                offset_minutes: if unknown_offset { 0 } else {
+                offset_minutes: if unknown_offset {
+                    0
+                } else {
                     i32::try_from(generator.bounded(2879)).unwrap() - 1439
                 },
                 unknown_offset,
@@ -113,7 +134,11 @@ fn parse(text: &str) -> ExactInstant {
 }
 
 fn fraction(digits: &str) -> ExactNumber {
-    let text = if digits.is_empty() { "0".to_owned() } else { format!("0.{digits}") };
+    let text = if digits.is_empty() {
+        "0".to_owned()
+    } else {
+        format!("0.{digits}")
+    };
     ExactNumber::parse_json_number(&text).unwrap()
 }
 
@@ -139,7 +164,10 @@ fn time_property_generator_is_pinned() {
     assert_eq!(days_from_epoch(1969, 12, 31), -1);
     assert_eq!(days_from_epoch(2000, 1, 1), 10_957);
     assert_eq!(days_from_epoch(0, 1, 1), -719_528);
-    assert_eq!(days_from_epoch(2400, 1, 1) - days_from_epoch(2000, 1, 1), 146_097);
+    assert_eq!(
+        days_from_epoch(2400, 1, 1) - days_from_epoch(2000, 1, 1),
+        146_097
+    );
 }
 
 #[test]
@@ -148,7 +176,11 @@ fn time_property_calendar_and_offsets_match_integer_oracle() {
     for (index, case) in cases.iter().enumerate() {
         let source = case.lexeme();
         let instant = parse(&source);
-        assert_eq!(instant.civil_second(), case.expected_second(), "case={index}: {source}");
+        assert_eq!(
+            instant.civil_second(),
+            case.expected_second(),
+            "case={index}: {source}"
+        );
         assert!(!instant.is_leap_second());
         assert_eq!(instant.fraction(), &fraction(""));
         assert_eq!(instant.fraction_digits(), 0);
@@ -170,7 +202,10 @@ fn time_property_calendar_and_offsets_match_integer_oracle() {
             unknown_offset: false,
             ..case.clone()
         };
-        let utc = format!("{:04}-{:02}-{:02}T12:00:{:02}Z", case.year, case.month, case.day, case.second);
+        let utc = format!(
+            "{:04}-{:02}-{:02}T12:00:{:02}Z",
+            case.year, case.month, case.day, case.second
+        );
         assert_eq!(parse(&shifted.lexeme()), parse(&utc));
         if index > 0 {
             let previous = &cases[index - 1];
@@ -199,7 +234,10 @@ fn time_property_fraction_order_and_source_are_exact() {
         assert_eq!(high.fraction(), &fraction(&high_digits));
         assert_eq!(low.fraction_digits(), 19);
         assert_eq!(low.source_lexeme(), low_text);
-        assert!(low < high && high < parse("1970-01-01T00:00:00Z"), "case={index}");
+        assert!(
+            low < high && high < parse("1970-01-01T00:00:00Z"),
+            "case={index}"
+        );
         assert_eq!(low.cmp(&high), high.cmp(&low).reverse());
         let padded = format!("1969-12-31t23:59:59.{low_digits}00-00:00");
         let equivalent = parse(&padded);
@@ -208,7 +246,10 @@ fn time_property_fraction_order_and_source_are_exact() {
         assert_eq!(equivalent.offset_seconds(), 0);
         assert_eq!(equivalent.fraction_digits(), 21);
         assert_eq!(equivalent.source_lexeme(), padded);
-        assert_eq!(ExactNumber::parse_json_number(&low.fraction_decimal()).unwrap(), fraction(&low_digits));
+        assert_eq!(
+            ExactNumber::parse_json_number(&low.fraction_decimal()).unwrap(),
+            fraction(&low_digits)
+        );
     }
     let before = parse("2016-12-31T23:59:59.999999999999999999999999999999Z");
     let leap = parse("2016-12-31T23:59:60Z");
@@ -226,26 +267,54 @@ fn time_property_calendar_leap_and_grammar_boundaries() {
     for century in 0..100 {
         let year = century * 100;
         let february = format!("{year:04}-02-29T00:00:00Z");
-        assert_eq!(ExactInstant::parse_rfc3339(&february).is_ok(), century % 4 == 0, "{february}");
+        assert_eq!(
+            ExactInstant::parse_rfc3339(&february).is_ok(),
+            century % 4 == 0,
+            "{february}"
+        );
         let march = parse(&format!("{year:04}-03-01T00:00:00Z"));
         assert_eq!(march.civil_second(), days_from_epoch(year, 3, 1) * 86_400);
     }
     for text in [
-        "", "1970-01-01", "1970-01-01T00:00:00", "1970-01-01 00:00:00Z",
-        "1970-01-01T24:00:00Z", "1970-01-01T23:60:00Z", "1970-01-01T00:00:61Z",
-        "1970-00-01T00:00:00Z", "1970-13-01T00:00:00Z", "1970-01-00T00:00:00Z",
-        "2001-02-29T00:00:00Z", "2000-04-31T00:00:00Z", "2016-12-31T22:59:60Z",
-        "2017-12-31T23:59:60Z", "2016-12-31T23:59:60+01:00", "1969-12-31T23:59:60Z",
-        "1970-01-01T00:00:00.Z", "1970-01-01T00:00:00,1Z", "1970-01-01T00:00:00+0000",
-        "1970-01-01T00:00:00+24:00", "1970-01-01T00:00:00+00:60", " 1970-01-01T00:00:00Z",
-        "1970-01-01T00:00:00Z\n", "1970-01-01T00:00:00Z\0", "1970-01-01T00:00:00Z/..",
-        "10000-01-01T00:00:00Z", "１９７０-01-01T00:00:00Z",
+        "",
+        "1970-01-01",
+        "1970-01-01T00:00:00",
+        "1970-01-01 00:00:00Z",
+        "1970-01-01T24:00:00Z",
+        "1970-01-01T23:60:00Z",
+        "1970-01-01T00:00:61Z",
+        "1970-00-01T00:00:00Z",
+        "1970-13-01T00:00:00Z",
+        "1970-01-00T00:00:00Z",
+        "2001-02-29T00:00:00Z",
+        "2000-04-31T00:00:00Z",
+        "2016-12-31T22:59:60Z",
+        "2017-12-31T23:59:60Z",
+        "2016-12-31T23:59:60+01:00",
+        "1969-12-31T23:59:60Z",
+        "1970-01-01T00:00:00.Z",
+        "1970-01-01T00:00:00,1Z",
+        "1970-01-01T00:00:00+0000",
+        "1970-01-01T00:00:00+24:00",
+        "1970-01-01T00:00:00+00:60",
+        " 1970-01-01T00:00:00Z",
+        "1970-01-01T00:00:00Z\n",
+        "1970-01-01T00:00:00Z\0",
+        "1970-01-01T00:00:00Z/..",
+        "10000-01-01T00:00:00Z",
+        "１９７０-01-01T00:00:00Z",
     ] {
         assert!(ExactInstant::parse_rfc3339(text).is_err(), "{text:?}");
         assert!(text.parse::<ExactInstant>().is_err(), "{text:?}");
     }
-    assert_eq!(parse("0000-01-01T00:00:00Z").civil_second(), -62_167_219_200);
-    assert_eq!(parse("9999-12-31T23:59:59Z").civil_second(), 253_402_300_799);
+    assert_eq!(
+        parse("0000-01-01T00:00:00Z").civil_second(),
+        -62_167_219_200
+    );
+    assert_eq!(
+        parse("9999-12-31T23:59:59Z").civil_second(),
+        253_402_300_799
+    );
     assert_eq!(parse("1970-01-01T00:00:00+23:59").civil_second(), -86_340);
     assert_eq!(parse("1970-01-01T00:00:00-23:59").civil_second(), 86_340);
     assert_eq!(MAX_TIMESTAMP_BYTES, 4096);
