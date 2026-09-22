@@ -1,4 +1,5 @@
 """Offline packaging controls, not schema validation."""
+import copy
 import hashlib
 import json
 from pathlib import Path
@@ -41,12 +42,37 @@ class CorpusTests(unittest.TestCase):
             mirror.update(bytes=len(data), sha256=artifact["sha256"])
         self.save(manifest)
 
-    def test_baseline_exact_inventory(self):
+    def test_baseline_inventory_and_recursive_fixture_pairs(self):
         result = check(self.root)
         for key, value in {"artifacts": 138, "schemas": 129, "fixtures": 23,
                            "expectations_true": 7, "expectations_false": 16}.items():
             self.assertEqual(result[key], value, key)
         self.assertGreater(result["references"], 200)
+        # Authored fixture hygiene, not a replacement schema validator. The
+        # source Count.json requires its own label independently of Quantity.
+        def fixture(name):
+            return json.loads((self.root / "fixtures" / name).read_text())
+
+        def sample(record):
+            return record["fields"][0]["elementType"]
+
+        def count(record):
+            return sample(record)["fields"][1]["fields"][0]
+
+        expected_count = {"type": "Count", "name": "sequence", "label": "Sequence",
+                          "definition": "urn:glaux:fixture:sequence", "value": 1}
+        swe = fixture("swe-recursive.json")
+        self.assertEqual(count(swe), expected_count)
+        swe_negative = copy.deepcopy(swe)
+        count(swe_negative)["value"] = "one"
+        self.assertEqual(fixture("swe-recursive-invalid-count.json"), swe_negative)
+        sml = fixture("sensorml-recursive.json")
+        output = sml["components"][0]["components"][0]["outputs"][0]
+        self.assertEqual(count(output), expected_count)
+        sml_negative = copy.deepcopy(sml)
+        negative_output = sml_negative["components"][0]["components"][0]["outputs"][0]
+        del sample(negative_output)["fields"][0]["label"]
+        self.assertEqual(fixture("sensorml-recursive-missing-quantity-label.json"), sml_negative)
 
     def test_known_official_bytes_not_only_manifest(self):
         # Independently retrieved official-source digests, recorded in #7.

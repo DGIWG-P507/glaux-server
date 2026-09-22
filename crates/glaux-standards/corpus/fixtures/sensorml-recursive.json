@@ -46,6 +46,7 @@
                             "type": "Count",
                             "name": "sequence",
                             "definition": "urn:glaux:fixture:sequence",
+                            "label": "Sequence",
                             "value": 1
                           }
                         ]
