@@ -41,11 +41,21 @@ jobs:
           cargo --version --verbose
           rustfmt --version
           cargo clippy --version
-      - name: Verify formatting and lockfile reproduction
+      - name: Fetch the locked dependency archives
         shell: bash
         run: |
-          cargo fmt --all --check
-          cargo generate-lockfile --offline
+          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
+          cargo fetch --locked
+          git diff --exit-code -- Cargo.lock
+      - name: Verify formatting and locked dependencies
+        shell: bash
+        run: |
+          if ! cargo fmt --all --check; then
+            cargo fmt --all
+            git diff -- '*.rs' > "$RUNNER_TEMP/glaux-ci-evidence/rustfmt.patch"
+            exit 1
+          fi
+          python3 scripts/cargo_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/cargo-dependencies.json"
           git diff --exit-code -- Cargo.lock
       - name: Lint Rust and check Python syntax
         run: |
@@ -60,6 +70,9 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
           python3 -u scripts/check-execution.py rust | tee "$RUNNER_TEMP/glaux-ci-evidence/rust.log"
+      - name: Exercise the bounded schema-parser mutation campaign
+        shell: bash
+        run: python3 -u scripts/check-execution.py schema-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/schema-fuzz.log"
       - name: Fetch the pinned disposable database image
         shell: bash
         run: |
@@ -76,6 +89,8 @@ jobs:
           python3 -u scripts/check-execution.py database | tee "$RUNNER_TEMP/glaux-ci-evidence/database.log"
       - name: Verify required execution rejects disposable failures
         run: python3 -u scripts/test-ci-failures.py
+      - name: Verify validation assertions detect disposable faults
+        run: python3 -u scripts/test-validation-failures.py
       - name: Inventory resolved dependencies and licence evidence
         run: python3 scripts/dependency_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/dependency-inventory.json"
       - name: Preserve actual execution evidence

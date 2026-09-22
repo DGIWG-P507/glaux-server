@@ -101,6 +101,7 @@ def main():
             result = subprocess.run(
                 [sys.executable, "scripts/check-execution.py", suite], cwd=target,
                 text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                env={**os.environ, "CARGO_TARGET_DIR": str(Path(os.environ["RUNNER_TEMP"]) / "glaux-ci-control-target")},
                 timeout=210, check=False,
             )
             (EVIDENCE / (name + ".log")).write_text(result.stdout)

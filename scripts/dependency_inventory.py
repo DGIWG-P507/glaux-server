@@ -17,6 +17,7 @@ import sys
 import tomllib
 
 from database_harness import DisposablePostgis, PIN, ROOT, docker
+from cargo_inventory import cargo_inventory
 
 
 def require(condition, message):
@@ -33,38 +34,6 @@ def command(*args):
         print(result.stdout, end="", file=sys.stderr)
         result.check_returncode()
     return result.stdout.strip()
-
-
-def cargo_inventory():
-    metadata = json.loads(command(
-        "cargo", "metadata", "--format-version=1", "--locked", "--offline",
-    ))
-    expected = {
-        "glaux-domain": set(),
-        "glaux-standards": {"glaux-domain"},
-        "glaux-server": {"glaux-domain", "glaux-standards"},
-    }
-    packages = {package["id"]: package for package in metadata["packages"]}
-    require(len(packages) == 3, "Inventory needs review: unexpected Cargo packages.")
-    require(set(packages) == set(metadata["workspace_members"]),
-            "Inventory needs review: non-workspace Cargo dependency.")
-    require({item["name"] for item in packages.values()} == set(expected),
-            "Inventory needs review: changed workspace package names.")
-    nodes = {node["id"]: node for node in metadata["resolve"]["nodes"]}
-    require(set(nodes) == set(packages), "Incomplete resolved Cargo dependency graph.")
-    inventory = []
-    for package_id, package in sorted(packages.items()):
-        require(package["source"] is None and package["license"] == "Apache-2.0",
-                "Inventory needs review: external source or original-code licence drift.")
-        edges = sorted(packages[edge["pkg"]]["name"] for edge in nodes[package_id]["deps"])
-        require(set(edges) == expected[package["name"]],
-                "Inventory needs review: changed Cargo dependency edges.")
-        inventory.append({
-            "name": package["name"], "version": package["version"],
-            "declared_license": package["license"], "source": "local workspace",
-            "dependencies": edges, "enabled_features": nodes[package_id]["features"],
-        })
-    return {"packages": inventory, "third_party_cargo_packages": 0}
 
 
 def action_inventory():
@@ -193,7 +162,7 @@ def main():
         "cargo": cargo_inventory(), "actions": action_inventory(),
         "database_image": image_inventory(),
         "limitations": [
-            "No third-party Cargo dependency has been approved by this inventory.",
+            "Cargo packages/features/notices match the separately reviewed committed snapshot; this inventory is evidence, not automatic dependency or legal approval.",
             "Missing copyright files are disclosed, not converted to a guessed licence.",
             "No CVE scan, legal approval, release SBOM or security certification is claimed.",
             "Hosted runner OS/tools and bundled action/toolchain components retain their own notices; this is not a complete transitive inventory of the runner.",

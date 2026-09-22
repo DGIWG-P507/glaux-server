@@ -10,3 +10,12 @@ publish.workspace = true
 
 [dependencies]
 glaux-domain.workspace = true
+jsonschema.workspace = true
+serde_json.workspace = true
+
+[build-dependencies]
+serde_json.workspace = true
+
+[[example]]
+name = "schema-parser-fuzz"
+path = "../../fuzz/schema_parser.rs"
