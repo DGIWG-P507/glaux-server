@@ -88,12 +88,15 @@ fn wrapper(round: usize, replacement: &str) -> (Contract, Vec<u8>) {
     let (contract, seed) = WRAPPERS[round % WRAPPERS.len()];
     let source = std::str::from_utf8(seed).expect("UTF-8 source fixture");
     assert_eq!(source.matches("\"Temperature\"").count(), 1);
-    let changed = source.replace("\"Temperature\"", replacement);
+    let changed = source.replace("\"Temperature\"", replacement).replace(
+        "urn:glaux:fixture:temperature",
+        &format!("urn:glaux:fuzz:temperature:{round}"),
+    );
     (contract, format!("\t{changed}\n ").into_bytes())
 }
 
 fn valid_seed(index: usize) -> (Contract, &'static [u8]) {
-    if index % 5 == 0 {
+    if index.is_multiple_of(5) {
         (Contract::Quantity, QUANTITY)
     } else {
         WRAPPERS[index % 5 - 1]
@@ -130,7 +133,7 @@ fn mutate(seed: &[u8], bits: u64, operation: usize) -> Vec<u8> {
         4 => {
             let length = (1 + (bits >> 16) as usize % 16).min(bytes.len() - at);
             let repeated = bytes[at..at + length].to_vec();
-            bytes.splice(at..at, repeated);
+            drop(bytes.splice(at..at, repeated));
         }
         _ => {
             let token: &[u8] = match bits % 4 {
@@ -139,7 +142,7 @@ fn mutate(seed: &[u8], bits: u64, operation: usize) -> Vec<u8> {
                 2 => b"null",
                 _ => b"\xff]",
             };
-            bytes.splice(at..at, token.iter().copied());
+            drop(bytes.splice(at..at, token.iter().copied()));
         }
     }
     assert_ne!(bytes, seed, "mutation left its source seed unchanged");
@@ -198,8 +201,12 @@ fn generate(partition: usize, round: usize, bits: u64) -> Case {
             (contract, bytes, Some(Err(Failure::Structure)))
         }
         4 => {
-            let (contract, seed) = valid_seed(round);
-            (contract, malformed(seed, round), Some(Err(Failure::Malformed)))
+            let (contract, seed) = if round.is_multiple_of(5) {
+                (Contract::Quantity, quantity(round, bits, Some(&label(round))))
+            } else {
+                wrapper(round, &label(round))
+            };
+            (contract, malformed(&seed, round), Some(Err(Failure::Malformed)))
         }
         5 => {
             let (contract, seed) = valid_seed(round);
