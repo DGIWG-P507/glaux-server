@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, enforced CI, offline schema validation and typed identities — 22 September 2026 UTC.**
+**Initial build, enforced CI, offline schema validation, typed identities and exact numbers — 22 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
@@ -29,6 +29,12 @@ locators, URI-form published UIDs and authority-qualified source identifiers.
 Strict parsing, fallible generation and type-boundary checks prevent accidental
 mixing; identifiers do not grant permission or establish observation time.
 Database uniqueness, resource-family models and HTTP behavior remain later work.
+
+[Exact numeric primitives](docs/exact-numbers.md) now preserve large Counts and
+decimal measured values without silent rounding, compare values exactly and keep
+non-finite states explicit. Original decimal spelling or finite binary64 bits
+remain available. Complete SWE codecs, unit conversion and numeric storage are
+still later work.
 
 ## Planned capabilities
 

@@ -78,6 +78,11 @@ jobs:
         run: |
           python3 -u scripts/check_identity_boundary.py | tee "$RUNNER_TEMP/glaux-ci-evidence/identity-boundary.log"
           python3 -u scripts/test-identity-failures.py
+      - name: Exercise exact numeric parsing and detect lossy numeric faults
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py numeric-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/numeric-fuzz.log"
+          python3 -u scripts/test-numeric-failures.py
       - name: Fetch the pinned disposable database image
         shell: bash
         run: |

@@ -22,7 +22,7 @@ WORKSPACE_EDGES = {
     "glaux-standards": {"glaux-domain"},
     "glaux-server": {"glaux-domain", "glaux-standards"},
 }
-# Tasks #8/#9 selections; the resolved graph is separately reviewed as a snapshot.
+# Task-owned selections; the resolved graph is separately reviewed as a snapshot.
 DIRECT_DEPENDENCIES = {
     "glaux-standards": {
         "jsonschema": {"version": "=0.56.0", "default_features": False, "features": []},
@@ -33,6 +33,9 @@ DIRECT_DEPENDENCIES = {
         "uuid": {"version": "=1.26.1", "default_features": False, "features": []},
         "getrandom": {"version": "=0.4.3", "default_features": False, "features": []},
         "fluent-uri": {"version": "=0.4.1", "default_features": False, "features": []},
+        "num-bigint": {"version": "=0.4.8", "default_features": False, "features": []},
+        "num-rational": {"version": "=0.4.2", "default_features": False, "features": ["num-bigint"]},
+        "num-traits": {"version": "=0.2.19", "default_features": False, "features": []},
     },
 }
 NETWORK_CLIENTS = {

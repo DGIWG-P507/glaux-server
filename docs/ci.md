@@ -25,6 +25,8 @@ cargo build --workspace --locked --offline
 python3 scripts/check-bootstrap.py
 python3 -u scripts/check-execution.py rust
 python3 -u scripts/check-execution.py schema-fuzz
+python3 -u scripts/check-execution.py numeric-fuzz
+python3 -u scripts/test-numeric-failures.py
 python3 -u scripts/check_identity_boundary.py
 python3 -u scripts/test-identity-failures.py
 python3 scripts/check_corpus.py
@@ -69,7 +71,7 @@ proof for this packaging task, not a claim that schema validation ran.
 
 [check-execution.py](../scripts/check-execution.py) preserves command failure and
 requires actual successful execution evidence. It accepts exactly `rust`,
-`schema-fuzz` or `database`, not arbitrary selectors. Every named Rust test must
+`schema-fuzz`, `numeric-fuzz` or `database`, not arbitrary selectors. Every named Rust test must
 execute successfully, and the fuzz campaign must emit its completed-invariant
 marker; the wrapper imposes a 180-second process timeout. The [database runner](../scripts/test_database.py)
 also rejects missing or skipped cases. No step uses continue-on-error to turn
@@ -103,6 +105,12 @@ and the [resolved dependency/licence inventory](dependencies.md). Retention is
 outcomes. Rerunning the pinned scripts regenerates evidence, not the exact old
 run identity. Upload failure is itself a failed check; early failed setup may
 leave no artifact and remains a failure, with normal GitHub logs.
+
+The [exact numeric checks](exact-numbers.md) add eight unit and four property tests,
+a 2,048-case deterministic parsing campaign, and two deliberate lossy-conversion/
+comparison faults in disposable copies. Their exact baselines must pass before
+the intended assertion failures count. Results and per-fault logs are retained
+alongside the existing suite evidence; no score replaces the value assertions.
 
 ## Main-branch rule
 
