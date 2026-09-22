@@ -4,7 +4,11 @@
 //! UUIDv7 leaks approximate minting time; "opaque" does not mean confidential.
 //! Persistence owns uniqueness, conflicts and non-reuse after deletion.
 
-use std::{fmt, str::FromStr, time::{Duration, SystemTime, UNIX_EPOCH}};
+use std::{
+    fmt,
+    str::FromStr,
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 
 /// Local parsing budget, not an OGC or URI-standard length limit.
 pub const MAX_IDENTITY_TEXT_BYTES: usize = 4096;
@@ -23,7 +27,9 @@ impl fmt::Display for IdentityError {
         f.write_str(match self {
             Self::InvalidLocalId => "expected a canonical lowercase UUIDv7 local ID",
             Self::InvalidUid => "expected an absolute URI within the identity text budget",
-            Self::InvalidSourceText => "expected nonempty source text without controls within the identity text budget",
+            Self::InvalidSourceText => {
+                "expected nonempty source text without controls within the identity text budget"
+            }
         })
     }
 }
@@ -62,7 +68,8 @@ impl LocalId {
     /// Not guaranteed monotonic or collision-free; storage must reject conflicts.
     /// OS entropy can block (for example during early boot); no deadline is promised.
     pub fn generate() -> Result<Self, GenerationError> {
-        let elapsed = SystemTime::now().duration_since(UNIX_EPOCH)
+        let elapsed = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
             .map_err(|_| GenerationError::ClockBeforeEpoch);
         Self::generate_with(elapsed, |bytes| {
             getrandom::fill(bytes).map_err(|_| GenerationError::EntropyUnavailable)
@@ -80,7 +87,9 @@ impl LocalId {
         }
         let mut entropy = [0_u8; 10];
         fill(&mut entropy)?; // On error even partially filled bytes must be discarded.
-        Ok(Self(uuid::Builder::from_unix_timestamp_millis(millis as u64, &entropy).into_uuid()))
+        Ok(Self(
+            uuid::Builder::from_unix_timestamp_millis(millis as u64, &entropy).into_uuid(),
+        ))
     }
 }
 
@@ -88,13 +97,15 @@ impl FromStr for LocalId {
     type Err = IdentityError;
 
     fn from_str(text: &str) -> Result<Self, Self::Err> {
-        if text.len() != 36 || !text.bytes().enumerate().all(|(i, byte)| {
-            if matches!(i, 8 | 13 | 18 | 23) {
-                byte == b'-'
-            } else {
-                byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)
-            }
-        }) {
+        if text.len() != 36
+            || !text.bytes().enumerate().all(|(i, byte)| {
+                if matches!(i, 8 | 13 | 18 | 23) {
+                    byte == b'-'
+                } else {
+                    byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)
+                }
+            })
+        {
             return Err(IdentityError::InvalidLocalId);
         }
         let value = uuid::Uuid::try_parse(text).map_err(|_| IdentityError::InvalidLocalId)?;
@@ -118,7 +129,9 @@ impl fmt::Display for LocalId {
 pub struct Uid(String);
 
 impl Uid {
-    pub fn as_str(&self) -> &str { &self.0 }
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
 }
 
 impl FromStr for Uid {
@@ -133,11 +146,14 @@ impl FromStr for Uid {
 }
 
 impl fmt::Display for Uid {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str(&self.0) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
 }
 
 fn source_text(text: &str) -> Result<String, IdentityError> {
-    if text.is_empty() || text.len() > MAX_IDENTITY_TEXT_BYTES || text.chars().any(char::is_control) {
+    if text.is_empty() || text.len() > MAX_IDENTITY_TEXT_BYTES || text.chars().any(char::is_control)
+    {
         return Err(IdentityError::InvalidSourceText);
     }
     Ok(text.to_owned())
@@ -148,16 +164,22 @@ fn source_text(text: &str) -> Result<String, IdentityError> {
 pub struct SourceAuthority(String);
 
 impl SourceAuthority {
-    pub fn as_str(&self) -> &str { &self.0 }
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
 }
 
 impl FromStr for SourceAuthority {
     type Err = IdentityError;
-    fn from_str(text: &str) -> Result<Self, Self::Err> { source_text(text).map(Self) }
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
+        source_text(text).map(Self)
+    }
 }
 
 impl fmt::Display for SourceAuthority {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str(&self.0) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
 }
 
 /// Opaque source-assigned value; meaningful as an identity only with its authority.
@@ -165,16 +187,22 @@ impl fmt::Display for SourceAuthority {
 pub struct SourceIdentifier(String);
 
 impl SourceIdentifier {
-    pub fn as_str(&self) -> &str { &self.0 }
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
 }
 
 impl FromStr for SourceIdentifier {
     type Err = IdentityError;
-    fn from_str(text: &str) -> Result<Self, Self::Err> { source_text(text).map(Self) }
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
+        source_text(text).map(Self)
+    }
 }
 
 impl fmt::Display for SourceIdentifier {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str(&self.0) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
 }
 
 /// Equality and hashing use both source fields; no inference of a local locator.
@@ -186,10 +214,17 @@ pub struct SourceIdentity {
 
 impl SourceIdentity {
     pub fn new(authority: SourceAuthority, identifier: SourceIdentifier) -> Self {
-        Self { authority, identifier }
+        Self {
+            authority,
+            identifier,
+        }
     }
-    pub fn authority(&self) -> &SourceAuthority { &self.authority }
-    pub fn identifier(&self) -> &SourceIdentifier { &self.identifier }
+    pub fn authority(&self) -> &SourceAuthority {
+        &self.authority
+    }
+    pub fn identifier(&self) -> &SourceIdentifier {
+        &self.identifier
+    }
 }
 
 #[cfg(test)]
@@ -204,23 +239,43 @@ mod tests {
     fn local_id_rfc_vector_and_exact_round_trip() {
         let id: LocalId = RFC_ID.parse().unwrap();
         assert_eq!(id.to_string(), RFC_ID);
-        assert_eq!(id.0.as_bytes(), &[0x01,0x7f,0x22,0xe2,0x79,0xb0,0x7c,0xc3,0x98,0xc4,0xdc,0x0c,0x0c,0x07,0x39,0x8f]);
+        assert_eq!(
+            id.0.as_bytes(),
+            &[
+                0x01, 0x7f, 0x22, 0xe2, 0x79, 0xb0, 0x7c, 0xc3, 0x98, 0xc4, 0xdc, 0x0c, 0x0c, 0x07,
+                0x39, 0x8f
+            ]
+        );
         let minted = LocalId::generate_with(Ok(Duration::from_millis(1645557742000)), |bytes| {
-            *bytes = [0x0c,0xc3,0x18,0xc4,0xdc,0x0c,0x0c,0x07,0x39,0x8f];
+            *bytes = [0x0c, 0xc3, 0x18, 0xc4, 0xdc, 0x0c, 0x0c, 0x07, 0x39, 0x8f];
             Ok(())
-        }).unwrap();
+        })
+        .unwrap();
         assert_eq!(minted.to_string(), RFC_ID);
     }
 
     #[test]
     fn local_id_rejects_malformed_and_noncanonical_forms() {
-        for text in ["", "sensor-12", "017f22e279b07cc398c4dc0c0c07398f",
-            "017F22E2-79B0-7CC3-98C4-DC0C0C07398F", "017f22e2-79b0-7cc3-98c4-dc0c0c07398g",
-            "{017f22e2-79b0-7cc3-98c4-dc0c0c07398f}", "urn:uuid:017f22e2-79b0-7cc3-98c4-dc0c0c07398f",
-            " 017f22e2-79b0-7cc3-98c4-dc0c0c07398f", "017f22e2-79b0-7cc3-98c4-dc0c0c07398f\n",
-            "017f22e2%2d79b0-7cc3-98c4-dc0c0c07398f", "017f22e2_79b0-7cc3-98c4-dc0c0c07398f",
-            "00000000-0000-0000-0000-000000000000", "ffffffff-ffff-ffff-ffff-ffffffffffff"] {
-            assert_eq!(text.parse::<LocalId>(), Err(IdentityError::InvalidLocalId), "{text:?}");
+        for text in [
+            "",
+            "sensor-12",
+            "017f22e279b07cc398c4dc0c0c07398f",
+            "017F22E2-79B0-7CC3-98C4-DC0C0C07398F",
+            "017f22e2-79b0-7cc3-98c4-dc0c0c07398g",
+            "{017f22e2-79b0-7cc3-98c4-dc0c0c07398f}",
+            "urn:uuid:017f22e2-79b0-7cc3-98c4-dc0c0c07398f",
+            " 017f22e2-79b0-7cc3-98c4-dc0c0c07398f",
+            "017f22e2-79b0-7cc3-98c4-dc0c0c07398f\n",
+            "017f22e2%2d79b0-7cc3-98c4-dc0c0c07398f",
+            "017f22e2_79b0-7cc3-98c4-dc0c0c07398f",
+            "00000000-0000-0000-0000-000000000000",
+            "ffffffff-ffff-ffff-ffff-ffffffffffff",
+        ] {
+            assert_eq!(
+                text.parse::<LocalId>(),
+                Err(IdentityError::InvalidLocalId),
+                "{text:?}"
+            );
         }
     }
 
@@ -231,29 +286,62 @@ mod tests {
             for variant in 0..16 {
                 let text = format!("017f22e2-79b0-{version:x}cc3-{variant:x}8c4-dc0c0c07398f");
                 let result = text.parse::<LocalId>();
-                assert_eq!(result.is_ok(), version == 7 && (8..=11).contains(&variant), "{text}");
-                if let Ok(id) = result { assert_eq!(id.to_string(), text); }
+                assert_eq!(
+                    result.is_ok(),
+                    version == 7 && (8..=11).contains(&variant),
+                    "{text}"
+                );
+                if let Ok(id) = result {
+                    assert_eq!(id.to_string(), text);
+                }
             }
         }
     }
 
     #[test]
     fn generation_checks_clock_and_entropy_before_emitting_id() {
-        assert_eq!(LocalId::generate_with(Err(GenerationError::ClockBeforeEpoch), |_| panic!("entropy on invalid clock")), Err(GenerationError::ClockBeforeEpoch));
-        assert_eq!(LocalId::generate_with(Ok(Duration::from_millis(1_u64 << 48)), |_| panic!("entropy on overflowing clock")), Err(GenerationError::ClockOutOfRange));
-        assert_eq!(LocalId::generate_with(Ok(Duration::ZERO), |bytes| {
-            bytes.fill(0x55); // Partial or complete writes must not escape after an error.
+        assert_eq!(
+            LocalId::generate_with(Err(GenerationError::ClockBeforeEpoch), |_| panic!(
+                "entropy on invalid clock"
+            )),
+            Err(GenerationError::ClockBeforeEpoch)
+        );
+        assert_eq!(
+            LocalId::generate_with(Ok(Duration::from_millis(1_u64 << 48)), |_| panic!(
+                "entropy on overflowing clock"
+            )),
+            Err(GenerationError::ClockOutOfRange)
+        );
+        assert_eq!(
+            LocalId::generate_with(Ok(Duration::ZERO), |bytes| {
+                bytes.fill(0x55); // Partial or complete writes must not escape after an error.
+                Err(GenerationError::EntropyUnavailable)
+            }),
             Err(GenerationError::EntropyUnavailable)
-        }), Err(GenerationError::EntropyUnavailable));
-        let first = LocalId::generate_with(Ok(Duration::ZERO), |bytes| { bytes.fill(0); Ok(()) }).unwrap();
+        );
+        let first = LocalId::generate_with(Ok(Duration::ZERO), |bytes| {
+            bytes.fill(0);
+            Ok(())
+        })
+        .unwrap();
         assert_eq!(first.to_string(), "00000000-0000-7000-8000-000000000000");
-        let last = LocalId::generate_with(Ok(Duration::from_millis((1_u64 << 48)-1)), |bytes| { bytes.fill(0xff); Ok(()) }).unwrap();
+        let last = LocalId::generate_with(Ok(Duration::from_millis((1_u64 << 48) - 1)), |bytes| {
+            bytes.fill(0xff);
+            Ok(())
+        })
+        .unwrap();
         assert_eq!(last.to_string(), "ffffffff-ffff-7fff-bfff-ffffffffffff");
     }
 
     #[test]
     fn generation_uses_fresh_randomness_without_claiming_temporal_order() {
-        let make = |millis, entropy| LocalId::generate_with(Ok(Duration::from_millis(millis)), |bytes| { bytes.fill(entropy); Ok(()) }).unwrap();
+        let make = |millis, entropy| {
+            LocalId::generate_with(Ok(Duration::from_millis(millis)), |bytes| {
+                bytes.fill(entropy);
+                Ok(())
+            })
+            .unwrap()
+        };
         // Repeated/rolled-back clocks are allowed. The millisecond is not domain time.
         let ids = [make(123, 0), make(123, 1), make(122, 2)];
         assert_eq!(ids.into_iter().collect::<HashSet<_>>().len(), 3);
@@ -268,21 +356,50 @@ mod tests {
 
     #[test]
     fn uid_preserves_absolute_uri_spelling_without_local_id_inference() {
-        for text in ["urn:example:temperature", "https://EXAMPLE.test/a%2Fb?x=%41#part", "custom:value", "x:", "file:///sensor"] {
+        for text in [
+            "urn:example:temperature",
+            "https://EXAMPLE.test/a%2Fb?x=%41#part",
+            "custom:value",
+            "x:",
+            "file:///sensor",
+        ] {
             let uid: Uid = text.parse().unwrap();
             assert_eq!(uid.as_str(), text);
             assert_eq!(uid.to_string(), text);
             assert!(text.parse::<LocalId>().is_err());
         }
-        assert_ne!("https://example.test/%41".parse::<Uid>().unwrap(), "https://example.test/A".parse::<Uid>().unwrap());
-        assert_ne!("https://EXAMPLE.test/a".parse::<Uid>().unwrap(), "https://example.test/a".parse::<Uid>().unwrap());
+        assert_ne!(
+            "https://example.test/%41".parse::<Uid>().unwrap(),
+            "https://example.test/A".parse::<Uid>().unwrap()
+        );
+        assert_ne!(
+            "https://EXAMPLE.test/a".parse::<Uid>().unwrap(),
+            "https://example.test/a".parse::<Uid>().unwrap()
+        );
         let full = format!("urn:uuid:{RFC_ID}");
         assert!(full.parse::<Uid>().is_ok());
         assert!(full.parse::<LocalId>().is_err());
-        for text in ["", RFC_ID, "sensor-12", "/relative", "//host/path", "x:a b", " x:a", "x:a\n", "x:%zz", "x:%", "x:é", "1x:value"] {
-            assert_eq!(text.parse::<Uid>(), Err(IdentityError::InvalidUid), "{text:?}");
+        for text in [
+            "",
+            RFC_ID,
+            "sensor-12",
+            "/relative",
+            "//host/path",
+            "x:a b",
+            " x:a",
+            "x:a\n",
+            "x:%zz",
+            "x:%",
+            "x:é",
+            "1x:value",
+        ] {
+            assert_eq!(
+                text.parse::<Uid>(),
+                Err(IdentityError::InvalidUid),
+                "{text:?}"
+            );
         }
-        let at_limit = format!("x:{}", "a".repeat(MAX_IDENTITY_TEXT_BYTES-2));
+        let at_limit = format!("x:{}", "a".repeat(MAX_IDENTITY_TEXT_BYTES - 2));
         assert!(at_limit.parse::<Uid>().is_ok());
         assert!(format!("{at_limit}a").parse::<Uid>().is_err());
     }
@@ -295,15 +412,33 @@ mod tests {
         assert_ne!(first, second);
         assert_eq!(first.authority().as_str(), "Sensor Fleet A");
         assert_eq!(first.identifier().as_str(), " device:α%2f ");
-        assert_eq!([first.clone(), first, second].into_iter().collect::<HashSet<_>>().len(), 2);
+        assert_eq!(
+            [first.clone(), first, second]
+                .into_iter()
+                .collect::<HashSet<_>>()
+                .len(),
+            2
+        );
         // A source can use URI- or UUID-looking text without changing its type/meaning.
         assert_eq!(RFC_ID.parse::<SourceIdentifier>().unwrap().as_str(), RFC_ID);
-        assert_eq!("urn:example:source".parse::<SourceAuthority>().unwrap().as_str(), "urn:example:source");
+        assert_eq!(
+            "urn:example:source"
+                .parse::<SourceAuthority>()
+                .unwrap()
+                .as_str(),
+            "urn:example:source"
+        );
         for text in ["", "a\n", "\0", "a\u{0085}"] {
-            assert_eq!(text.parse::<SourceAuthority>(), Err(IdentityError::InvalidSourceText));
-            assert_eq!(text.parse::<SourceIdentifier>(), Err(IdentityError::InvalidSourceText));
+            assert_eq!(
+                text.parse::<SourceAuthority>(),
+                Err(IdentityError::InvalidSourceText)
+            );
+            assert_eq!(
+                text.parse::<SourceIdentifier>(),
+                Err(IdentityError::InvalidSourceText)
+            );
         }
-        let limit = "é".repeat(MAX_IDENTITY_TEXT_BYTES/2);
+        let limit = "é".repeat(MAX_IDENTITY_TEXT_BYTES / 2);
         assert!(limit.parse::<SourceAuthority>().is_ok());
         assert!(limit.parse::<SourceIdentifier>().is_ok());
         let too_long = format!("{limit}a");

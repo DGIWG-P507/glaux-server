@@ -1,15 +1,15 @@
 {
-  "cargo_lock_sha256": "729e80f3c1ab2c3286ccc55eca3ce82882f0f9256134732fec93ef9d0e3388de",
+  "cargo_lock_sha256": "3fa0e034625d917ed34891efaa371fe3688f6d71ba3fe84674710c9df9567fed",
   "format_version": 1,
   "licence_metadata_unavailable": [],
   "manifests": [
     {
       "path": "Cargo.toml",
-      "sha256": "8ab79ca1e261c42c23726d8f628d5b14258086b7c45161b48feb97f63a0cbeeb"
+      "sha256": "68cc386bca2f2de7195a1348cbf0faf9edeb8af1baf1659d7c0bd6d0553f41b0"
     },
     {
       "path": "crates/glaux-domain/Cargo.toml",
-      "sha256": "f181e913017e2a1a60c22a4557fc04abd23d4d4b5403c118e506f9d3fa7dc2e6"
+      "sha256": "003158b6fbb5ccf8559fa003f2d3e243e6eb68530837eceb95d0058910396efd"
     },
     {
       "path": "crates/glaux-server/Cargo.toml",
@@ -25,6 +25,7 @@
     "jsonschema-regex 0.56.0 (registry+https://github.com/rust-lang/crates.io-index)",
     "jsonschema-value 0.56.0 (registry+https://github.com/rust-lang/crates.io-index)",
     "r-efi 5.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+    "r-efi 6.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
     "uuid-simd 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
     "vsimd 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)"
   ],
@@ -774,10 +775,124 @@
       "version": "0.3.4"
     },
     {
+      "checksum": "300e883d756b2e4ec94e02791f39b04b522276138852cfc41d9fb7e904106099",
+      "declared_license": "MIT OR Apache-2.0",
+      "declared_license_file": null,
+      "dependencies": [
+        {
+          "kinds": [
+            {
+              "kind": null,
+              "target": "cfg(all(any(target_os = \"linux\", target_os = \"android\"), not(any(all(target_os = \"linux\", target_env = \"\"), getrandom_backend = \"custom\", getrandom_backend = \"linux_raw\", getrandom_backend = \"rdrand\", getrandom_backend = \"rndr\"))))"
+            },
+            {
+              "kind": null,
+              "target": "cfg(any(target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"hurd\", target_os = \"illumos\", target_os = \"cygwin\", all(target_os = \"horizon\", target_arch = \"arm\")))"
+            },
+            {
+              "kind": null,
+              "target": "cfg(any(target_os = \"haiku\", target_os = \"redox\", target_os = \"nto\", target_os = \"aix\"))"
+            },
+            {
+              "kind": null,
+              "target": "cfg(any(target_os = \"ios\", target_os = \"visionos\", target_os = \"watchos\", target_os = \"tvos\"))"
+            },
+            {
+              "kind": null,
+              "target": "cfg(any(target_os = \"macos\", target_os = \"openbsd\", target_os = \"vita\", target_os = \"emscripten\"))"
+            },
+            {
+              "kind": null,
+              "target": "cfg(target_os = \"netbsd\")"
+            },
+            {
+              "kind": null,
+              "target": "cfg(target_os = \"solaris\")"
+            },
+            {
+              "kind": null,
+              "target": "cfg(target_os = \"vxworks\")"
+            }
+          ],
+          "name": "libc",
+          "package": "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)"
+        },
+        {
+          "kinds": [
+            {
+              "kind": null,
+              "target": "cfg(all(target_os = \"uefi\", getrandom_backend = \"efi_rng\"))"
+            }
+          ],
+          "name": "r_efi",
+          "package": "r-efi 6.0.0 (registry+https://github.com/rust-lang/crates.io-index)"
+        },
+        {
+          "kinds": [
+            {
+              "kind": null,
+              "target": null
+            }
+          ],
+          "name": "cfg_if",
+          "package": "cfg-if 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)"
+        }
+      ],
+      "enabled_features": [],
+      "fetched_archive": {
+        "file": "getrandom-0.4.3.crate",
+        "sha256": "300e883d756b2e4ec94e02791f39b04b522276138852cfc41d9fb7e904106099"
+      },
+      "name": "getrandom",
+      "notice_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "aaff376532ea30a0cd5330b9502ad4a4c8bf769c539c87ffe78819d188a18ebf"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "523a42c25d245dde9c015f882cec7f4555aad883382a6cf19b4b7d9b2cd5419b"
+        }
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "version": "0.4.3"
+    },
+    {
       "checksum": null,
       "declared_license": "Apache-2.0",
       "declared_license_file": null,
-      "dependencies": [],
+      "dependencies": [
+        {
+          "kinds": [
+            {
+              "kind": null,
+              "target": null
+            }
+          ],
+          "name": "fluent_uri",
+          "package": "fluent-uri 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)"
+        },
+        {
+          "kinds": [
+            {
+              "kind": null,
+              "target": null
+            }
+          ],
+          "name": "getrandom",
+          "package": "getrandom 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)"
+        },
+        {
+          "kinds": [
+            {
+              "kind": null,
+              "target": null
+            }
+          ],
+          "name": "uuid",
+          "package": "uuid 1.26.1 (registry+https://github.com/rust-lang/crates.io-index)"
+        }
+      ],
       "enabled_features": [],
       "fetched_archive": null,
       "name": "glaux-domain",
@@ -2165,6 +2280,21 @@
       "version": "5.3.0"
     },
     {
+      "checksum": "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf",
+      "declared_license": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+      "declared_license_file": null,
+      "dependencies": [],
+      "enabled_features": [],
+      "fetched_archive": {
+        "file": "r-efi-6.0.0.crate",
+        "sha256": "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
+      },
+      "name": "r-efi",
+      "notice_files": [],
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "version": "6.0.0"
+    },
+    {
       "checksum": "ed2bf2547551a7053d6fdfafda3f938979645c44812fbfcda098faae3f1a362d",
       "declared_license": "MIT",
       "declared_license_file": null,
@@ -3179,6 +3309,30 @@
       "version": "1.0.26"
     },
     {
+      "checksum": "2ef6dac1e96601b4fb3acccccff2139741fcb757cb9a36089bf5be91cfb285ce",
+      "declared_license": "Apache-2.0 OR MIT",
+      "declared_license_file": null,
+      "dependencies": [],
+      "enabled_features": [],
+      "fetched_archive": {
+        "file": "uuid-1.26.1.crate",
+        "sha256": "2ef6dac1e96601b4fb3acccccff2139741fcb757cb9a36089bf5be91cfb285ce"
+      },
+      "name": "uuid",
+      "notice_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "436bc5a105d8e57dcd8778730f3754f7bf39c14d2f530e4cde4bd2d17a83ec3d"
+        }
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "version": "1.26.1"
+    },
+    {
       "checksum": "23b082222b4f6619906941c17eb2297fff4c2fb96cb60164170522942a200bd8",
       "declared_license": "MIT",
       "declared_license_file": null,
@@ -3703,5 +3857,5 @@
       "version": "1.0.23"
     }
   ],
-  "third_party_cargo_packages": 79
+  "third_party_cargo_packages": 82
 }

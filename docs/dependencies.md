@@ -69,17 +69,17 @@ tools, image, package data, malformed accounting or cleanup failures are errors.
 
 ## What this does not establish
 
-Task #8's reviewed lock contains 79 registry packages, including target-specific
+Task #9's reviewed lock contains 82 registry packages (three more than #8), including target-specific
 dependencies not necessarily compiled on Linux. No HTTP client or jsonschema
 HTTP/filesystem retrieval feature is enabled. All declared expressions offer
 permissive terms; compound Unicode data terms remain recorded rather than reduced
 to the crate's MIT/Apache heading. This is dependency-selection accounting, not
 a legal opinion or a completed release-redistribution check.
 
-Five archives contain no separately named licence/notice file: `jsonschema-regex`
+Six archives contain no separately named licence/notice file: `jsonschema-regex`
 and `jsonschema-value` 0.56.0 (MIT, [upstream workspace](https://github.com/Stranger6667/jsonschema/tree/rust-v0.56.0)),
 `uuid-simd` and `vsimd` 0.8.0 (MIT, [upstream](https://github.com/Nugine/simd)), and
-`r-efi` 5.3.0 (MIT OR Apache-2.0 OR LGPL-2.1-or-later,
+`r-efi` 5.3.0 and 6.0.0 (MIT OR Apache-2.0 OR LGPL-2.1-or-later,
 [upstream](https://github.com/r-efi/r-efi)). Their package metadata is present;
 the snapshot explicitly lists the absent packaged files. Do not describe them as
 missing licence declarations or silently claim their notices were present.

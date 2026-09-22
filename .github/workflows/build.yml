@@ -41,18 +41,6 @@ jobs:
           cargo --version --verbose
           rustfmt --version
           cargo clippy --version
-      - name: Prepare unapproved task 9 dependency and formatting candidate
-        shell: bash
-        run: |
-          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
-          cargo fetch
-          cargo fmt --all
-          cp Cargo.lock "$RUNNER_TEMP/glaux-ci-evidence/Cargo.lock"
-          git diff -- '*.rs' > "$RUNNER_TEMP/glaux-ci-evidence/rustfmt.patch"
-          python3 scripts/cargo_inventory.py --candidate > "$RUNNER_TEMP/glaux-ci-evidence/cargo-dependencies.json"
-          cargo test -p glaux-domain --locked --offline -- --nocapture
-          echo 'Candidate evidence only: lock and inventory require review; this is not acceptance.'
-          exit 1
       - name: Fetch the locked dependency archives
         shell: bash
         run: |

@@ -25,6 +25,8 @@ cargo build --workspace --locked --offline
 python3 scripts/check-bootstrap.py
 python3 -u scripts/check-execution.py rust
 python3 -u scripts/check-execution.py schema-fuzz
+python3 -u scripts/check_identity_boundary.py
+python3 -u scripts/test-identity-failures.py
 python3 scripts/check_corpus.py
 python3 scripts/test_corpus.py
 python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness import PIN, docker; print(docker("pull", "--platform", PIN["platform"], PIN["image"], timeout=180))'
@@ -42,10 +44,18 @@ local Unix socket. Image/toolchain provisioning uses the network; Cargo operatio
 are offline after the explicit locked dependency fetch. No local prerequisites are installed implicitly.
 
 Formatting and Clippy check Rust; compileall checks Python syntax, not a claim of
-Python style/static-analysis coverage. The executable regression, named standards
-tests, bounded schema-parser mutation campaign and seven real database lifecycle
-tests run. Empty domain/doctest targets have no current behavior or executable
-examples; they are not substituted for the named behavioral checks.
+Python style/static-analysis coverage. The executable regression, named identity
+and standards tests, bounded schema-parser mutation campaign and seven real
+database lifecycle tests run. Empty doctest targets have no executable examples;
+they are not substituted for the named behavioral checks.
+
+The [identity boundary harness](../scripts/check_identity_boundary.py) runs only
+on GitHub-hosted Linux. A valid external client must compile, link and execute
+before six specific type/member compiler rejections are counted. Successful
+compilation must itself be rejected as negative evidence. The separate
+[identity fault control](../scripts/test-identity-failures.py) removes the UUID
+version check in a disposable copy and requires the exact intended assertion
+failure after a passing baseline. See [contracts and limits](resource-identities.md).
 
 The [standards corpus](standards-corpus.md) has a separate standard-library
 Python packaging check and 15 controls. They check unchanged original bytes,
