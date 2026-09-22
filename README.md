@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, database tests, enforced CI and packaged schema sources — 21 September 2026.**
+**Initial build, enforced CI and bounded offline schema validation — 22 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
@@ -19,7 +19,10 @@ The [initial schema corpus](docs/standards-corpus.md) now preserves 138 original
 source/notice files with exact-byte provenance, a complete local schema-reference
 graph and 23 independently authored recursive/source-conflict expectations.
 CI checks packaging and deliberate corruption/missing-target failures offline.
-Schema validation remains the next task, #8; packaging is not a conformance claim.
+The [structural validator](docs/structural-validation.md) executes those cases
+against pinned, embedded sources, with fixed entry points and bounded input.
+It rejects external schema retrieval and non-progressing reference cycles.
+Structural success is not full SWE semantics, codec support or conformance.
 
 ## Planned capabilities
 
@@ -48,7 +51,7 @@ One deployable **Rust service** will use Axum/Tokio for HTTP and asynchronous wo
 
 Live publication will use an optional Server-Sent Events (SSE) interface as a Glaux extension and outbound MQTT 5 for the selected experimental Part 3 binding. The basic reference server is designed to be exercised without first completing other Glaux applications or installing enterprise identity infrastructure; broker-backed features have their own dependencies.
 
-Verification will combine standards-derived expectations, real database tests and independent-client exercises, including failure and access-control cases. The initial build pins Rust 1.98.1 and its workspace lockfile; it has no third-party Cargo dependencies yet. Axum/Tokio, SQLx and other libraries are added and verified by their owning tasks, not included merely to fill out the bootstrap. These packages currently define boundaries, not the planned resource model or server capabilities.
+Verification will combine standards-derived expectations, real database tests and independent-client exercises, including failure and access-control cases. The build pins Rust 1.98.1, its workspace lockfile, and the initial `jsonschema`/`serde_json` dependency graph. Schema tests include independently expected outcomes, bounds, retrieval denial, parser regressions, a bounded mutation campaign and deliberate validation faults. Axum/Tokio, SQLx and other libraries are added and verified by their owning tasks; the planned resource model and service capabilities remain unimplemented.
 
 ## Project documents
 

@@ -153,7 +153,8 @@ fn parse(input: &[u8]) -> Result<Value, Failure> {
     if !frames.is_empty() {
         return Err(Failure::Malformed);
     }
-    let raw: Box<serde_json::value::RawValue> = serde_json::from_slice(input).map_err(|_| Failure::Malformed)?;
+    let raw: Box<serde_json::value::RawValue> =
+        serde_json::from_slice(input).map_err(|_| Failure::Malformed)?;
     let value = preserve_wire_kind(&raw)?;
     let mut pending = vec![&value];
     let mut nodes = 0;
@@ -190,14 +191,20 @@ fn preserve_wire_kind(raw: &serde_json::value::RawValue) -> Result<Value, Failur
         Some(b'{') => {
             let members: BTreeMap<String, Box<serde_json::value::RawValue>> =
                 serde_json::from_str(text).map_err(|_| Failure::Malformed)?;
-            members.into_iter().map(|(key, value)| Ok((key, preserve_wire_kind(&value)?)))
-                .collect::<Result<serde_json::Map<String, Value>, Failure>>().map(Value::Object)
+            members
+                .into_iter()
+                .map(|(key, value)| Ok((key, preserve_wire_kind(&value)?)))
+                .collect::<Result<serde_json::Map<String, Value>, Failure>>()
+                .map(Value::Object)
         }
         Some(b'[') => {
             let members: Vec<Box<serde_json::value::RawValue>> =
                 serde_json::from_str(text).map_err(|_| Failure::Malformed)?;
-            members.into_iter().map(|value| preserve_wire_kind(&value))
-                .collect::<Result<Vec<Value>, Failure>>().map(Value::Array)
+            members
+                .into_iter()
+                .map(|value| preserve_wire_kind(&value))
+                .collect::<Result<Vec<Value>, Failure>>()
+                .map(Value::Array)
         }
         _ => serde_json::from_str(text).map_err(|_| Failure::Malformed),
     }

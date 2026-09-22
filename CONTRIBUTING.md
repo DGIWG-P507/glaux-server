@@ -6,7 +6,7 @@ This repository implements the approved Glaux Server plan. These instructions ma
 
 Original Glaux Server code and accompanying documentation in this repository use [Apache-2.0](LICENSE), unless explicitly identified otherwise. Contributions intentionally submitted for inclusion follow section 5 of that licence; identify any different terms or third-party material before inclusion, and contribute only material you are authorised to submit. No separate contributor agreement or copyright assignment is introduced here.
 
-Keep third-party licences and notices with their source material; the project licence does not relicense dependencies or the OGC standards/schema corpus. Original workspace package metadata uses the SPDX expression `Apache-2.0`, not `MIT OR Apache-2.0`. The initial workspace has no third-party Cargo dependencies. Maintain the [dependency/licence inventory](docs/dependencies.md), including the pinned workflow actions and separately licensed database-image components, as later tasks add dependencies.
+Keep third-party licences and notices with their source material; the project licence does not relicense dependencies or the OGC standards/schema corpus. Original workspace package metadata uses the SPDX expression `Apache-2.0`, not `MIT OR Apache-2.0`. Task #8 introduces pinned schema-validation dependencies. Maintain the [dependency/licence inventory](docs/dependencies.md), including the reviewed Cargo graph/features, workflow actions and separately licensed database-image components, as later tasks add dependencies.
 
 ## Controlling documents
 
@@ -45,7 +45,7 @@ When each owning issue is authorised, provision only its needed pinned tools and
 
 ## Branches, pull requests and review
 
-Use the complete [build/test commands](docs/ci.md#reproduce-the-checks) when changing the workspace. The checked-in workflow runs on the exact PR head, not the synthetic merge commit. The active main-branch ruleset separately requires its successful, up-to-date result. Any base movement must be reconciled and re-tested before merge. Cargo's normal workspace test command includes applicable doctests. The domain/standards libraries currently contain no behavior or executable examples; zero tests there are disclosed, not a conformance claim. The required executable regression is checked for discovery and actual execution.
+Use the complete [build/test commands](docs/ci.md#reproduce-the-checks) when changing the workspace. The checked-in workflow runs on the exact PR head, not the synthetic merge commit. The active main-branch ruleset separately requires its successful, up-to-date result. Any base movement must be reconciled and re-tested before merge. Cargo's normal workspace test command includes applicable doctests. The domain library still has no behavior; the standards library now has required structural-validation tests and a bounded fuzz example. Required named tests are checked for both discovery and actual execution; empty doctest targets are not conformance evidence.
 
 The small `scripts/check-bootstrap.py` inventory checks this initial package graph. Update it, `scripts/check-execution.py`, the failure controls and dependency inventory with the controlling Guide and review when a later issue introduces legitimate dependencies or tests. Do not delete or weaken a guard merely to make an unexpected dependency or missing test pass.
 

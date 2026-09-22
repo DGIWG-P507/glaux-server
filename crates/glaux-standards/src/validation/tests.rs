@@ -241,10 +241,16 @@ fn parser_fuzz_regressions() {
 fn preserves_wire_object_kind_with_private_number_member() {
     let mut instance: Value = serde_json::from_slice(&fixture("quantity-labelled.json")).unwrap();
     instance["value"] = serde_json::json!({"$serde_json::private::Number":"1"});
-    assert_eq!(validator().validate(Contract::Quantity, &serde_json::to_vec(&instance).unwrap()),
-               Err(Failure::Structure), "wire object must not become a number");
+    assert_eq!(
+        validator().validate(Contract::Quantity, &serde_json::to_vec(&instance).unwrap()),
+        Err(Failure::Structure),
+        "wire object must not become a number"
+    );
     let raw = br#"{"$serde_json::private::Number":"1"}"#;
-    assert!(parse(raw).unwrap().is_object(), "ordinary extension member is not parser control syntax");
+    assert!(
+        parse(raw).unwrap().is_object(),
+        "ordinary extension member is not parser control syntax"
+    );
     instance.as_object_mut().unwrap().remove("value");
     instance["extension"] = serde_json::json!({"$serde_json::private::Number":"1"});
     let bytes = serde_json::to_vec(&instance).unwrap();
@@ -269,10 +275,19 @@ fn complete_command_wrapper_enforces_its_encoding() {
             "members":[{"type":"Component","ref":"target","dataType":"http://www.opengis.net/def/dataType/OGC/0/float64"}]
         }
     });
-    assert_eq!(validator().validate(Contract::CommandSwe, &serde_json::to_vec(&command).unwrap()), Ok(()));
+    assert_eq!(
+        validator().validate(Contract::CommandSwe, &serde_json::to_vec(&command).unwrap()),
+        Ok(())
+    );
     command["encoding"] = serde_json::json!({"type":"JSONEncoding"});
-    assert_eq!(validator().validate(Contract::CommandSwe, &serde_json::to_vec(&command).unwrap()), Err(Failure::Structure));
+    assert_eq!(
+        validator().validate(Contract::CommandSwe, &serde_json::to_vec(&command).unwrap()),
+        Err(Failure::Structure)
+    );
     command["commandFormat"] = serde_json::json!("application/swe+json");
     command.as_object_mut().unwrap().remove("recordSchema");
-    assert_eq!(validator().validate(Contract::CommandSwe, &serde_json::to_vec(&command).unwrap()), Err(Failure::Structure));
+    assert_eq!(
+        validator().validate(Contract::CommandSwe, &serde_json::to_vec(&command).unwrap()),
+        Err(Failure::Structure)
+    );
 }

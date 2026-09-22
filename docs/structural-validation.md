@@ -14,7 +14,7 @@ outcomes, failure controls and separate review before claiming completion.
 
 ## Dependency selection and scope
 
-The candidate is Rust `jsonschema = "=0.56.0"`, with `default-features = false`.
+The selected library is Rust `jsonschema = "=0.56.0"`, with `default-features = false`.
 The selected crate supports Draft 2020-12 and Draft-07 and has an MIT licence and
 Rust 1.85.0 minimum; Glaux's workspace toolchain remains pinned separately.
 Disabling defaults excludes the crate's HTTP and filesystem resolution features.
@@ -25,13 +25,23 @@ are the selection sources. The resolved lockfile and
 [dependency/licence inventory](dependencies.md) are required delivery evidence;
 an exact top-level version declaration alone does not identify every dependency.
 
-`serde_json = "=1.0.151"` enables `arbitrary_precision`. Parsing retains numeric
+`serde_json = "=1.0.151"` enables `arbitrary_precision` and `raw_value`. Parsing retains numeric
 values without first forcing them through a floating-point number. An authored
 regression checks preservation of a large integer beyond `u64`. This is a
 parser check, not proof of every numeric assertion inside the validator, exact
 decimal arithmetic, application numeric conversions, database representation
 or the complete numeric work owned by issue #10. Those distinctions must remain
 visible when extending this boundary.
+
+Raw JSON containers are decoded through `RawValue`, then explicitly constructed
+as objects/arrays before scalar tokens use `Value`. This prevents serde_json's
+private arbitrary-precision marker from reinterpreting a wire object as a number.
+The regression covers the marker as a numeric-position object (reject), an
+ordinary extension (preserve), and an escaped nested key. Before the fix, the
+[hosted red run](https://github.com/DGIWG-P507/glaux-server/actions/runs/35675152809)
+accepted the wrong wire kind; the [corrected candidate run](https://github.com/DGIWG-P507/glaux-server/actions/runs/35675239342)
+passed the regression and all 23 original cases. These were preparation runs,
+not the final required CI result; PR #316 records final delivery evidence.
 
 Structural success says that an input satisfies the selected schema under the
 pinned implementation. It does not establish units, component-reference
@@ -89,16 +99,21 @@ integrity/digests remain covered by the existing corpus checks. Runtime catalog
 construction parses those strings and does not open schema files.
 
 The compiler populates `Registry::new().add(...).prepare()` from the embedded
-catalog and uses `ValidationOptions::offline()` when building validators.
-Registry preparation defaults to a retriever that refuses retrieval; compilation
-also rejects references absent from the registry. See the pinned
+catalog and installs the same `DenyRetrieval` at registry preparation and validator
+construction. This hook only increments an observation counter and returns an
+error; it has no network, filesystem or fallback implementation. It replaces the
+library's default retriever, in addition to disabling the transport features.
+See the pinned
 [registry implementation](https://github.com/Stranger6667/jsonschema/blob/rust-v0.56.0/crates/jsonschema-referencing/src/registry/mod.rs)
 and [retriever implementation](https://github.com/Stranger6667/jsonschema/blob/rust-v0.56.0/crates/jsonschema-referencing/src/retriever.rs).
 Instance strings named `$ref`, `href` or similar are data, not requests to load
-a new schema. Tests include HTTP, file and data-URI canaries. An error for an
-unresolved URI and disabled transport features alone are not an instrumented
-observation that no retrieval was attempted; the delivery evidence must state
-what was actually observed.
+a new schema. The test observes zero retrieval requests while compiling the
+packaged Quantity contract and validating HTTP/file/data-URI instance metadata.
+Missing schema URIs exercise the observer and fail; a missing catalog dependency
+also exercises registry-preparation denial. Thus the zero-count observation has
+a positive control proving the observer is connected. The graph's separate
+HTTP/file/data/URI-escape canaries are rejected before compilation. No external
+server is contacted or arbitrary local file read by these probes.
 
 [`schema_guard.rs`](../crates/glaux-standards/src/schema_guard.rs) preflights the
 fixed catalog before compilation. It follows only schema-valued keywords,
@@ -169,8 +184,9 @@ contains a runner for the 23 independently authored expectations from #7:
 seven expected valid and sixteen expected invalid. They cover the binary
 root/definition/wrapper distinction, byte-order/member negatives, Quantity
 labels directly and inside wrappers, and positive/deep-negative recursive SWE
-and SensorML documents. These are authored expected outcomes, not executed
-results at the time this document was prepared. The unresolved binary component
+and SensorML documents. The hosted candidate executed all 23 with the recorded
+seven accepted/sixteen rejected outcomes; the final required run repeats them.
+The unresolved binary component
 fixture is expected to pass structure and later fail the semantic compiler in
 #140; structural acceptance must not become product acceptance.
 
@@ -181,11 +197,15 @@ budget boundaries. Required execution, meaningful false-green controls and
 separate review remain part of the [CI procedure](ci.md).
 
 [`fuzz/schema_parser.rs`](../fuzz/schema_parser.rs) is a deterministic mutation
-driver exposed as the `schema-parser-fuzz` Cargo example. It selects from four
-seeds, applies byte flips/truncations/insertions, and checks 1,024 cases with
-seed `0x475c000800000001`. Each result is repeated to check determinism; accepted
-Quantity documents receive additional required-field assertions. It also checks
-explicit size/depth rejection and requires both accepted and rejected cases.
+driver exposed as the `schema-parser-fuzz` Cargo example. Version 2 checks 1,024
+cases with seed `0x475c000800000001`: eight partitions of 128 cases cover varied
+valid Quantities, recursive SWE/SensorML and observation wrappers, invalid direct
+and nested labels/encodings, malformed valid seeds, byte mutations of both valid
+and invalid seeds, and concrete regressions. Constructive cases have independently
+specified verdicts; arbitrary mutations check determinism and insignificant outer
+whitespace without claiming a complete oracle. At least 256 distinct accepted
+inputs and 640 distinct overall inputs are required, with per-partition counts.
+It also checks explicit size/depth rejection and both accepted/rejected outcomes.
 Two [saved regression inputs](../fuzz/corpus/schema-parser/) cover missing and
 duplicate labels.
 
