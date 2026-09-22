@@ -206,11 +206,18 @@ fn generate(partition: usize, round: usize, bits: u64) -> Case {
         }
         4 => {
             let (contract, seed) = if round.is_multiple_of(5) {
-                (Contract::Quantity, quantity(round, bits, Some(&label(round))))
+                (
+                    Contract::Quantity,
+                    quantity(round, bits, Some(&label(round))),
+                )
             } else {
                 wrapper(round, &label(round))
             };
-            (contract, malformed(&seed, round), Some(Err(Failure::Malformed)))
+            (
+                contract,
+                malformed(&seed, round),
+                Some(Err(Failure::Malformed)),
+            )
         }
         5 => {
             let (contract, seed) = valid_seed(round);
