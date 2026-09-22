@@ -74,10 +74,12 @@ proof for this packaging task, not a claim that schema validation ran.
 
 [check-execution.py](../scripts/check-execution.py) preserves command failure and
 requires actual successful execution evidence. It accepts exactly `rust`,
-`schema-fuzz`, `numeric-fuzz` or `database`, not arbitrary selectors. Every named Rust test must
-execute successfully, and the fuzz campaign must emit its completed-invariant
-marker; the wrapper imposes a 180-second process timeout. The [database runner](../scripts/test_database.py)
-also rejects missing or skipped cases. No step uses continue-on-error to turn
+`schema-fuzz`, `numeric-fuzz`, `time-fuzz`, `database` or `time-database`,
+not arbitrary selectors. Every named Rust test must execute successfully, and
+each fuzz campaign must emit its completed-invariant marker; the wrapper imposes
+a 180-second process timeout. Both the [lifecycle runner](../scripts/test_database.py)
+and [exact-time runner](../scripts/test_time_database.py) reject missing or
+skipped cases. No step uses continue-on-error to turn
 failure into success. Shell pipelines use pipefail.
 
 After the unmodified Rust/database checks pass,
