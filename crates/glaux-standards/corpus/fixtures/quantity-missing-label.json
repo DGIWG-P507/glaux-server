@@ -1,0 +1,7 @@
+{
+  "type": "Quantity",
+  "definition": "urn:glaux:fixture:temperature",
+  "uom": {
+    "code": "K"
+  }
+}

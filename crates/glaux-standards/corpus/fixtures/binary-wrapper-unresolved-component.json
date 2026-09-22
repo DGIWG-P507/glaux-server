@@ -1,0 +1,30 @@
+{
+  "obsFormat": "application/swe+binary",
+  "recordSchema": {
+    "type": "DataRecord",
+    "name": "record",
+    "fields": [
+      {
+        "name": "temperature",
+        "type": "Quantity",
+        "definition": "urn:glaux:fixture:temperature",
+        "label": "Temperature",
+        "uom": {
+          "code": "K"
+        }
+      }
+    ]
+  },
+  "encoding": {
+    "type": "BinaryEncoding",
+    "byteOrder": "bigEndian",
+    "byteEncoding": "raw",
+    "members": [
+      {
+        "type": "Component",
+        "ref": "record/absent",
+        "dataType": "http://www.opengis.net/def/dataType/OGC/0/float64"
+      }
+    ]
+  }
+}

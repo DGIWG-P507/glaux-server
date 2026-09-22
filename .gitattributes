@@ -6,3 +6,5 @@ Cargo.lock text eol=lf
 *.py text eol=lf
 *.sql text eol=lf
 *.json text eol=lf
+# Original upstream bytes/digests must survive Windows and Linux checkouts.
+crates/glaux-standards/corpus/originals/** -text

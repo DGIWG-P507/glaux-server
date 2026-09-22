@@ -27,6 +27,14 @@ covered merely by Glaux's Apache-2.0 licence.
 
 ## Per-run evidence
 
+The [initial standards corpus](standards-corpus.md) separately retains 129 schemas,
+four publication source headers and five licence/notice files. Its manifest records
+source revisions or digest-pinned snapshots, retrieval times and exact URI mappings.
+OGC, GeoJSON MIT and JSON Schema BSD/AFL notices remain with the originals; Glaux's
+Apache-2.0 licence does not relicense them. No Cargo or pip dependency is added.
+The corpus check and its log complement, rather than modify, the runtime dependency
+inventory below. The optional PowerShell acquisition script is not a CI dependency.
+
 After the workflow provisions the pinned Rust components and pulls the database
 image, it runs from the checked-out repository root:
 

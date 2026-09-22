@@ -1,0 +1,23 @@
+{
+  "obsFormat": "application/swe+binary",
+  "recordSchema": {
+    "type": "DataRecord",
+    "name": "record",
+    "fields": [
+      {
+        "name": "temperature",
+        "type": "Quantity",
+        "definition": "urn:glaux:fixture:temperature",
+        "label": "Temperature",
+        "uom": {
+          "code": "K"
+        }
+      }
+    ]
+  },
+  "encoding": {
+    "type": "TextEncoding",
+    "tokenSeparator": ",",
+    "blockSeparator": "\n"
+  }
+}

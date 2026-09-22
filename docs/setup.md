@@ -23,7 +23,7 @@ The `glaux-server` binary deliberately writes `glaux-server: bootstrap only; no 
 | Package | Current local dependencies | Current implementation |
 |---|---|---|
 | `glaux-domain` | None | Library boundary only; resource rules belong to later issues. |
-| `glaux-standards` | `glaux-domain` | Library boundary only; no schemas, validators or codecs yet. |
+| `glaux-standards` | `glaux-domain` | Library boundary plus [original schema corpus and authored fixtures](standards-corpus.md); no validator or codec yet. |
 | `glaux-server` | Both libraries | Explicit unfinished-startup diagnostic and its process-level test. |
 
 The three packages are the exact initial production set in [Guide v1.21 §2.2](https://github.com/DGIWG-P507/glaux/blob/f2d9f912b1a75c14315b4555b21ae545fd6caaee/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#22-component-boundaries). No extra empty publication, tasking, policy or other subsystem packages are created. The libraries are not padded with invented domain behavior just to increase test counts.
@@ -48,7 +48,7 @@ The startup expectation is independently authored in `tests/bootstrap.rs`: exit 
 
 The preceding [run 35664492990](https://github.com/DGIWG-P507/glaux-server/actions/runs/35664492990) stopped at formatting, so its build/tests were skipped. It is retained as a real initial failure, not counted as the intended red test. The log also prompted replacing deprecated implicit rustup installation with an explicit hosted install. Final passing/review/merge evidence belongs to PR #312, including any later corrections; a stale green run cannot cover a changed head.
 
-HTTP, resource schemas/behavior, codecs, brokers and conformance checks remain unimplemented. #5 adds the [real PostgreSQL/PostGIS lifecycle harness](database-tests.md), using the image's own client and a minimal explicit extension migration. It does not prove the future Rust SQLx adapter, resource queries, full restore or application storage; those owners retain their checks.
+HTTP, resource behavior/validation, codecs, brokers and conformance checks remain unimplemented. #7 packages original schemas and fixtures without executing schema validation. #5 adds the [real PostgreSQL/PostGIS lifecycle harness](database-tests.md), using the image's own client and a minimal explicit extension migration. It does not prove the future Rust SQLx adapter, resource queries, full restore or application storage; those owners retain their checks.
 
 ## Delivery sequence and boundaries
 
@@ -56,7 +56,7 @@ HTTP, resource schemas/behavior, codecs, brokers and conformance checks remain u
 
 [#6](https://github.com/DGIWG-P507/glaux-server/issues/6) owns the initial formatting/lint/build/unit/database suite, dependency/licence inventory, clean reproduction and false-green checks. [PR #314](https://github.com/DGIWG-P507/glaux-server/pull/314) records the actual main-rule application and failed/missing-check blocking probes, final execution and review. Automated checks do not mechanically enforce separate review. The eventual native/Compose reference instructions remain deliverables.
 
-Issues #4 and #5 are complete. Once #6 is merged and closed with its evidence, the next candidate is [#7 / task 1.2.1](https://github.com/DGIWG-P507/glaux-server/issues/7): package the pinned standards/schema corpus and initial independent fixtures. It requires its own `proceed`; this CI change does not implement it. No local installation, persistent cloud provisioning or production access is implicit.
+Issues #4–#6 are complete. [#7 / task 1.2.1](https://github.com/DGIWG-P507/glaux-server/issues/7) packages the pinned original schema corpus and independent fixtures. Its issue/PR records executed checks and completion. After that merge, the next candidate is [#8 / task 1.2.2](https://github.com/DGIWG-P507/glaux-server/issues/8): select and wrap structural validation against this corpus. It requires its own `proceed`; #7 does not implement it. No local installation, persistent cloud provisioning or production access is implicit.
 
 ## Initial inspection record
 

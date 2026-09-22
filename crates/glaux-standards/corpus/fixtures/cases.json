@@ -1,0 +1,199 @@
+{
+  "cases": [
+    {
+      "id": "binary-original-root-rejects",
+      "input": "binary-valid.json",
+      "schema_uri": "https://schemas.opengis.net/sweCommon/3.0/json/encodings.json",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The original encodings.json root lists TextEncoding, XMLEncoding and JSONEncoding only. This valid BinaryEncoding matches none of those three alternatives.",
+      "semantic_note": "This expected rejection is a source-artifact diagnostic, not the Glaux product decision for BinaryEncoding. No runtime validation has run."
+    },
+    {
+      "id": "binary-named-definition-accepts",
+      "input": "binary-valid.json",
+      "schema_uri": "https://schemas.opengis.net/sweCommon/3.0/json/encodings.json#/$defs/BinaryEncoding",
+      "expected_valid": true,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The named BinaryEncoding definition accepts bigEndian, raw and one Component with a dataType URI and component reference.",
+      "semantic_note": "Structural acceptance is not proof of a working binary codec or semantic layout validation."
+    },
+    {
+      "id": "binary-complete-wrapper-accepts",
+      "input": "binary-wrapper-valid.json",
+      "schema_uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaSwe.json",
+      "expected_valid": true,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The complete observation schema wrapper supplies obsFormat, recordSchema and encoding. Its application/swe+binary branch references the named BinaryEncoding definition, and the record contains a labelled Quantity.",
+      "semantic_note": "The descriptor's record/temperature path identifies the named scalar in this fixture. Codec execution remains future work."
+    },
+    {
+      "id": "binary-missing-byte-order-rejects",
+      "input": "binary-missing-byte-order.json",
+      "schema_uri": "https://schemas.opengis.net/sweCommon/3.0/json/encodings.json#/$defs/BinaryEncoding",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "BinaryEncoding explicitly requires byteOrder; the otherwise identical descriptor omits it."
+    },
+    {
+      "id": "binary-invalid-byte-order-rejects",
+      "input": "binary-invalid-byte-order.json",
+      "schema_uri": "https://schemas.opengis.net/sweCommon/3.0/json/encodings.json#/$defs/BinaryEncoding",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "BinaryEncoding permits only bigEndian and littleEndian; middleEndian is outside that enumeration."
+    },
+    {
+      "id": "binary-empty-members-rejects",
+      "input": "binary-empty-members.json",
+      "schema_uri": "https://schemas.opengis.net/sweCommon/3.0/json/encodings.json#/$defs/BinaryEncoding",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "BinaryEncoding requires members to contain at least one entry; an empty list violates minItems: 1."
+    },
+    {
+      "id": "binary-wrapper-wrong-encoding-rejects",
+      "input": "binary-wrapper-text-encoding.json",
+      "schema_uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaSwe.json",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The descriptor is a valid TextEncoding, but application/swe+binary selects the wrapper branch requiring BinaryEncoding. Descriptor validity alone cannot satisfy this wrapper."
+    },
+    {
+      "id": "binary-wrapper-missing-record-schema-rejects",
+      "input": "binary-wrapper-missing-record-schema.json",
+      "schema_uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaSwe.json",
+      "expected_valid": false,
+      "source": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaSwe.json#/required",
+      "reason": "The complete wrapper requires recordSchema. Checking only its valid BinaryEncoding descriptor would miss this omission."
+    },
+    {
+      "id": "quantity-labelled",
+      "input": "quantity-labelled.json",
+      "schema_uri": "https://schemas.opengis.net/sweCommon/3.0/json/Quantity.json",
+      "expected_valid": true,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "Quantity supplies type, definition, uom and a nonempty string label, satisfying the published required list and inherited label constraint.",
+      "semantic_note": "These expectations concern component descriptions, not encoded measurement values. Supplied labels must not be synthesized or discarded."
+    },
+    {
+      "id": "quantity-wrapper-labelled",
+      "input": "quantity-wrapper-labelled.json",
+      "schema_uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaSwe.json",
+      "expected_valid": true,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The complete SWE JSON observation schema wrapper reaches Quantity through recordSchema.fields[0]. Quantity supplies type, definition, uom and a nonempty string label, satisfying the published required list and inherited label constraint."
+    },
+    {
+      "id": "quantity-missing-label",
+      "input": "quantity-missing-label.json",
+      "schema_uri": "https://schemas.opengis.net/sweCommon/3.0/json/Quantity.json",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "Quantity explicitly requires label. The conceptual model's optional label does not remove the JSON requirement.",
+      "semantic_note": "These expectations concern component descriptions, not encoded measurement values. Supplied labels must not be synthesized or discarded."
+    },
+    {
+      "id": "quantity-wrapper-missing-label",
+      "input": "quantity-wrapper-missing-label.json",
+      "schema_uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaSwe.json",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The complete SWE JSON observation schema wrapper reaches Quantity through recordSchema.fields[0]. Quantity explicitly requires label. The conceptual model's optional label does not remove the JSON requirement."
+    },
+    {
+      "id": "quantity-empty-label",
+      "input": "quantity-empty-label.json",
+      "schema_uri": "https://schemas.opengis.net/sweCommon/3.0/json/Quantity.json",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The inherited label definition requires a string of at least one character; an empty string fails.",
+      "semantic_note": "These expectations concern component descriptions, not encoded measurement values. Supplied labels must not be synthesized or discarded."
+    },
+    {
+      "id": "quantity-wrapper-empty-label",
+      "input": "quantity-wrapper-empty-label.json",
+      "schema_uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaSwe.json",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The complete SWE JSON observation schema wrapper reaches Quantity through recordSchema.fields[0]. The inherited label definition requires a string of at least one character; an empty string fails."
+    },
+    {
+      "id": "quantity-null-label",
+      "input": "quantity-null-label.json",
+      "schema_uri": "https://schemas.opengis.net/sweCommon/3.0/json/Quantity.json",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The inherited label definition requires a string; null fails.",
+      "semantic_note": "These expectations concern component descriptions, not encoded measurement values. Supplied labels must not be synthesized or discarded."
+    },
+    {
+      "id": "quantity-wrapper-null-label",
+      "input": "quantity-wrapper-null-label.json",
+      "schema_uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaSwe.json",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The complete SWE JSON observation schema wrapper reaches Quantity through recordSchema.fields[0]. The inherited label definition requires a string; null fails."
+    },
+    {
+      "id": "quantity-numeric-label",
+      "input": "quantity-numeric-label.json",
+      "schema_uri": "https://schemas.opengis.net/sweCommon/3.0/json/Quantity.json",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The inherited label definition requires a string; a number fails.",
+      "semantic_note": "These expectations concern component descriptions, not encoded measurement values. Supplied labels must not be synthesized or discarded."
+    },
+    {
+      "id": "quantity-wrapper-numeric-label",
+      "input": "quantity-wrapper-numeric-label.json",
+      "schema_uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaSwe.json",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The complete SWE JSON observation schema wrapper reaches Quantity through recordSchema.fields[0]. The inherited label definition requires a string; a number fails."
+    },
+    {
+      "id": "swe-recursive-accepts",
+      "input": "swe-recursive.json",
+      "schema_uri": "https://schemas.opengis.net/sweCommon/3.0/json/DataRecord.json",
+      "expected_valid": true,
+      "source": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/DataRecord.json",
+      "reason": "A record field is a named DataArray whose named element is another DataRecord. That record contains a labelled Quantity and a further nested record with a Count. Each aggregate has its required nonempty fields or elementType.",
+      "semantic_note": "This finite instance exercises recursive schema references. It does not prove depth limits, cyclic instance handling, value codecs or semantic completeness."
+    },
+    {
+      "id": "swe-recursive-invalid-count-rejects",
+      "input": "swe-recursive-invalid-count.json",
+      "schema_uri": "https://schemas.opengis.net/sweCommon/3.0/json/DataRecord.json",
+      "expected_valid": false,
+      "source": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Count.json",
+      "reason": "The only changed value is record.samples.sample.diagnostics.sequence.value: Count requires an integer, so the string one fails even at this nested depth."
+    },
+    {
+      "id": "sensorml-recursive-accepts",
+      "input": "sensorml-recursive.json",
+      "schema_uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/PhysicalSystem.json",
+      "expected_valid": true,
+      "source": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/AggregateProcess.json#/$defs/ComponentList",
+      "reason": "PhysicalSystem permits recursively nested named components. The platform, module and sensor each supply type, label and uniqueId; the PhysicalComponent output is a named recursive SWE DataRecord.",
+      "semantic_note": "Uses the complete CSAPI publication source tree and its original relative references. It does not use a SensorML registry alias or repair the registry's missing timeInstantOrNow.json."
+    },
+    {
+      "id": "sensorml-recursive-missing-quantity-label-rejects",
+      "input": "sensorml-recursive-missing-quantity-label.json",
+      "schema_uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/PhysicalSystem.json",
+      "expected_valid": false,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The otherwise unchanged recursive SensorML output omits its deeply nested Quantity label. The published component requirement still applies through the SensorML/SWE reference chain."
+    },
+    {
+      "id": "binary-unresolved-component-structurally-accepts",
+      "input": "binary-wrapper-unresolved-component.json",
+      "schema_uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaSwe.json",
+      "expected_valid": true,
+      "source": "https://github.com/DGIWG-P507/glaux/blob/c49889a378eeb7dbd2ca3283849fa0244fd9710c/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings",
+      "reason": "The BinaryEncoding Component schema checks ref as a string and cannot establish that record/absent identifies a component. All structural wrapper requirements still hold.",
+      "semantic_note": "Expected later semantic compiler outcome: reject because record/absent does not exist, under SWE requirement 73 and Guide §4.3; owner #140. This structural expectation is not product acceptance."
+    }
+  ]
+}

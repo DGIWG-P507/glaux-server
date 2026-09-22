@@ -1,0 +1,130 @@
+= OGC API - Connected Systems - Part 2: Dynamic Data
+:doctype: standard
+:encoding: utf-8
+:lang: en
+:status: approved
+:committee: technical
+:external-id: http://www.opengis.net/doc/IS/ogcapi-connectedsystems-2/1.0
+:docnumber: 23-002
+:received-date: 2025-03-19
+:issued-date: 2025-06-02
+:published-date: yyyy-mm-dd
+:fullname: Alexandre Robin
+:docsubtype: implementation
+:keywords: ogcdoc, OGC document, OpenAPI, REST, feature, API, system, smart system, connected system, IoT, sensorweb, ssn, sensor, actuator, transducer, sampling, platform, robot, drone, unmanned, autonomous, observation, measurement, datastream, command, control, trajectory, dynamic
+:submitting-organizations: GeoRobotix, Inc.; Botts Innovative Research, Inc.; Cesium GS, Inc.; 52°North Spatial Information Research GmbH; Riverside Research; Pelagis Data Solutions; National Geospatial-Intelligence Agency (NGA); 
+:mn-document-class: ogc
+:mn-output-extensions: xml,html,doc,pdf
+:local-cache-only:
+:data-uri-image:
+:edition: 1.0
+//
+:ogcapi-cs-1: <<OGCAPI-Consys-1, OGC API - Connected Systems - Part 1>>
+:ogcapi-common: <<OGCAPI-Common-1, OGC API - Common>>
+:ogcapi-common-1: <<OGCAPI-Common-1, OGC API - Common - Part 1: Core>>
+:ogcapi-common-2: <<OGCAPI-Common-2, OGC API - Common - Part 2: Collections>>
+:ogcapi-features: <<OGCAPI-Features-1, OGC API - Features>>
+:ogcapi-features-1: <<OGCAPI-Features-1, OGC API - Features - Part 1: Core>>
+:ogcapi-features-4: <<OGCAPI-Features-4, OGC API - Features - Part 4: Create, Replace, Update and Delete>>
+:ogc-w3c-ssn: <<SOSA-SSN, Semantic Sensor Network Ontology (SOSA/SSN)>>
+//
+:part1-specurl: http://www.opengis.net/spec/ogcapi-connectedsystems-1/1.0
+:ogcapi-features-1-spec-url: http://www.opengis.net/spec/ogcapi-features-1/1.0
+:ogcapi-features-4-spec-url: http://www.opengis.net/spec/ogcapi-features-4/1.0
+//
+:resources-endpoint: link:file:///home/alex/Projects/OGC/CONNSYS%20SWG/connected-systems/api/part1/standard/23-001r0.html#_endpoint_types[resources endpoint]
+:datastream-resources-endpoint: <<clause-datastream-resources-endpoint,DataStream resources endpoint>>
+:observation-resources-endpoint: <<clause-observation-resources-endpoint,Observation resources endpoint>>
+:controlstream-resources-endpoint: <<clause-controlstream-resources-endpoint,ControlStream resources endpoint>>
+:command-resources-endpoint: <<clause-command-resources-endpoint,Command resources endpoint>>
+:commandstatus-resources-endpoint: <<clause-commandstatus-resources-endpoint,Command Status resources endpoint>>
+:commandresult-resources-endpoint: <<clause-commandresult-resources-endpoint,Command Result resources endpoint>>
+:systemevent-resources-endpoint: <<clause-systemevent-resources-endpoint,System Event resources endpoint>>
+//
+:filter-idlist-schema: link:https://docs.ogc.org/DRAFTS/23-001r0.html#filter-idlist-schema[ID_List]
+:json-schema-root: https://schemas.opengis.net/ogcapi/connected-systems/part2/1.0/openapi/schemas/json
+//:json-schema-root: ../openapi/schemas/json
+:json-datastream-schema: link:{json-schema-root}/dataStream.json[dataStream.json]
+:json-datastream-collection-schema: link:{json-schema-root}/dataStreamCollection.json[dataStreamCollection.json]
+:json-observationschema-schema-json: link:{json-schema-root}/observationSchemaJson.json[observationSchemaJson.json]
+:json-observationschema-schema-swe: link:{json-schema-root}/observationSchemaSwe.json[observationSchemaSwe.json]
+:json-observation-schema: link:{json-schema-root}/observation.json[observation.json]
+:json-observation-collection-schema: link:{json-schema-root}/observationCollection.json[observationCollection.json]
+:json-controlstream-schema: link:{json-schema-root}/controlStream.json[controlStream.json]
+:json-controlstream-collection-schema: link:{json-schema-root}/controlStreamCollection.json[controlStreamCollection.json]
+:json-commandschema-schema-json: link:{json-schema-root}/commandSchemaJson.json[commandSchemaJson.json]
+:json-commandschema-schema-swe: link:{json-schema-root}/commandSchemaSwe.json[commandSchemaSwe.json]
+:json-command-schema: link:{json-schema-root}/command.json[command.json]
+:json-command-collection-schema: link:{json-schema-root}/commandCollection.json[commandCollection.json]
+:json-commandstatus-schema: link:{json-schema-root}/commandStatus.json[commandStatus.json]
+:json-commandstatus-collection-schema: link:{json-schema-root}/commandStatusCollection.json[commandStatusCollection.json]
+:json-commandresult-schema: link:{json-schema-root}/commandResult.json[commandResult.json]
+:json-commandresult-collection-schema: link:{json-schema-root}/commandResultCollection.json[commandResultCollection.json]
+:json-systemevent-schema: link:{json-schema-root}/systemEvent.json[systemEvent.json]
+:json-systemevent-collection-schema: link:{json-schema-root}/systemEventCollection.json[systemEventCollection.json]
+
+////
+Make sure to complete each included document
+////
+include::sections/clause_0_front_material.adoc[]
+
+include::sections/clause_1_scope.adoc[]
+
+include::sections/clause_2_conformance.adoc[]
+
+include::sections/clause_3_references.adoc[]
+
+include::sections/clause_4_terms_and_definitions.adoc[]
+
+include::sections/clause_5_conventions.adoc[]
+
+include::sections/clause_6_overview.adoc[]
+
+include::sections/clause_7_requirements_class_common.adoc[]
+
+include::sections/clause_8_requirements_class_datastreams.adoc[]
+
+include::sections/clause_9_requirements_class_controlstreams.adoc[]
+
+include::sections/clause_10_requirements_class_command_feasibility.adoc[]
+
+include::sections/clause_11_requirements_class_system_events.adoc[]
+
+// include::sections/clause_12_requirements_class_system_history.adoc[]
+
+// include::sections/clause_13_requirements_class_simple_filtering.adoc[]
+
+include::sections/clause_14_requirements_class_advanced_filtering.adoc[]
+
+include::sections/clause_15_requirements_class_create_replace_delete.adoc[]
+
+include::sections/clause_16_requirements_class_update.adoc[]
+
+
+== Requirements Classes for Encodings
+
+include::sections/clause_20_requirements_class_json_encoding.adoc[]
+
+include::sections/clause_21_requirements_class_swecommon_json_encoding.adoc[]
+
+include::sections/clause_22_requirements_class_swecommon_text_encoding.adoc[]
+
+include::sections/clause_23_requirements_class_swecommon_binary_encoding.adoc[]
+
+
+////
+Annexes
+////
+include::sections/annex-abstract-test-suite.adoc[]
+
+include::sections/annex-examples.adoc[]
+
+include::sections/annex-relationships_with_standards.adoc[]
+
+////
+Revision History should be the last annex before the Bibliography
+Bibliography should be the last annex
+////
+include::sections/annex-history.adoc[]
+
+include::sections/annex-bibliography.adoc[]

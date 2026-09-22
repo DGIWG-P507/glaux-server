@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, database tests and enforced CI — 21 September 2026.**
+**Initial build, database tests, enforced CI and packaged schema sources — 21 September 2026.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
@@ -14,6 +14,12 @@ This repository is home to the server implementation. Research and planning docu
 - The initial three-package Rust workspace and [CI suite](docs/ci.md) cover formatting, Clippy, build, the initial executable regression, seven real database lifecycle tests and nine controls against false-green results. The [dependency/licence inventory](docs/dependencies.md) records what those runs use. This is not a runnable CSAPI service: resource behavior, HTTP endpoints and Rust application storage remain unimplemented.
 
 Use the [clean check instructions](docs/ci.md#reproduce-the-checks) and the [Build workflow](https://github.com/DGIWG-P507/glaux-server/actions/workflows/build.yml). Builds and disposable database tests run on GitHub-hosted Linux; no Rust/database installation on the company laptop or permanent cloud service is required. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records planning decisions; issues and PRs record execution.
+
+The [initial schema corpus](docs/standards-corpus.md) now preserves 138 original
+source/notice files with exact-byte provenance, a complete local schema-reference
+graph and 23 independently authored recursive/source-conflict expectations.
+CI checks packaging and deliberate corruption/missing-target failures offline.
+Schema validation remains the next task, #8; packaging is not a conformance claim.
 
 ## Planned capabilities
 

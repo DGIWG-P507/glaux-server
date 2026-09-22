@@ -1,0 +1,63 @@
+{
+  "type": "PhysicalSystem",
+  "uniqueId": "urn:glaux:fixture:platform",
+  "label": "Fixture platform",
+  "components": [
+    {
+      "type": "PhysicalSystem",
+      "name": "module",
+      "uniqueId": "urn:glaux:fixture:module",
+      "label": "Fixture module",
+      "components": [
+        {
+          "type": "PhysicalComponent",
+          "name": "sensor",
+          "uniqueId": "urn:glaux:fixture:sensor",
+          "label": "Fixture sensor",
+          "outputs": [
+            {
+              "type": "DataRecord",
+              "name": "readings",
+              "fields": [
+                {
+                  "type": "DataArray",
+                  "name": "samples",
+                  "elementCount": {
+                    "value": 2
+                  },
+                  "elementType": {
+                    "type": "DataRecord",
+                    "name": "sample",
+                    "fields": [
+                      {
+                        "name": "temperature",
+                        "type": "Quantity",
+                        "definition": "urn:glaux:fixture:temperature",
+                        "uom": {
+                          "code": "K"
+                        }
+                      },
+                      {
+                        "type": "DataRecord",
+                        "name": "diagnostics",
+                        "fields": [
+                          {
+                            "type": "Count",
+                            "name": "sequence",
+                            "definition": "urn:glaux:fixture:sequence",
+                            "label": "Sequence",
+                            "value": 1
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
