@@ -83,6 +83,11 @@ jobs:
         run: |
           python3 -u scripts/check-execution.py numeric-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/numeric-fuzz.log"
           python3 -u scripts/test-numeric-failures.py
+      - name: Exercise exact time parsing and detect time faults
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py time-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/time-fuzz.log"
+          python3 -u scripts/test-time-failures.py
       - name: Fetch the pinned disposable database image
         shell: bash
         run: |
@@ -97,6 +102,9 @@ jobs:
         shell: bash
         run: |
           python3 -u scripts/check-execution.py database | tee "$RUNNER_TEMP/glaux-ci-evidence/database.log"
+      - name: Prove exact time through the real isolated database
+        shell: bash
+        run: python3 -u scripts/check-execution.py time-database | tee "$RUNNER_TEMP/glaux-ci-evidence/time-database.log"
       - name: Verify required execution rejects disposable failures
         run: python3 -u scripts/test-ci-failures.py
       - name: Verify validation assertions detect disposable faults

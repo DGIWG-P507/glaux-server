@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, enforced CI, offline schema validation, typed identities and exact numbers — 22 September 2026 UTC.**
+**Initial build, enforced CI, offline schema validation, typed identities, exact numbers and time — 22 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
@@ -35,6 +35,12 @@ decimal measured values without silent rounding, compare values exactly and keep
 non-finite states explicit. Original decimal spelling or finite binary64 bits
 remain available. Complete SWE codecs, unit conversion and numeric storage are
 still later work.
+
+[Exact time primitives](docs/exact-time.md) preserve timestamp fractions and
+source context, normalize offsets and keep known leap seconds distinct. Their
+real-database proof stores and compares exact values beyond timestamp resolution.
+Observation endpoints, interval filters and the application database adapter
+remain later work.
 
 ## Planned capabilities
 

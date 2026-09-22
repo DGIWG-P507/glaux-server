@@ -1,7 +1,8 @@
 //! Domain boundary for Glaux Server.
 //!
-//! Identity and exact numeric primitives are separate from resource-family models, authorization,
-//! occurrence time, HTTP handling, database access and broker behavior.
+//! Identity, exact numeric and instant primitives are separate from resource-family
+//! models, authorization, HTTP handling, database access and broker behavior.
 
 pub mod identity;
 pub mod numeric;
+pub mod temporal;
