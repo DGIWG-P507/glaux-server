@@ -14,7 +14,7 @@ cargo fmt --all --check
 cargo clippy --workspace --all-targets --locked --offline -- -D warnings
 ```
 
-The Python helpers need Python 3.11+ and only its standard library. They check the package graph/licence metadata, required discovery and actual execution; they are not needed just to compile the Rust packages. Cargo's normal workspace test command includes applicable doctests. There are no executable documentation examples yet; empty doctest targets are not substituted for the seven identity tests, eight numeric unit tests, four numeric property tests, six time unit tests, four time property tests, sixteen structural-validation tests and executable's initial integration test. These workspace commands alone are not the full CI suite: follow [clean reproduction](ci.md#reproduce-the-checks) for lockfile checking, Python syntax, type-boundary probes, bounded parser campaigns, real database tests, failure controls and inventory.
+The Python helpers need Python 3.11+ and only its standard library. They check the package graph/licence metadata, required discovery and actual execution; they are not needed just to compile the Rust packages. Cargo's normal workspace test command includes applicable doctests. There are no executable documentation examples yet; empty doctest targets are not substituted for the seven identity tests, eight numeric unit tests, four numeric property tests, six time unit tests, four time property tests, sixteen structural-validation tests, fourteen direction-projection tests and executable's initial integration test. These workspace commands alone are not the full CI suite: follow [clean reproduction](ci.md#reproduce-the-checks) for lockfile checking, Python syntax, type-boundary probes, bounded parser campaigns, real database tests, failure controls and inventory.
 
 The `glaux-server` binary deliberately writes `glaux-server: bootstrap only; no server commands are implemented yet.` to standard error and exits with code 2. It does not bind a listener, accept commands or access storage. A successful build, or the names of the packages, is not proof of any planned server capability. Do not treat `cargo run -p glaux-server` as a successful server startup at this stage.
 
@@ -23,7 +23,7 @@ The `glaux-server` binary deliberately writes `glaux-server: bootstrap only; no 
 | Package | Current local dependencies | Current implementation |
 |---|---|---|
 | `glaux-domain` | None | [Typed identities](resource-identities.md), [exact numeric primitives](exact-numbers.md) and [exact instants](exact-time.md); family models and persistence belong to later issues. |
-| `glaux-standards` | `glaux-domain` | [Original schema corpus and authored fixtures](standards-corpus.md), plus [bounded offline structural validation](structural-validation.md); no codec yet. |
+| `glaux-standards` | `glaux-domain` | [Original schema corpus and authored fixtures](standards-corpus.md), [bounded offline structural validation](structural-validation.md) and [direction projections](direction-validation.md); no codec yet. |
 | `glaux-server` | Both libraries | Explicit unfinished-startup diagnostic and its process-level test. |
 
 The three packages are the exact initial production set in [Guide v1.21 §2.2](https://github.com/DGIWG-P507/glaux/blob/f2d9f912b1a75c14315b4555b21ae545fd6caaee/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#22-component-boundaries). No extra empty publication, tasking, policy or other subsystem packages are created. The libraries are not padded with invented domain behavior just to increase test counts.
@@ -48,7 +48,7 @@ The startup expectation is independently authored in `tests/bootstrap.rs`: exit 
 
 The preceding [run 35664492990](https://github.com/DGIWG-P507/glaux-server/actions/runs/35664492990) stopped at formatting, so its build/tests were skipped. It is retained as a real initial failure, not counted as the intended red test. The log also prompted replacing deprecated implicit rustup installation with an explicit hosted install. Final passing/review/merge evidence belongs to PR #312, including any later corrections; a stale green run cannot cover a changed head.
 
-HTTP, resource behavior, operation-specific validation, codecs, brokers and conformance checks remain unimplemented. #7 packages original schemas and fixtures; #8 adds [bounded offline structural validation](structural-validation.md), actual fixture verdicts and parser/fault checks. #5 adds the [real PostgreSQL/PostGIS lifecycle harness](database-tests.md), using the image's own client and a minimal explicit extension migration. It does not prove the future Rust SQLx adapter, resource queries, full restore or application storage; those owners retain their checks.
+HTTP, full resource behavior, codecs, brokers and conformance checks remain unimplemented. #7 packages original schemas and fixtures; #8 adds [bounded offline structural validation](structural-validation.md), actual fixture verdicts and parser/fault checks; #12 adds the bounded [operation/direction projections](direction-validation.md), not endpoint admission or full semantics. #5 adds the [real PostgreSQL/PostGIS lifecycle harness](database-tests.md), using the image's own client and a minimal explicit extension migration. It does not prove the future Rust SQLx adapter, resource queries, full restore or application storage; those owners retain their checks.
 
 ## Delivery sequence and boundaries
 
@@ -56,7 +56,7 @@ HTTP, resource behavior, operation-specific validation, codecs, brokers and conf
 
 [#6](https://github.com/DGIWG-P507/glaux-server/issues/6) owns the initial formatting/lint/build/unit/database suite, dependency/licence inventory, clean reproduction and false-green checks. [PR #314](https://github.com/DGIWG-P507/glaux-server/pull/314) records the actual main-rule application and failed/missing-check blocking probes, final execution and review. Automated checks do not mechanically enforce separate review. The eventual native/Compose reference instructions remain deliverables.
 
-Issues #4–#10 are complete. [#11 / task 1.2.5](https://github.com/DGIWG-P507/glaux-server/issues/11) adds exact time parsing/comparison and its storage proof; its issue/PR record actual checks, review and delivery. After its reviewed merge and closure, the next candidate is [#12 / task 1.2.6](https://github.com/DGIWG-P507/glaux-server/issues/12), only on a separate `proceed`. No local installation, persistent cloud provisioning or production access is implicit.
+Issues #4–#11 are complete. [#12 / task 1.2.6](https://github.com/DGIWG-P507/glaux-server/issues/12) adds [direction-aware validation](direction-validation.md) and initial System/stream/observation fixtures without endpoints; its issue/PR record actual checks, review and delivery. After its reviewed merge and closure, the next candidate is [#13 / task 1.2.7](https://github.com/DGIWG-P507/glaux-server/issues/13), only on a separate `proceed`. No local installation, persistent cloud provisioning or production access is implicit.
 
 ## Initial inspection record
 

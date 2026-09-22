@@ -7,6 +7,11 @@ sources are the [Guide §§2.4, 4.3 and 9.2](https://github.com/DGIWG-P507/glaux
 and [Roadmap task 1.2.2](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-roadmap.md).
 The [original corpus](standards-corpus.md) remains unchanged.
 
+The separate [operation/direction boundary](direction-validation.md) introduced
+by #12 reuses this bounded parser and fixed compiler with an attributed in-memory
+request catalog. The original-contract API below remains a source diagnostic;
+it is not direction-aware request admission.
+
 This document describes the implementation, checks and selected development
 evidence. It does not substitute for the final required CI and delivery record.
 The issue/PR identifies the tested commit, actual commands, outcomes, failure

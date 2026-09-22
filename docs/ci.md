@@ -23,6 +23,7 @@ cargo clippy --workspace --all-targets --locked --offline -- -D warnings
 python3 -m compileall -q scripts
 cargo build --workspace --locked --offline
 python3 scripts/check-bootstrap.py
+python3 scripts/check_corpus.py
 python3 -u scripts/check-execution.py rust
 python3 -u scripts/check-execution.py schema-fuzz
 python3 -u scripts/check-execution.py numeric-fuzz
@@ -38,6 +39,8 @@ python3 -u scripts/check-execution.py database
 python3 -u scripts/check-execution.py time-database
 python3 -u scripts/test-ci-failures.py
 python3 -u scripts/test-validation-failures.py
+python3 -u scripts/test-projection-failures.py
+python3 scripts/check_corpus.py
 python3 scripts/dependency_inventory.py
 ```
 
@@ -97,6 +100,15 @@ point, skipped Quantity structural checking, bypassed raw-size limit, and ignore
 unallowlisted references. Every control must compile and fail the exact test with
 the expected left/right values; setup failure or timeout is not detection.
 Disposable source copies share only their task-local compilation cache.
+
+The [direction projections](direction-validation.md) add fourteen required Rust
+tests and [four disposable faults](../scripts/test-projection-failures.py):
+using original response requiredness for requests, leaking write-only schemas,
+bypassing immutable UID checks, and permitting deletion of a locked schema.
+Each exact assertion must first pass on unmodified source, then the faulty copy
+must compile and fail with the expected values. Corpus digest checks run before
+and after the projection tests/faults; in-memory adaptations never rewrite the
+original source files. No dependency or hosted-service permission is added.
 
 Passing these controls means the expected bad executions were rejected, not that
 the bad versions themselves passed. Baseline results and every control's output,

@@ -4,4 +4,5 @@
 //! pinned original schemas; codecs and resource semantics remain later work.
 
 mod schema_guard;
+pub mod projection;
 pub mod validation;

@@ -13,7 +13,7 @@ use serde_json::Value;
 include!(concat!(env!("OUT_DIR"), "/corpus.rs"));
 
 const SWE: &str = "https://schemas.opengis.net/sweCommon/3.0/json/";
-const PIN: &str = "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/";
+pub(crate) const PIN: &str = "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/";
 /// Initial resource budgets, not standard-imposed sizes.
 pub const MAX_BYTES: usize = 262_144;
 pub const MAX_DEPTH: usize = 32;
@@ -81,7 +81,7 @@ struct Frame {
 }
 
 /// Parse only after raw-byte and lexical-depth checks; reject duplicate keys.
-fn parse(input: &[u8]) -> Result<Value, Failure> {
+pub(crate) fn parse(input: &[u8]) -> Result<Value, Failure> {
     if input.len() > MAX_BYTES {
         return Err(Failure::Size);
     }
@@ -215,7 +215,7 @@ pub struct StructuralValidator {
     validators: BTreeMap<Contract, jsonschema::Validator>,
 }
 
-fn catalog() -> Result<BTreeMap<String, Value>, String> {
+pub(crate) fn catalog() -> Result<BTreeMap<String, Value>, String> {
     DOCUMENTS
         .iter()
         .map(|(uri, text)| {
@@ -226,7 +226,7 @@ fn catalog() -> Result<BTreeMap<String, Value>, String> {
         .collect()
 }
 
-fn compile(catalog: &BTreeMap<String, Value>, uri: &str) -> Result<jsonschema::Validator, String> {
+pub(crate) fn compile(catalog: &BTreeMap<String, Value>, uri: &str) -> Result<jsonschema::Validator, String> {
     compile_with_denial(catalog, uri, DenyRetrieval::default())
 }
 

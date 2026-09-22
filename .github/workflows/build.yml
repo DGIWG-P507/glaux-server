@@ -63,6 +63,9 @@ jobs:
           python3 -m compileall -q scripts
       - name: Build all three packages
         run: cargo build --workspace --locked --offline
+      - name: Verify original corpus digests before projection execution
+        shell: bash
+        run: python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-before.log"
       - name: Check package boundaries and test discovery
         run: python3 scripts/check-bootstrap.py
       - name: Run initial tests and applicable doctests
@@ -109,6 +112,11 @@ jobs:
         run: python3 -u scripts/test-ci-failures.py
       - name: Verify validation assertions detect disposable faults
         run: python3 -u scripts/test-validation-failures.py
+      - name: Verify directional projection assertions detect disposable faults
+        run: python3 -u scripts/test-projection-failures.py
+      - name: Verify original corpus digests after projection execution
+        shell: bash
+        run: python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-after.log"
       - name: Inventory resolved dependencies and licence evidence
         run: python3 scripts/dependency_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/dependency-inventory.json"
       - name: Preserve actual execution evidence
