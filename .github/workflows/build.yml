@@ -35,17 +35,22 @@ jobs:
         shell: bash
         run: |
           bootstrap_toolchain="$(python3 -c 'import tomllib; print(tomllib.load(open("rust-toolchain.toml", "rb"))["toolchain"]["channel"])')"
-          rustup toolchain install "$bootstrap_toolchain" --profile minimal --component rustfmt
+          rustup toolchain install "$bootstrap_toolchain" --profile minimal --component rustfmt --component clippy
           rustup show active-toolchain
           rustc --version --verbose
           cargo --version --verbose
           rustfmt --version
+          cargo clippy --version
       - name: Verify formatting and lockfile reproduction
         shell: bash
         run: |
           cargo fmt --all --check
           cargo generate-lockfile --offline
           git diff --exit-code -- Cargo.lock
+      - name: Lint Rust and check Python syntax
+        run: |
+          cargo clippy --workspace --all-targets --locked --offline -- -D warnings
+          python3 -m compileall -q scripts
       - name: Build all three packages
         run: cargo build --workspace --locked --offline
       - name: Check package boundaries and test discovery
@@ -53,8 +58,8 @@ jobs:
       - name: Run initial tests and applicable doctests
         shell: bash
         run: |
-          cargo test --workspace --locked --offline -- --nocapture | tee "$RUNNER_TEMP/bootstrap-tests.log"
-          grep -Fxq 'test unfinished_server_does_not_report_success ... ok' "$RUNNER_TEMP/bootstrap-tests.log"
+          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
+          python3 -u scripts/check-execution.py rust | tee "$RUNNER_TEMP/glaux-ci-evidence/rust.log"
       - name: Fetch the pinned disposable database image
         shell: bash
         run: |
@@ -63,5 +68,16 @@ jobs:
       - name: Exercise real database lifecycle and failure cases
         shell: bash
         run: |
-          python3 -u scripts/test_database.py 2>&1 | tee "$RUNNER_TEMP/database-tests.log"
-          grep -Fxq 'Database lifecycle: 7 passed; 0 failed; 0 skipped' "$RUNNER_TEMP/database-tests.log"
+          python3 -u scripts/check-execution.py database | tee "$RUNNER_TEMP/glaux-ci-evidence/database.log"
+      - name: Verify required execution rejects disposable failures
+        run: python3 -u scripts/test-ci-failures.py
+      - name: Inventory resolved dependencies and licence evidence
+        run: python3 scripts/dependency_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/dependency-inventory.json"
+      - name: Preserve actual execution evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1; MIT
+        with:
+          name: initial-ci-evidence
+          path: ${{ runner.temp }}/glaux-ci-evidence/
+          if-no-files-found: error
+          retention-days: 14
