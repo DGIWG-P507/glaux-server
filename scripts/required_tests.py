@@ -1,6 +1,18 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "numeric::tests::distinct_large_integers_never_collapse",
+    "numeric::tests::decimal_fractions_exponents_and_value_hashing_are_exact",
+    "numeric::tests::source_spelling_and_signed_zero_are_not_numeric_identity",
+    "numeric::tests::count_integrality_and_requested_integer_ranges_are_checked",
+    "numeric::tests::json_token_grammar_rejects_repairs_and_special_numbers",
+    "numeric::tests::numeric_budgets_fail_explicitly_before_expansion",
+    "numeric::tests::binary64_preserves_exact_bits_not_shortest_decimal_display",
+    "numeric::tests::nonfinite_states_are_explicit_and_nan_is_unordered",
+    "numeric_property_generator_is_pinned",
+    "numeric_property_equivalent_lexemes_and_integer_oracle",
+    "numeric_property_order_matches_integer_rationals",
+    "numeric_property_invalid_partitions_and_limits",
     "identity::tests::local_id_rfc_vector_and_exact_round_trip",
     "identity::tests::local_id_rejects_malformed_and_noncanonical_forms",
     "identity::tests::local_id_rejects_every_wrong_version_and_variant",

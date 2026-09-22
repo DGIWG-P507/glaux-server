@@ -21,8 +21,12 @@ def main():
         command = ["cargo", "run", "--locked", "--offline", "-p", "glaux-standards", "--example", "schema-parser-fuzz"]
         markers = ["Required schema-parser fuzz invariants passed: 1024 cases."]
         missing = "Required schema-parser fuzz campaign did not execute successfully"
+    elif sys.argv[1:] == ["numeric-fuzz"]:
+        command = ["cargo", "run", "--locked", "--offline", "-p", "glaux-domain", "--example", "numeric-parser-fuzz"]
+        markers = ["Required numeric-parser fuzz invariants passed: 2048 cases."]
+        missing = "Required numeric-parser fuzz campaign did not execute successfully"
     else:
-        sys.exit("Specify exactly rust, database or schema-fuzz; no test-selection override.")
+        sys.exit("Specify exactly rust, database, schema-fuzz or numeric-fuzz; no test-selection override.")
     print("Required command: " + " ".join(command), flush=True)
     try:
         result = subprocess.run(
