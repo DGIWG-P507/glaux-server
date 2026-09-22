@@ -3,5 +3,6 @@
 //! Dependencies point inward to the domain package. Structural validation uses
 //! pinned original schemas; codecs and resource semantics remain later work.
 
+pub mod projection;
 mod schema_guard;
 pub mod validation;

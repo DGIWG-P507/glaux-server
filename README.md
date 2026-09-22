@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, enforced CI, offline schema validation, typed identities, exact numbers and time — 22 September 2026 UTC.**
+**Initial build, enforced CI, request/response validation and exact value primitives — 22 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
@@ -41,6 +41,13 @@ source context, normalize offsets and keep known leap seconds distinct. Their
 real-database proof stores and compares exact values beyond timestamp resolution.
 Observation endpoints, interval filters and the application database adapter
 remain later work.
+
+[Direction-aware validation](docs/direction-validation.md) now separates initial
+System, stream and observation requests from responses: clients need not supply
+server-generated fields, and responses must not leak input-only schemas.
+Protected identity, parent and locked-schema checks are explicit; the original
+standards schemas remain unchanged. This is a validation foundation, not HTTP
+endpoints, a patch engine or complete resource semantics.
 
 ## Planned capabilities
 

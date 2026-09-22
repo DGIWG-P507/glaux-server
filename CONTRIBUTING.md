@@ -49,6 +49,11 @@ Use the complete [build/test commands](docs/ci.md#reproduce-the-checks) when cha
 
 The small `scripts/check-bootstrap.py` inventory checks this initial package graph. Update it, `scripts/check-execution.py`, the failure controls and dependency inventory with the controlling Guide and review when a later issue introduces legitimate dependencies or tests. Do not delete or weaken a guard merely to make an unexpected dependency or missing test pass.
 
+The [direction-projection tests](docs/direction-validation.md) separately check
+original-source verdicts, operation/direction shape and trusted-context guards.
+Keep those claims distinct when adding resource endpoints; a structural pass is
+not authorization or complete writable-domain validation.
+
 For database-harness changes, also run the [disposable database tests](docs/database-tests.md) in the authorised hosted Linux environment. They use Python's standard library and the pinned image's psql, not an application SQLx adapter. Keep the exact image/version checks, owned-target validation, fixture/reset isolation and fatal setup/cleanup errors; never supply a user database or broaden cleanup to unrelated containers/volumes. A Rust-only green result does not cover these required database checks.
 
 The project lead selected the branch/PR policy on September 18, 2026 and approved the explicit separate-review procedure and required-check enforcement decision on September 21, 2026:

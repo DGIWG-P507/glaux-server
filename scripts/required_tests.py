@@ -1,6 +1,20 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "projection::tests::minimal_requests_and_complete_responses_have_independent_contracts",
+    "projection::tests::generated_response_members_remain_required",
+    "projection::tests::writable_required_members_survive_request_projection",
+    "projection::tests::stream_schema_is_write_only_in_responses",
+    "projection::tests::nested_quantity_label_requirements_survive_projection",
+    "projection::tests::malformed_generated_members_are_not_ignored",
+    "projection::tests::only_resource_local_ids_are_ignored",
+    "projection::tests::wrong_direction_and_original_schema_results_are_distinct",
+    "projection::policy_tests::trusted_context_separates_uid_parent_and_ignored_local_id",
+    "projection::policy_tests::locked_contract_rejects_change_and_patch_removal",
+    "projection::policy_tests::partial_patch_intent_is_checked_before_full_candidate_validation",
+    "projection::policy_tests::observation_envelope_ignoring_is_not_recursive_or_an_alias",
+    "projection::policy_tests::ignored_members_do_not_bypass_bounded_lossless_parsing",
+    "projection::policy_tests::adaptations_are_separate_and_fail_when_source_preconditions_change",
     "temporal::tests::calendar_and_epoch_values_are_independent",
     "temporal::tests::offset_sign_and_unknown_offset_preserve_instant",
     "temporal::tests::fractional_boundaries_are_not_rounded",
