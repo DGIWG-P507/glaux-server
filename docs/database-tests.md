@@ -85,6 +85,18 @@ owned containers were removed. Reset was implemented without weakening those
 assertions. [PR #313](https://github.com/DGIWG-P507/glaux-server/pull/313) preserves
 the failing head, subsequent passing execution and separate-review record.
 
+## Exact-time storage proof
+
+Task #11's [exact-time proof](exact-time.md) separately uses this same isolation
+boundary through `python3 -u scripts/check-execution.py time-database`. Its five
+required tests pass actual Rust keys through unconstrained PostgreSQL numeric
+storage and checked Rust reconstruction, comparing to 18 independent fixtures.
+They cover exact equality/order/range predicates, sub-microsecond and long
+fractions, retained source metadata, known leap seconds, invalid stored fractions
+and deliberate key/source corruption. A lossy timestamp-cast control must collapse
+two values that the selected representation distinguishes. This adds one
+test-owned table, not a family migration or Rust SQLx adapter.
+
 ## Pin provenance and limits
 
 [database-image.json](../scripts/database-image.json) pins Linux/amd64 to:

@@ -1,6 +1,16 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "temporal::tests::calendar_and_epoch_values_are_independent",
+    "temporal::tests::offset_sign_and_unknown_offset_preserve_instant",
+    "temporal::tests::fractional_boundaries_are_not_rounded",
+    "temporal::tests::leap_slot_is_distinct_and_offsets_are_checked_in_utc",
+    "temporal::tests::syntax_and_input_budgets_fail_without_repair",
+    "temporal::tests::storage_parts_must_match_source_without_normalizing_away_errors",
+    "time_property_generator_is_pinned",
+    "time_property_calendar_and_offsets_match_integer_oracle",
+    "time_property_fraction_order_and_source_are_exact",
+    "time_property_calendar_leap_and_grammar_boundaries",
     "numeric::tests::distinct_large_integers_never_collapse",
     "numeric::tests::decimal_fractions_exponents_and_value_hashing_are_exact",
     "numeric::tests::source_spelling_and_signed_zero_are_not_numeric_identity",

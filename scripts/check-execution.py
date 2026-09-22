@@ -25,8 +25,16 @@ def main():
         command = ["cargo", "run", "--locked", "--offline", "-p", "glaux-domain", "--example", "numeric-parser-fuzz"]
         markers = ["Required numeric-parser fuzz invariants passed: 2048 cases."]
         missing = "Required numeric-parser fuzz campaign did not execute successfully"
+    elif sys.argv[1:] == ["time-fuzz"]:
+        command = ["cargo", "run", "--locked", "--offline", "-p", "glaux-domain", "--example", "time-parser-fuzz"]
+        markers = ["Required time-parser fuzz invariants passed: 2048 cases."]
+        missing = "Required time-parser fuzz campaign did not execute successfully"
+    elif sys.argv[1:] == ["time-database"]:
+        command = [sys.executable, "-u", "scripts/test_time_database.py"]
+        markers = ["Exact-time database: 5 passed; 0 failed; 0 skipped"]
+        missing = "Required exact-time database proof did not execute successfully"
     else:
-        sys.exit("Specify exactly rust, database, schema-fuzz or numeric-fuzz; no test-selection override.")
+        sys.exit("Specify exactly rust, database, schema-fuzz, numeric-fuzz, time-fuzz or time-database; no test-selection override.")
     print("Required command: " + " ".join(command), flush=True)
     try:
         result = subprocess.run(

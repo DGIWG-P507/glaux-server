@@ -27,12 +27,15 @@ python3 -u scripts/check-execution.py rust
 python3 -u scripts/check-execution.py schema-fuzz
 python3 -u scripts/check-execution.py numeric-fuzz
 python3 -u scripts/test-numeric-failures.py
+python3 -u scripts/check-execution.py time-fuzz
+python3 -u scripts/test-time-failures.py
 python3 -u scripts/check_identity_boundary.py
 python3 -u scripts/test-identity-failures.py
 python3 scripts/check_corpus.py
 python3 scripts/test_corpus.py
 python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness import PIN, docker; print(docker("pull", "--platform", PIN["platform"], PIN["image"], timeout=180))'
 python3 -u scripts/check-execution.py database
+python3 -u scripts/check-execution.py time-database
 python3 -u scripts/test-ci-failures.py
 python3 -u scripts/test-validation-failures.py
 python3 scripts/dependency_inventory.py
@@ -46,9 +49,9 @@ local Unix socket. Image/toolchain provisioning uses the network; Cargo operatio
 are offline after the explicit locked dependency fetch. No local prerequisites are installed implicitly.
 
 Formatting and Clippy check Rust; compileall checks Python syntax, not a claim of
-Python style/static-analysis coverage. The executable regression, named identity
-and standards tests, bounded schema-parser mutation campaign and seven real
-database lifecycle tests run. Empty doctest targets have no executable examples;
+Python style/static-analysis coverage. The executable regression, named identity,
+numeric, time and standards tests, bounded parser campaigns, exact-time storage
+proof and seven real database lifecycle tests run. Empty doctest targets have no executable examples;
 they are not substituted for the named behavioral checks.
 
 The [identity boundary harness](../scripts/check_identity_boundary.py) runs only

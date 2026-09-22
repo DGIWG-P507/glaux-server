@@ -14,7 +14,7 @@ cargo fmt --all --check
 cargo clippy --workspace --all-targets --locked --offline -- -D warnings
 ```
 
-The Python helpers need Python 3.11+ and only its standard library. They check the package graph/licence metadata, required discovery and actual execution; they are not needed just to compile the Rust packages. Cargo's normal workspace test command includes applicable doctests. There are no executable documentation examples yet; empty doctest targets are not substituted for the seven identity tests, eight numeric unit tests, four numeric property tests, sixteen structural-validation tests and executable's initial integration test. These workspace commands alone are not the full CI suite: follow [clean reproduction](ci.md#reproduce-the-checks) for lockfile checking, Python syntax, type-boundary probes, bounded parser campaigns, real database tests, failure controls and inventory.
+The Python helpers need Python 3.11+ and only its standard library. They check the package graph/licence metadata, required discovery and actual execution; they are not needed just to compile the Rust packages. Cargo's normal workspace test command includes applicable doctests. There are no executable documentation examples yet; empty doctest targets are not substituted for the seven identity tests, eight numeric unit tests, four numeric property tests, six time unit tests, four time property tests, sixteen structural-validation tests and executable's initial integration test. These workspace commands alone are not the full CI suite: follow [clean reproduction](ci.md#reproduce-the-checks) for lockfile checking, Python syntax, type-boundary probes, bounded parser campaigns, real database tests, failure controls and inventory.
 
 The `glaux-server` binary deliberately writes `glaux-server: bootstrap only; no server commands are implemented yet.` to standard error and exits with code 2. It does not bind a listener, accept commands or access storage. A successful build, or the names of the packages, is not proof of any planned server capability. Do not treat `cargo run -p glaux-server` as a successful server startup at this stage.
 
@@ -22,7 +22,7 @@ The `glaux-server` binary deliberately writes `glaux-server: bootstrap only; no 
 
 | Package | Current local dependencies | Current implementation |
 |---|---|---|
-| `glaux-domain` | None | [Typed identities](resource-identities.md) and [exact numeric primitives](exact-numbers.md); family models and persistence belong to later issues. |
+| `glaux-domain` | None | [Typed identities](resource-identities.md), [exact numeric primitives](exact-numbers.md) and [exact instants](exact-time.md); family models and persistence belong to later issues. |
 | `glaux-standards` | `glaux-domain` | [Original schema corpus and authored fixtures](standards-corpus.md), plus [bounded offline structural validation](structural-validation.md); no codec yet. |
 | `glaux-server` | Both libraries | Explicit unfinished-startup diagnostic and its process-level test. |
 
@@ -56,7 +56,7 @@ HTTP, resource behavior, operation-specific validation, codecs, brokers and conf
 
 [#6](https://github.com/DGIWG-P507/glaux-server/issues/6) owns the initial formatting/lint/build/unit/database suite, dependency/licence inventory, clean reproduction and false-green checks. [PR #314](https://github.com/DGIWG-P507/glaux-server/pull/314) records the actual main-rule application and failed/missing-check blocking probes, final execution and review. Automated checks do not mechanically enforce separate review. The eventual native/Compose reference instructions remain deliverables.
 
-Issues #4–#9 are complete. [#10 / task 1.2.4](https://github.com/DGIWG-P507/glaux-server/issues/10) adds exact numeric representation; its issue/PR record actual checks, review and delivery. After its reviewed merge and closure, the next candidate is [#11 / task 1.2.5](https://github.com/DGIWG-P507/glaux-server/issues/11), exact time parsing/comparison and its storage proof, only on a separate `proceed`. No local installation, persistent cloud provisioning or production access is implicit.
+Issues #4–#10 are complete. [#11 / task 1.2.5](https://github.com/DGIWG-P507/glaux-server/issues/11) adds exact time parsing/comparison and its storage proof; its issue/PR record actual checks, review and delivery. After its reviewed merge and closure, the next candidate is [#12 / task 1.2.6](https://github.com/DGIWG-P507/glaux-server/issues/12), only on a separate `proceed`. No local installation, persistent cloud provisioning or production access is implicit.
 
 ## Initial inspection record
 
