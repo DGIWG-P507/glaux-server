@@ -41,18 +41,6 @@ jobs:
           cargo --version --verbose
           rustfmt --version
           cargo clippy --version
-      - name: Prepare task 13 dependency proposal (not a passing check)
-        shell: bash
-        run: |
-          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
-          cargo update --workspace
-          cargo fetch --locked
-          cp Cargo.lock "$RUNNER_TEMP/glaux-ci-evidence/Cargo.lock"
-          python3 scripts/cargo_inventory.py --candidate > "$RUNNER_TEMP/glaux-ci-evidence/cargo-dependencies-candidate.json"
-          cargo fmt --all
-          git diff -- '*.rs' > "$RUNNER_TEMP/glaux-ci-evidence/rustfmt.patch"
-          echo 'Proposal only: lock and inventory require review and commit before normal locked CI.'
-          exit 1
       - name: Fetch the locked dependency archives
         shell: bash
         run: |
@@ -120,6 +108,9 @@ jobs:
       - name: Prove exact time through the real isolated database
         shell: bash
         run: python3 -u scripts/check-execution.py time-database | tee "$RUNNER_TEMP/glaux-ci-evidence/time-database.log"
+      - name: Prove System identity repository and real database constraints
+        shell: bash
+        run: python3 -u scripts/check-execution.py system-storage | tee "$RUNNER_TEMP/glaux-ci-evidence/system-storage.log"
       - name: Verify required execution rejects disposable failures
         run: python3 -u scripts/test-ci-failures.py
       - name: Verify validation assertions detect disposable faults
