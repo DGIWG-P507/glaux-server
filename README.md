@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, enforced CI and bounded offline schema validation — 22 September 2026 UTC.**
+**Initial build, enforced CI, offline schema validation and typed identities — 22 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
@@ -23,6 +23,12 @@ The [structural validator](docs/structural-validation.md) executes those cases
 against pinned, embedded sources, with fixed entry points and bounded input.
 It rejects external schema retrieval and non-progressing reference cycles.
 Structural success is not full SWE semantics, codec support or conformance.
+
+[Typed resource identities](docs/resource-identities.md) now separate UUIDv7 local
+locators, URI-form published UIDs and authority-qualified source identifiers.
+Strict parsing, fallible generation and type-boundary checks prevent accidental
+mixing; identifiers do not grant permission or establish observation time.
+Database uniqueness, resource-family models and HTTP behavior remain later work.
 
 ## Planned capabilities
 

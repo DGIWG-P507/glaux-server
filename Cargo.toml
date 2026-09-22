@@ -11,7 +11,10 @@ repository = "https://github.com/DGIWG-P507/glaux-server"
 publish = false
 
 [workspace.dependencies]
+fluent-uri = { version = "=0.4.1", default-features = false }
+getrandom = { version = "=0.4.3", default-features = false }
 glaux-domain = { path = "crates/glaux-domain" }
 glaux-standards = { path = "crates/glaux-standards" }
 jsonschema = { version = "=0.56.0", default-features = false }
 serde_json = { version = "=1.0.151", features = ["arbitrary_precision", "raw_value"] }
+uuid = { version = "=1.26.1", default-features = false }

@@ -41,6 +41,18 @@ jobs:
           cargo --version --verbose
           rustfmt --version
           cargo clippy --version
+      - name: Prepare unapproved task 9 dependency and formatting candidate
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
+          cargo fetch
+          cargo fmt --all
+          cp Cargo.lock "$RUNNER_TEMP/glaux-ci-evidence/Cargo.lock"
+          git diff -- '*.rs' > "$RUNNER_TEMP/glaux-ci-evidence/rustfmt.patch"
+          python3 scripts/cargo_inventory.py --candidate > "$RUNNER_TEMP/glaux-ci-evidence/cargo-dependencies.json"
+          cargo test -p glaux-domain --locked --offline -- --nocapture
+          echo 'Candidate evidence only: lock and inventory require review; this is not acceptance.'
+          exit 1
       - name: Fetch the locked dependency archives
         shell: bash
         run: |
@@ -73,6 +85,11 @@ jobs:
       - name: Exercise the bounded schema-parser mutation campaign
         shell: bash
         run: python3 -u scripts/check-execution.py schema-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/schema-fuzz.log"
+      - name: Prove public identity type boundaries and wrong-acceptance detection
+        shell: bash
+        run: |
+          python3 -u scripts/check_identity_boundary.py | tee "$RUNNER_TEMP/glaux-ci-evidence/identity-boundary.log"
+          python3 -u scripts/test-identity-failures.py
       - name: Fetch the pinned disposable database image
         shell: bash
         run: |

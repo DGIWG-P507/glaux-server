@@ -1,4 +1,6 @@
 //! Domain boundary for Glaux Server.
 //!
-//! Resource rules arrive in their owning issues. This bootstrap defines no
-//! resource model, HTTP handling, database access or broker behavior.
+//! Resource identity is separate from resource-family models, authorization,
+//! occurrence time, HTTP handling, database access and broker behavior.
+
+pub mod identity;

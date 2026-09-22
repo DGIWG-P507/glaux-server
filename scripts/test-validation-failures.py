@@ -105,9 +105,9 @@ def copy_source(files, source, destination):
         target.write_bytes((source / relative).read_bytes())
 
 
-def run_test(root, target_directory, test, log_path):
+def run_test(root, target_directory, test, log_path, *, package="glaux-standards"):
     command = [
-        "cargo", "test", "--locked", "--offline", "-p", "glaux-standards",
+        "cargo", "test", "--locked", "--offline", "-p", package,
         "--lib", test, "--", "--exact", "--nocapture",
     ]
     environment = os.environ.copy()

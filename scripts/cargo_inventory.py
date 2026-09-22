@@ -1,4 +1,4 @@
-"""Account for task #8's locked Cargo graph and enforce its reviewed snapshot.
+"""Account for the approved locked Cargo graph and enforce its reviewed snapshot.
 
 The explicit --candidate mode only emits evidence on the approved hosted runner.
 It does not approve or write a snapshot. Ordinary callers require the reviewed,
@@ -22,11 +22,18 @@ WORKSPACE_EDGES = {
     "glaux-standards": {"glaux-domain"},
     "glaux-server": {"glaux-domain", "glaux-standards"},
 }
-# Task #8 selection; the full resolved graph is separately reviewed as a snapshot.
+# Tasks #8/#9 selections; the resolved graph is separately reviewed as a snapshot.
 DIRECT_DEPENDENCIES = {
-    "jsonschema": {"version": "=0.56.0", "default_features": False, "features": []},
-    "serde_json": {"version": "=1.0.151", "default_features": True,
-                   "features": ["arbitrary_precision", "raw_value"]},
+    "glaux-standards": {
+        "jsonschema": {"version": "=0.56.0", "default_features": False, "features": []},
+        "serde_json": {"version": "=1.0.151", "default_features": True,
+                       "features": ["arbitrary_precision", "raw_value"]},
+    },
+    "glaux-domain": {
+        "uuid": {"version": "=1.26.1", "default_features": False, "features": []},
+        "getrandom": {"version": "=0.4.3", "default_features": False, "features": []},
+        "fluent-uri": {"version": "=0.4.1", "default_features": False, "features": []},
+    },
 }
 NETWORK_CLIENTS = {
     "attohttpc", "awc", "curl", "curl-sys", "hyper", "hyper-util", "isahc",
@@ -106,7 +113,7 @@ def check_workspace(package, node, packages, root, toolchain):
                    if packages[edge["pkg"]]["source"] is None}
     require(local_edges == WORKSPACE_EDGES[name],
             f"{name}: wrong inward workspace dependency edges: {sorted(local_edges)}")
-    expected_external = DIRECT_DEPENDENCIES if name == "glaux-standards" else {}
+    expected_external = DIRECT_DEPENDENCIES.get(name, {})
     # serde_json also generates the embedded corpus catalog in build.rs.
     expected_declarations = {(dependency, None) for dependency in WORKSPACE_EDGES[name]}
     expected_declarations |= {(dependency, None) for dependency in expected_external}
