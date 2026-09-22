@@ -12,11 +12,13 @@ On the selected GitHub-hosted Ubuntu runner, from the repository root:
 
 ```text
 python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness import PIN, docker; print(docker("pull", "--platform", PIN["platform"], PIN["image"], timeout=180))'
-python3 -u scripts/test_database.py
+python3 -u scripts/check-execution.py database
 ```
 
-The existing [Build workflow](../.github/workflows/build.yml) runs these after the
-Rust checks. Prerequisites are Python 3.11+ (standard library only) and a local
+The [Build workflow](../.github/workflows/build.yml) runs these after the Rust
+checks. The execution guard invokes `scripts/test_database.py` and checks its
+actual successful summary; [CI instructions](ci.md) include the failure controls.
+Prerequisites are Python 3.11+ (standard library only) and a local
 Linux Docker engine at `unix:///var/run/docker.sock`, as supplied by the hosted
 runner. There is no pip dependency or new Cargo dependency. The pull is an
 explicit network step; test containers themselves use `--network none`.
@@ -110,7 +112,9 @@ Container packaging is [MIT](https://github.com/postgis/docker-postgis/blob/2bcd
 PostgreSQL has its [PostgreSQL License](https://www.postgresql.org/about/licence/);
 PostGIS is [GPL-2.0-or-later](https://github.com/postgis/postgis/blob/3.6.4/LICENSE.TXT),
 with separately licensed bundled dependencies. The entire image is not MIT or
-Apache-2.0. Full dependency/security inventory remains #6; no peer source is copied.
+Apache-2.0. The [initial dependency/licence inventory](dependencies.md) records
+installed packages and available copyright files; it is not a security scan or
+complete release SBOM. No peer source is copied.
 
 These are lifecycle and initial-extension tests, not backup/restore, load,
 spatial-filter conformance, Rust-driver, production authentication or family-schema

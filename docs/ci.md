@@ -82,9 +82,13 @@ rewrite, and the actual `Rust bootstrap` check from GitHub Actions app `15368`.
 The historical name is retained, but that one job now includes all checks above.
 The branch must be up to date before merge.
 
-This JSON is a reproducible configuration, not evidence that settings were
-applied. Issue #6 and its PR record authenticated settings readback and observed
-merge blocking before claiming enforcement complete. Never merge faulty source
+The configuration was applied as [ruleset 23796335](https://github.com/DGIWG-P507/glaux-server/rules/23796335)
+on 21 September 2026 and authenticated readback confirmed it is effective on main,
+with no bypass available to the current administrator. [PR #314](https://github.com/DGIWG-P507/glaux-server/pull/314)
+records the exact heads and GitHub's blocked, non-draft, conflict-free merge states
+for a deliberately failed assertion and an intentionally missing check. Neither
+probe was merged. Configuration is not immutable: recheck live settings and the
+current head's execution before delivery. Never merge faulty source
 to test whether the rule works: inspect the exact head's failed/missing check and
 GitHub's blocked merge state instead. Do not confuse a conflict or draft status
 with a required-check block.

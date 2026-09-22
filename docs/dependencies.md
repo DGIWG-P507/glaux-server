@@ -31,7 +31,8 @@ After the workflow provisions the pinned Rust components and pulls the database
 image, it runs from the checked-out repository root:
 
 ```sh
-python3 scripts/dependency_inventory.py > "$RUNNER_TEMP/dependency-inventory.json"
+mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
+python3 scripts/dependency_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/dependency-inventory.json"
 ```
 
 The [inventory script](../scripts/dependency_inventory.py) emits JSON only after

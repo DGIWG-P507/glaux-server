@@ -9,4 +9,4 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before working. It links the controlling
 - Required checks must actually pass; never bypass protections. Follow CONTRIBUTING's explicit pre-CI documentation/prerequisite rules where applicable, without calling absent CI a pass.
 - Preserve unrelated work and user data. Do not install software, expand scope or change external permissions implicitly.
 
-These instructions trigger session-based delegation. They do not configure GitHub-triggered AI review or mechanically enforce review completion. A separate reviewer may use the same model; it is not independent human approval. Required-check configuration and proof belong to issue #6 under the approved contributor policy.
+These instructions trigger session-based delegation. They do not configure GitHub-triggered AI review or mechanically enforce review completion. A separate reviewer may use the same model; it is not independent human approval. The [active main-branch CI rule and its limits](docs/ci.md#main-branch-rule) are separate from this review procedure; issue #6 / PR #314 record configuration and proof.
