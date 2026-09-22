@@ -73,6 +73,11 @@ jobs:
       - name: Exercise the bounded schema-parser mutation campaign
         shell: bash
         run: python3 -u scripts/check-execution.py schema-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/schema-fuzz.log"
+      - name: Prove public identity type boundaries and wrong-acceptance detection
+        shell: bash
+        run: |
+          python3 -u scripts/check_identity_boundary.py | tee "$RUNNER_TEMP/glaux-ci-evidence/identity-boundary.log"
+          python3 -u scripts/test-identity-failures.py
       - name: Fetch the pinned disposable database image
         shell: bash
         run: |

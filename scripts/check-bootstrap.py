@@ -1,4 +1,4 @@
-"""Verify the reviewed task #8 package graph and required test discovery.
+"""Verify the reviewed package graph and required test discovery.
 
 Expected package edges come from Guide 2.2, not from Cargo's reported graph.
 Update this bootstrap-specific inventory when later approved tasks add dependencies

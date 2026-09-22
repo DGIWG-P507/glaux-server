@@ -1,6 +1,13 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "identity::tests::local_id_rfc_vector_and_exact_round_trip",
+    "identity::tests::local_id_rejects_malformed_and_noncanonical_forms",
+    "identity::tests::local_id_rejects_every_wrong_version_and_variant",
+    "identity::tests::generation_checks_clock_and_entropy_before_emitting_id",
+    "identity::tests::generation_uses_fresh_randomness_without_claiming_temporal_order",
+    "identity::tests::uid_preserves_absolute_uri_spelling_without_local_id_inference",
+    "identity::tests::source_identity_requires_both_fields_and_preserves_text",
     "unfinished_server_does_not_report_success",
     "validation::tests::published_corpus_expectations",
     "validation::tests::parser_fuzz_regressions",

@@ -12,6 +12,7 @@ new dependencies.
 | --- | --- | --- |
 | Glaux's three workspace packages | Local `0.1.0` packages with the same inward boundaries; `Cargo.lock` is committed and used without re-resolution. | [Apache-2.0](../LICENSE), as declared by each package. |
 | Structural validation | `jsonschema =0.56.0`, defaults disabled; `serde_json =1.0.151`, `arbitrary_precision` and `raw_value`. Exact transitive graph, all-target features, archive checksums and notice hashes: [reviewed Cargo snapshot](cargo-dependencies.json). | Package terms and actual packaged notices are recorded per dependency; no HTTP/filesystem retrieval feature or HTTP client is enabled. See [selection and limits](structural-validation.md). |
+| Typed identities | `uuid =1.26.1`, `getrandom =0.4.3`, `fluent-uri =0.4.1`, each with defaults disabled. [Selection, contracts and limits](resource-identities.md). | Actual packaged licences/notices and unified features are recorded in the reviewed Cargo snapshot; existing transitive `getrandom` remains separately accounted. |
 | Rust, Cargo, rustfmt and Clippy | Rust `1.98.1`, minimal toolchain plus the two explicit components; actual component versions appear in each run. | Rust's [Apache-2.0 OR MIT terms and third-party notice instructions](https://github.com/rust-lang/rust/blob/1.98.1/COPYRIGHT); bundled components retain their own notices. |
 | Checkout action | `actions/checkout` v7.0.1, `3d3c42e5aac5ba805825da76410c181273ba90b1`. | [MIT project licence](https://github.com/actions/checkout/blob/3d3c42e5aac5ba805825da76410c181273ba90b1/LICENSE). |
 | Inventory upload action | `actions/upload-artifact` v7.0.1, `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a`. | [MIT project licence](https://github.com/actions/upload-artifact/blob/043fb46d1a93c77aae656e7c1c64a875d1fc6a0a/LICENSE). Bundled action dependencies are not relicensed by that heading. |
@@ -68,17 +69,17 @@ tools, image, package data, malformed accounting or cleanup failures are errors.
 
 ## What this does not establish
 
-Task #8's reviewed lock contains 79 registry packages, including target-specific
+Task #9's reviewed lock contains 82 registry packages (three more than #8), including target-specific
 dependencies not necessarily compiled on Linux. No HTTP client or jsonschema
 HTTP/filesystem retrieval feature is enabled. All declared expressions offer
 permissive terms; compound Unicode data terms remain recorded rather than reduced
 to the crate's MIT/Apache heading. This is dependency-selection accounting, not
 a legal opinion or a completed release-redistribution check.
 
-Five archives contain no separately named licence/notice file: `jsonschema-regex`
+Six archives contain no separately named licence/notice file: `jsonschema-regex`
 and `jsonschema-value` 0.56.0 (MIT, [upstream workspace](https://github.com/Stranger6667/jsonschema/tree/rust-v0.56.0)),
 `uuid-simd` and `vsimd` 0.8.0 (MIT, [upstream](https://github.com/Nugine/simd)), and
-`r-efi` 5.3.0 (MIT OR Apache-2.0 OR LGPL-2.1-or-later,
+`r-efi` 5.3.0 and 6.0.0 (MIT OR Apache-2.0 OR LGPL-2.1-or-later,
 [upstream](https://github.com/r-efi/r-efi)). Their package metadata is present;
 the snapshot explicitly lists the absent packaged files. Do not describe them as
 missing licence declarations or silently claim their notices were present.

@@ -14,7 +14,7 @@ cargo fmt --all --check
 cargo clippy --workspace --all-targets --locked --offline -- -D warnings
 ```
 
-The Python helpers need Python 3.11+ and only its standard library. They check this initial package graph/licence metadata, required discovery and actual execution; they are not needed just to compile the Rust packages. Cargo's normal workspace test command includes applicable doctests. There are no executable documentation examples or domain/codec behaviors yet, so those targets currently report zero tests; that is explicitly not domain/standards verification. The executable has one initial integration test. These workspace commands alone are not the full CI suite: follow [clean reproduction](ci.md#reproduce-the-checks) for lockfile checking, Python syntax, real database tests, failure controls and inventory.
+The Python helpers need Python 3.11+ and only its standard library. They check the package graph/licence metadata, required discovery and actual execution; they are not needed just to compile the Rust packages. Cargo's normal workspace test command includes applicable doctests. There are no executable documentation examples yet; empty doctest targets are not substituted for the seven identity tests, sixteen structural-validation tests and executable's initial integration test. These workspace commands alone are not the full CI suite: follow [clean reproduction](ci.md#reproduce-the-checks) for lockfile checking, Python syntax, type-boundary probes, real database tests, failure controls and inventory.
 
 The `glaux-server` binary deliberately writes `glaux-server: bootstrap only; no server commands are implemented yet.` to standard error and exits with code 2. It does not bind a listener, accept commands or access storage. A successful build, or the names of the packages, is not proof of any planned server capability. Do not treat `cargo run -p glaux-server` as a successful server startup at this stage.
 
@@ -22,18 +22,18 @@ The `glaux-server` binary deliberately writes `glaux-server: bootstrap only; no 
 
 | Package | Current local dependencies | Current implementation |
 |---|---|---|
-| `glaux-domain` | None | Library boundary only; resource rules belong to later issues. |
-| `glaux-standards` | `glaux-domain` | Library boundary plus [original schema corpus and authored fixtures](standards-corpus.md); no validator or codec yet. |
+| `glaux-domain` | None | [Typed local IDs, UIDs and source identities](resource-identities.md); family models and persistence belong to later issues. |
+| `glaux-standards` | `glaux-domain` | [Original schema corpus and authored fixtures](standards-corpus.md), plus [bounded offline structural validation](structural-validation.md); no codec yet. |
 | `glaux-server` | Both libraries | Explicit unfinished-startup diagnostic and its process-level test. |
 
 The three packages are the exact initial production set in [Guide v1.21 §2.2](https://github.com/DGIWG-P507/glaux/blob/f2d9f912b1a75c14315b4555b21ae545fd6caaee/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#22-component-boundaries). No extra empty publication, tasking, policy or other subsystem packages are created. The libraries are not padded with invented domain behavior just to increase test counts.
 
-`scripts/check-bootstrap.py` compares Cargo's resolved graph with independently specified Guide-derived edges, checks original-package licence/edition/toolchain metadata and requires the named executable regression to be discovered exactly once. This is the initial graph inventory, not a prohibition on all future third-party dependencies. Later owning issues must update it deliberately against their approved changes.
+`scripts/check-bootstrap.py` compares Cargo's resolved graph with independently specified Guide-derived edges, checks original-package licence/edition/toolchain metadata and requires every named behavioral test to be discovered exactly once. This is the initial graph inventory, not a prohibition on all future third-party dependencies. Later owning issues must update it deliberately against their approved changes.
 
 ## Pins and hosted execution
 
 - Rust **1.98.1**, edition 2024, resolver 3, pinned by [rust-toolchain.toml](../rust-toolchain.toml). Package `rust-version` matches the actually selected toolchain; no compatibility with older compilers is claimed. [Official release](https://blog.rust-lang.org/2026/09/03/Rust-1.98.1/).
-- [Cargo.lock](../Cargo.lock) pins the three original Apache-2.0 packages at `0.1.0` and task #8's 79 registry packages, including target-specific dependencies. CI explicitly fetches locked archives, checks them against the reviewed [Cargo inventory](cargo-dependencies.json), and builds/tests with `--locked --offline` without regenerating the lock. Offline describes Cargo operations after provisioning, not the entire GitHub job.
+- [Cargo.lock](../Cargo.lock) pins the three original Apache-2.0 packages at `0.1.0` and task #9's 82 registry packages, including target-specific dependencies. CI explicitly fetches locked archives, checks them against the reviewed [Cargo inventory](cargo-dependencies.json), and builds/tests with `--locked --offline` without regenerating the lock. Offline describes Cargo operations after provisioning, not the entire GitHub job.
 - Checkout and evidence-upload actions use exact reviewed commit pins. Their project licences are MIT; Rust, database-image and runner components retain their own upstream terms. See the [dependency/licence inventory](dependencies.md) for identities, evidence and limits.
 - The [Build workflow](../.github/workflows/build.yml) uses standard `ubuntu-24.04` hosted runners, a 10-minute job limit, `contents: read`, no persisted checkout credentials and no production secrets. It runs on pull requests and main pushes, not `pull_request_target`. No paid runner upgrade or self-hosted machine is introduced.
 - On a PR, checkout selects its exact head SHA, verifies/logs that identity and tests it rather than the synthetic merge commit. Reconcile any base movement and re-test before merging. Main pushes test the merged commit. The active required-check rule and procedural separate assistant review are distinct from these runs.
@@ -56,7 +56,7 @@ HTTP, resource behavior, operation-specific validation, codecs, brokers and conf
 
 [#6](https://github.com/DGIWG-P507/glaux-server/issues/6) owns the initial formatting/lint/build/unit/database suite, dependency/licence inventory, clean reproduction and false-green checks. [PR #314](https://github.com/DGIWG-P507/glaux-server/pull/314) records the actual main-rule application and failed/missing-check blocking probes, final execution and review. Automated checks do not mechanically enforce separate review. The eventual native/Compose reference instructions remain deliverables.
 
-Issues #4–#6 are complete. [#7 / task 1.2.1](https://github.com/DGIWG-P507/glaux-server/issues/7) packages the pinned original schema corpus and independent fixtures. Its issue/PR records executed checks and completion. After that merge, the next candidate is [#8 / task 1.2.2](https://github.com/DGIWG-P507/glaux-server/issues/8): select and wrap structural validation against this corpus. It requires its own `proceed`; #7 does not implement it. No local installation, persistent cloud provisioning or production access is implicit.
+Issues #4–#8 are complete. [#9 / task 1.2.3](https://github.com/DGIWG-P507/glaux-server/issues/9) adds typed identities; its issue and [PR #317](https://github.com/DGIWG-P507/glaux-server/pull/317) record actual checks, review and delivery. After its reviewed merge and closure, the next candidate is [#10 / task 1.2.4](https://github.com/DGIWG-P507/glaux-server/issues/10), exact numeric representation, only on a separate `proceed`. No local installation, persistent cloud provisioning or production access is implicit.
 
 ## Initial inspection record
 
