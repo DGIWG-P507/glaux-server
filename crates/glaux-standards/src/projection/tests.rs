@@ -446,7 +446,12 @@ fn only_resource_local_ids_are_ignored() {
         // Guide 4.6 and the selected Features transaction revision's replace
         // /put-rid and update /rid rules ignore the submitted root id, not just
         // a well-typed or matching value. Parsing budgets still apply first.
-        for outer_id in [Value::Null, json!([]), json!(""), json!("different-local-id")] {
+        for outer_id in [
+            Value::Null,
+            json!([]),
+            json!(""),
+            json!("different-local-id"),
+        ] {
             let mut submitted = request.clone();
             submitted["id"] = outer_id.clone();
             for &projection in request_projections(resource) {
@@ -526,7 +531,12 @@ fn only_resource_local_ids_are_ignored() {
         Some(&json!("quantity-content-id"))
     );
     let existing_uid: Uid = "urn:glaux:fixture:thermometer".parse().unwrap();
-    for outer_id in [Value::Null, json!([]), json!(""), json!("different-local-id")] {
+    for outer_id in [
+        Value::Null,
+        json!([]),
+        json!(""),
+        json!("different-local-id"),
+    ] {
         submitted["id"] = outer_id;
         for projection in [Projection::ReplaceRequest, Projection::MergedPatch] {
             let actual = v.request(
