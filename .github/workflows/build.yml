@@ -12,7 +12,7 @@ jobs:
   rust-bootstrap:
     name: Rust bootstrap
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
     env:
       CARGO_TERM_COLOR: never
       RUST_BACKTRACE: "1"
@@ -41,6 +41,18 @@ jobs:
           cargo --version --verbose
           rustfmt --version
           cargo clippy --version
+      - name: Prepare task 13 dependency proposal (not a passing check)
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
+          cargo update --workspace
+          cargo fetch --locked
+          cp Cargo.lock "$RUNNER_TEMP/glaux-ci-evidence/Cargo.lock"
+          python3 scripts/cargo_inventory.py --candidate > "$RUNNER_TEMP/glaux-ci-evidence/cargo-dependencies-candidate.json"
+          cargo fmt --all
+          git diff -- '*.rs' > "$RUNNER_TEMP/glaux-ci-evidence/rustfmt.patch"
+          echo 'Proposal only: lock and inventory require review and commit before normal locked CI.'
+          exit 1
       - name: Fetch the locked dependency archives
         shell: bash
         run: |

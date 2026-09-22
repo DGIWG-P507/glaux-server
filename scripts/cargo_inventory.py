@@ -24,6 +24,12 @@ WORKSPACE_EDGES = {
 }
 # Task-owned selections; the resolved graph is separately reviewed as a snapshot.
 DIRECT_DEPENDENCIES = {
+    "glaux-server": {
+        "sqlx": {"version": "=0.9.0", "default_features": False,
+                 "features": ["migrate", "postgres", "runtime-tokio", "tls-rustls-ring-webpki"]},
+        "tokio": {"version": "=1.53.1", "default_features": False,
+                  "features": ["net", "rt", "sync", "time"]},
+    },
     "glaux-standards": {
         "jsonschema": {"version": "=0.56.0", "default_features": False, "features": []},
         "serde_json": {"version": "=1.0.151", "default_features": True,
