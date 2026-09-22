@@ -7,6 +7,8 @@ REQUIRED_RUST_TESTS = [
     "validation::tests::limits_and_safe_parse",
     "validation::tests::fixed_encoding_selection",
     "validation::tests::external_links_are_data_not_retrieval_instructions",
+    "validation::tests::preserves_wire_object_kind_with_private_number_member",
+    "validation::tests::complete_command_wrapper_enforces_its_encoding",
     "schema_guard::tests::rejects_direct_and_mutual_nonprogress_cycles",
     "schema_guard::tests::rejects_nonprogress_applicator_cycles",
     "schema_guard::tests::accepts_progressing_recursion_and_ignores_instance_data",

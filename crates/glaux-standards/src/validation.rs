@@ -153,7 +153,8 @@ fn parse(input: &[u8]) -> Result<Value, Failure> {
     if !frames.is_empty() {
         return Err(Failure::Malformed);
     }
-    let value: Value = serde_json::from_slice(input).map_err(|_| Failure::Malformed)?;
+    let raw: Box<serde_json::value::RawValue> = serde_json::from_slice(input).map_err(|_| Failure::Malformed)?;
+    let value = preserve_wire_kind(&raw)?;
     let mut pending = vec![&value];
     let mut nodes = 0;
     while let Some(node) = pending.pop() {
@@ -178,6 +179,28 @@ fn parse(input: &[u8]) -> Result<Value, Failure> {
         }
     }
     Ok(value)
+}
+
+// arbitrary_precision's generic Value visitor recognizes an internal map token.
+// RawValue keeps actual JSON objects distinct from that internal number token.
+// Depth was bounded lexically before this recursion; serde_json owns the grammar.
+fn preserve_wire_kind(raw: &serde_json::value::RawValue) -> Result<Value, Failure> {
+    let text = raw.get().trim_start();
+    match text.as_bytes().first() {
+        Some(b'{') => {
+            let members: BTreeMap<String, Box<serde_json::value::RawValue>> =
+                serde_json::from_str(text).map_err(|_| Failure::Malformed)?;
+            members.into_iter().map(|(key, value)| Ok((key, preserve_wire_kind(&value)?)))
+                .collect::<Result<serde_json::Map<String, Value>, Failure>>().map(Value::Object)
+        }
+        Some(b'[') => {
+            let members: Vec<Box<serde_json::value::RawValue>> =
+                serde_json::from_str(text).map_err(|_| Failure::Malformed)?;
+            members.into_iter().map(|value| preserve_wire_kind(&value))
+                .collect::<Result<Vec<Value>, Failure>>().map(Value::Array)
+        }
+        _ => serde_json::from_str(text).map_err(|_| Failure::Malformed),
+    }
 }
 
 /// Compiled once at startup from build-embedded reviewed files.

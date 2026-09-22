@@ -26,7 +26,7 @@ WORKSPACE_EDGES = {
 DIRECT_DEPENDENCIES = {
     "jsonschema": {"version": "=0.56.0", "default_features": False, "features": []},
     "serde_json": {"version": "=1.0.151", "default_features": True,
-                   "features": ["arbitrary_precision"]},
+                   "features": ["arbitrary_precision", "raw_value"]},
 }
 NETWORK_CLIENTS = {
     "attohttpc", "awc", "curl", "curl-sys", "hyper", "hyper-util", "isahc",

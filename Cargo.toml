@@ -14,4 +14,4 @@ publish = false
 glaux-domain = { path = "crates/glaux-domain" }
 glaux-standards = { path = "crates/glaux-standards" }
 jsonschema = { version = "=0.56.0", default-features = false }
-serde_json = { version = "=1.0.151", features = ["arbitrary_precision"] }
+serde_json = { version = "=1.0.151", features = ["arbitrary_precision", "raw_value"] }
