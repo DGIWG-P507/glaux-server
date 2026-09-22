@@ -15,13 +15,13 @@ This repository is home to the server implementation. Research and planning docu
 
 Use the [clean check instructions](docs/ci.md#reproduce-the-checks) and the [Build workflow](https://github.com/DGIWG-P507/glaux-server/actions/workflows/build.yml). Builds and disposable database tests run on GitHub-hosted Linux; no Rust/database installation on the company laptop or permanent cloud service is required. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records planning decisions; issues and PRs record execution.
 
-## Planned capabilities
-
 The [initial schema corpus](docs/standards-corpus.md) now preserves 138 original
 source/notice files with exact-byte provenance, a complete local schema-reference
 graph and 23 independently authored recursive/source-conflict expectations.
 CI checks packaging and deliberate corruption/missing-target failures offline.
 Schema validation remains the next task, #8; packaging is not a conformance claim.
+
+## Planned capabilities
 
 - **Describe and discover systems:** register systems, procedures, deployments, sampling features and properties, and follow their relationships.
 - **Work with observations:** submit, retrieve and filter observations and measurements, including location-based searches through related sampling geometry, while preserving timestamps, units and meaning.

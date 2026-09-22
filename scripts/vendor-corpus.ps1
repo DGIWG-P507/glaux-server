@@ -86,7 +86,6 @@ try {
     }
     $remote=Fetch "https://raw.githubusercontent.com/geojson/schema/$geoSource/license.md"
     Add-Artifact 'originals/licences/geojson-MIT.md' 'licence' $remote.url $remote $geoSource 'originals/licences/geojson-MIT.md' $remote.bytes
-    $json2020='add836e705c9a07434c467b6b90946ba45258a73'
     foreach($name in @('schema','meta/core','meta/applicator','meta/unevaluated','meta/validation','meta/meta-data','meta/format-annotation','meta/content')){
         $canonical="https://json-schema.org/draft/2020-12/$name"
         $remote=Fetch $canonical
@@ -121,6 +120,8 @@ try {
             if(-not(Test-Path -LiteralPath $path)){throw "Missing packaged source: $($artifact.path)"}
             if((Digest ([IO.File]::ReadAllBytes($path))) -cne $artifact.sha256 -or $existing.sha256 -cne $artifact.sha256 -or $existing.bytes -ne $artifact.bytes){throw "Source correspondence failed: $($artifact.path)"}
             if($existing.uri -cne $artifact.uri -or $existing.source_revision -cne $artifact.source_revision -or ($existing.aliases -join "`n") -cne ($artifact.aliases -join "`n")){throw 'Source mapping changed'}
+            if($existing.source_url -cne $artifact.source_url -or $existing.kind -cne $artifact.kind -or $existing.licence -cne $artifact.licence){throw "Source attribution changed: $($artifact.path)"}
+            if(($existing.verified_mirrors.url -join "`n") -cne ($artifact.verified_mirrors.url -join "`n")){throw "Mirror selection changed: $($artifact.path)"}
         }
         Write-Output "Fresh upstream verification: $($ordered.Count) original artifacts match; no local file changed."
     } else {
