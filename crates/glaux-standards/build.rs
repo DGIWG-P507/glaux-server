@@ -6,7 +6,8 @@ fn main() {
     let manifest = corpus.join("manifest.json");
     println!("cargo:rerun-if-changed={}", manifest.display());
     let value: serde_json::Value =
-        serde_json::from_slice(&fs::read(manifest).expect("corpus manifest")).expect("manifest JSON");
+        serde_json::from_slice(&fs::read(manifest).expect("corpus manifest"))
+            .expect("manifest JSON");
     let mut generated = String::from("const DOCUMENTS: &[(&str, &str)] = &[\n");
     for artifact in value["artifacts"].as_array().expect("artifact inventory") {
         if artifact["kind"] != "schema" {
@@ -14,7 +15,11 @@ fn main() {
         }
         let relative = artifact["path"].as_str().expect("artifact path");
         assert!(relative.starts_with("originals/"));
-        assert!(relative.split('/').all(|part| !part.is_empty() && part != ".." && part != "."));
+        assert!(
+            relative
+                .split('/')
+                .all(|part| !part.is_empty() && part != ".." && part != ".")
+        );
         let file = corpus.join(relative).canonicalize().expect("original file");
         assert!(file.starts_with(corpus.canonicalize().expect("corpus root")));
         println!("cargo:rerun-if-changed={}", file.display());

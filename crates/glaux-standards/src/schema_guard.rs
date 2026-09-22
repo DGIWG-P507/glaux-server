@@ -65,8 +65,8 @@ fn check_with_limits(catalog: &BTreeMap<String, Value>, limits: Limits) -> Resul
         references: Vec::new(),
     };
     for (document, schema) in catalog {
-        let uri = Uri::parse(document.as_str())
-            .map_err(|_| "invalid catalog resource URI".to_owned())?;
+        let uri =
+            Uri::parse(document.as_str()).map_err(|_| "invalid catalog resource URI".to_owned())?;
         if uri.fragment().is_some() {
             return Err("catalog resource URI contains a fragment".to_owned());
         }
@@ -265,7 +265,12 @@ impl<'a> Guard<'a> {
         let uri = Uri::parse(target).map_err(|_| "invalid resolved schema URI".to_owned())?;
         let fragment = uri
             .fragment()
-            .map(|fragment| fragment.decode().to_string().map(|value| value.into_owned()))
+            .map(|fragment| {
+                fragment
+                    .decode()
+                    .to_string()
+                    .map(|value| value.into_owned())
+            })
             .transpose()
             .map_err(|_| "schema fragment is not UTF-8".to_owned())?
             .unwrap_or_default();
@@ -288,7 +293,11 @@ impl<'a> Guard<'a> {
         }
         // Validate pointer escaping as well as existence; serde_json's pointer
         // lookup alone accepts malformed '~' escapes as literal characters.
-        if fragment.split('/').skip(1).any(|part| !valid_pointer_part(part)) {
+        if fragment
+            .split('/')
+            .skip(1)
+            .any(|part| !valid_pointer_part(part))
+        {
             return Err("invalid schema JSON Pointer escape".to_owned());
         }
         let root = &self.nodes[root];
@@ -364,7 +373,9 @@ fn valid_pointer_part(part: &str) -> bool {
 
 fn valid_anchor(name: &str) -> bool {
     let mut bytes = name.bytes();
-    bytes.next().is_some_and(|first| first.is_ascii_alphabetic() || first == b'_')
+    bytes
+        .next()
+        .is_some_and(|first| first.is_ascii_alphabetic() || first == b'_')
         && bytes.all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-' | b'.'))
 }
 
@@ -444,11 +455,17 @@ mod tests {
     #[test]
     fn rejects_missing_resources_pointers_and_anchors() {
         for (reference, expected) in [
-            ("missing.json", "schema reference is outside the embedded catalog"),
+            (
+                "missing.json",
+                "schema reference is outside the embedded catalog",
+            ),
             ("#/$defs/missing", "schema JSON Pointer target is missing"),
             ("#missing", "schema anchor target is missing"),
             ("#/$defs/a~2b", "invalid schema JSON Pointer escape"),
-            ("#/default", "reference target is not an indexed schema position"),
+            (
+                "#/default",
+                "reference target is not an indexed schema position",
+            ),
         ] {
             assert_eq!(
                 check_catalog(&catalog(json!({"$ref": reference, "default": {}}))),
@@ -493,7 +510,8 @@ mod tests {
             }
         });
         assert_eq!(check_catalog(&catalog(schema)), Ok(()));
-        let schema = json!({"$id": ROOT, "$dynamicAnchor": "meta", "items": {"$dynamicRef": "#meta"}});
+        let schema =
+            json!({"$id": ROOT, "$dynamicAnchor": "meta", "items": {"$dynamicRef": "#meta"}});
         let mut schemas = catalog(schema.clone());
         schemas.insert("https://aliases.example/root.json".to_owned(), schema);
         assert_eq!(check_catalog(&schemas), Ok(()));
@@ -518,22 +536,39 @@ mod tests {
 
     #[test]
     fn enforces_schema_node_and_depth_boundaries() {
-        let limits = Limits { nodes: 3, depth: 3, same_instance_depth: 3 };
-        assert_eq!(check_with_limits(&catalog(json!({"allOf": [true, false]})), limits), Ok(()));
+        let limits = Limits {
+            nodes: 3,
+            depth: 3,
+            same_instance_depth: 3,
+        };
+        assert_eq!(
+            check_with_limits(&catalog(json!({"allOf": [true, false]})), limits),
+            Ok(())
+        );
         assert_eq!(
             check_with_limits(&catalog(json!({"allOf": [true, false, true]})), limits),
             Err("schema node limit exceeded".to_owned())
         );
-        assert_eq!(check_with_limits(&catalog(json!({"items": {"items": true}})), limits), Ok(()));
         assert_eq!(
-            check_with_limits(&catalog(json!({"items": {"items": {"items": true}}})), limits),
+            check_with_limits(&catalog(json!({"items": {"items": true}})), limits),
+            Ok(())
+        );
+        assert_eq!(
+            check_with_limits(
+                &catalog(json!({"items": {"items": {"items": true}}})),
+                limits
+            ),
             Err("schema nesting depth limit exceeded".to_owned())
         );
     }
 
     #[test]
     fn enforces_reference_depth_including_previously_finished_branches() {
-        let limits = Limits { nodes: 20, depth: 5, same_instance_depth: 3 };
+        let limits = Limits {
+            nodes: 20,
+            depth: 5,
+            same_instance_depth: 3,
+        };
         let schema = json!({"$defs": {
             "a": true,
             "b": {"$ref": "#/$defs/a"},

@@ -80,17 +80,28 @@ fn limits_and_safe_parse() {
 
 #[test]
 fn external_links_are_data_not_retrieval_instructions() {
+    let corpus = catalog().unwrap();
+    let observer = DenyRetrieval::default();
+    let compiled = compile_with_denial(&corpus, &Contract::Quantity.uri(), observer.clone()).unwrap();
     let mut instance: Value = serde_json::from_slice(&fixture("quantity-labelled.json")).unwrap();
     for uri in ["http://127.0.0.1:9/canary", "file:///glaux-no-such-file", "data:application/json,false"] {
         instance["extension"] = serde_json::json!({"$ref":uri,"href":uri});
         assert_eq!(validator().validate(Contract::Quantity, &serde_json::to_vec(&instance).unwrap()), Ok(()));
+        assert!(compiled.is_valid(&instance));
+        assert_eq!(observer.0.load(Ordering::Relaxed), 0, "instance metadata requested retrieval");
     }
-    // Compiler has offline() plus zero transport features. Unknown schema refs
-    // fail; the only public validation arguments are a fixed enum and bytes.
-    let corpus = catalog().unwrap();
+    // Prove the observer is connected: missing schema URIs reach the installed
+    // denial hook, which records the attempt and returns without any I/O.
     for uri in ["http://127.0.0.1:9/canary", "file:///glaux-no-such-file", "data:application/json,false"] {
-        assert!(compile(&corpus, uri).is_err(), "unknown URI escaped: {uri}");
+        let observer = DenyRetrieval::default();
+        assert!(compile_with_denial(&corpus, uri, observer.clone()).is_err(), "unknown URI escaped: {uri}");
+        assert!(observer.0.load(Ordering::Relaxed) > 0, "denial observer was not connected");
     }
+    let observer = DenyRetrieval::default();
+    let broken = BTreeMap::from([("https://schemas.example/root".to_owned(),
+        serde_json::json!({"$ref":"file:///unavailable-schema"}))]);
+    assert!(compile_with_denial(&broken, "https://schemas.example/root", observer.clone()).is_err());
+    assert!(observer.0.load(Ordering::Relaxed) > 0, "registry-preparation denial was not observed");
 }
 
 #[test]

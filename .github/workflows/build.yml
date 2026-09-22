@@ -45,7 +45,6 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
-          cargo generate-lockfile
           cargo fetch --locked
           cargo fmt --all
           cp Cargo.lock "$RUNNER_TEMP/glaux-ci-evidence/Cargo.lock"

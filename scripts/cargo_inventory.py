@@ -173,6 +173,7 @@ def cargo_inventory(root=ROOT, *, enforce_snapshot=True):
         require(set(node["dependencies"]) <= set(packages),
                 f"{label(package)}: dependency missing from inventory.")
         checksum = locked[identity(package)].get("checksum")
+        fetched_archive = None
         if package_id in members:
             check_workspace(package, node, packages, root, toolchain)
             notices = [{"path": "LICENSE", "sha256": sha256(root / "LICENSE")}]
@@ -181,9 +182,18 @@ def cargo_inventory(root=ROOT, *, enforce_snapshot=True):
                     f"{label(package)}: unreviewed dependency source.")
             require(isinstance(checksum, str) and re.fullmatch(r"[a-f0-9]{64}", checksum),
                     f"{label(package)}: missing registry checksum.")
-            checksum_path = Path(package["manifest_path"]).parent / ".cargo-checksum.json"
-            require(json.loads(checksum_path.read_text())["package"] == checksum,
-                    f"{label(package)}: fetched package checksum differs from Cargo.lock.")
+            directory = Path(package["manifest_path"]).resolve().parent
+            require(directory.name == f"{package['name']}-{package['version']}"
+                    and directory.parent.parent.name == "src"
+                    and directory.parents[2].name == "registry",
+                    f"{label(package)}: unexpected Cargo registry cache layout.")
+            archive = (directory.parents[2] / "cache" / directory.parent.name
+                       / (directory.name + ".crate"))
+            require(archive.is_file(), f"{label(package)}: fetched crate archive is missing.")
+            archive_digest = sha256(archive)
+            require(archive_digest == checksum,
+                    f"{label(package)}: fetched archive checksum differs from Cargo.lock.")
+            fetched_archive = {"file": archive.name, "sha256": archive_digest}
             require(package["name"] not in NETWORK_CLIENTS,
                     f"{label(package)}: network client is outside the offline validator scope.")
             if package["name"] == "jsonschema":
@@ -193,6 +203,7 @@ def cargo_inventory(root=ROOT, *, enforce_snapshot=True):
         inventory.append({
             "name": package["name"], "version": package["version"],
             "source": package["source"] or "local workspace", "checksum": checksum,
+            "fetched_archive": fetched_archive,
             "declared_license": package["license"], "declared_license_file": package["license_file"],
             "notice_files": notices, "enabled_features": sorted(node["features"]),
             "dependencies": sorted_records([

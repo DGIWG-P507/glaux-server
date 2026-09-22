@@ -3,6 +3,7 @@
 //! No caller-selected schema URI, filesystem path or remote retrieval is exposed.
 //! Success is structural only; it does not establish semantics or codec support.
 use std::collections::{BTreeMap, HashSet};
+use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
 
 use serde_json::Value;
 
@@ -174,16 +175,32 @@ fn catalog() -> Result<BTreeMap<String, Value>, String> {
 }
 
 fn compile(catalog: &BTreeMap<String, Value>, uri: &str) -> Result<jsonschema::Validator, String> {
+    compile_with_denial(catalog, uri, DenyRetrieval::default())
+}
+
+/// The only installed retriever has no I/O or fallback. Its counter lets tests
+/// prove that ordinary validation never asks it to resolve instance data.
+#[derive(Clone, Default)]
+struct DenyRetrieval(Arc<AtomicUsize>);
+
+impl jsonschema::Retrieve for DenyRetrieval {
+    fn retrieve(&self, _uri: &jsonschema::Uri<String>) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
+        self.0.fetch_add(1, Ordering::Relaxed);
+        Err("schema retrieval denied: embedded resources only".into())
+    }
+}
+
+fn compile_with_denial(catalog: &BTreeMap<String, Value>, uri: &str, deny: DenyRetrieval) -> Result<jsonschema::Validator, String> {
     // Originals retain their retrieval bases; the tiny wrapper selects a named
     // fragment without cloning it and accidentally changing relative references.
-    let mut builder = jsonschema::Registry::new();
+    let mut builder = jsonschema::Registry::new().retriever(deny.clone());
     for (name, value) in catalog {
         builder = builder.add(name.as_str(), value).map_err(|e| e.to_string())?;
     }
     let registry = builder.prepare().map_err(|e| e.to_string())?;
     jsonschema::options()
         .with_registry(&registry)
-        .offline()
+        .with_retriever(deny)
         .with_draft(jsonschema::Draft::Draft202012)
         .with_pattern_options(jsonschema::PatternOptions::fancy_regex()
             .backtrack_limit(20_000).size_limit(1_048_576).dfa_size_limit(1_048_576))
