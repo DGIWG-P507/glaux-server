@@ -70,8 +70,7 @@ impl Decimal {
     }
 
     fn compare(self, other: Self) -> Ordering {
-        (self.coefficient * other.denominator())
-            .cmp(&(other.coefficient * self.denominator()))
+        (self.coefficient * other.denominator()).cmp(&(other.coefficient * self.denominator()))
     }
 }
 
@@ -206,11 +205,39 @@ fn numeric_property_order_matches_integer_rationals() {
 #[test]
 fn numeric_property_invalid_partitions_and_limits() {
     for invalid in [
-        "", "+1", "01", "-01", ".1", "1.", "1e", "1e+", "1e-", "--1", " 1", "1 ",
-        "1\n", "1\0", "1_000", "0x10", "NaN", "Infinity", "+Infinity", "-Infinity", "\"1\"",
-        "\"NaN\"", "1,2", "[1]", "true", "１", "−1", "1e２",
+        "",
+        "+1",
+        "01",
+        "-01",
+        ".1",
+        "1.",
+        "1e",
+        "1e+",
+        "1e-",
+        "--1",
+        " 1",
+        "1 ",
+        "1\n",
+        "1\0",
+        "1_000",
+        "0x10",
+        "NaN",
+        "Infinity",
+        "+Infinity",
+        "-Infinity",
+        "\"1\"",
+        "\"NaN\"",
+        "1,2",
+        "[1]",
+        "true",
+        "１",
+        "−1",
+        "1e２",
     ] {
-        assert!(ExactNumber::parse_json_number(invalid).is_err(), "{invalid:?}");
+        assert!(
+            ExactNumber::parse_json_number(invalid).is_err(),
+            "{invalid:?}"
+        );
         assert!(invalid.parse::<ExactNumber>().is_err(), "{invalid:?}");
     }
     assert_eq!(MAX_NUMERIC_TEXT_BYTES, 4096);
@@ -225,7 +252,16 @@ fn numeric_property_invalid_partitions_and_limits() {
     assert!(parse("1e4096") > parse("1"));
     assert!(parse("1e-4096") > parse("0"));
     assert!(parse("1e-4096") < parse("1"));
-    for invalid in ["1e4097", "1e-4097", "0e4097", "0e-4097", "1e999999999999999999999"] {
-        assert!(ExactNumber::parse_json_number(invalid).is_err(), "{invalid}");
+    for invalid in [
+        "1e4097",
+        "1e-4097",
+        "0e4097",
+        "0e-4097",
+        "1e999999999999999999999",
+    ] {
+        assert!(
+            ExactNumber::parse_json_number(invalid).is_err(),
+            "{invalid}"
+        );
     }
 }

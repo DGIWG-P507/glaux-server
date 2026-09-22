@@ -1,15 +1,15 @@
 {
-  "cargo_lock_sha256": "3fa0e034625d917ed34891efaa371fe3688f6d71ba3fe84674710c9df9567fed",
+  "cargo_lock_sha256": "ecfee1e22ee9bbc4d7432b5cd3c1bbfd65a8e0de0fcb4945a62aa030e1e7bd8d",
   "format_version": 1,
   "licence_metadata_unavailable": [],
   "manifests": [
     {
       "path": "Cargo.toml",
-      "sha256": "68cc386bca2f2de7195a1348cbf0faf9edeb8af1baf1659d7c0bd6d0553f41b0"
+      "sha256": "91929fca4509c374684ee7d12c06701bbe051af6b280ee883a85e2fa9289b1a5"
     },
     {
       "path": "crates/glaux-domain/Cargo.toml",
-      "sha256": "003158b6fbb5ccf8559fa003f2d3e243e6eb68530837eceb95d0058910396efd"
+      "sha256": "7cd10cfc3dd5cf939f7a43ad43a8410443bc97e114854abad8cd1b4d3640d319"
     },
     {
       "path": "crates/glaux-server/Cargo.toml",
@@ -881,6 +881,36 @@
           ],
           "name": "getrandom",
           "package": "getrandom 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)"
+        },
+        {
+          "kinds": [
+            {
+              "kind": null,
+              "target": null
+            }
+          ],
+          "name": "num_bigint",
+          "package": "num-bigint 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)"
+        },
+        {
+          "kinds": [
+            {
+              "kind": null,
+              "target": null
+            }
+          ],
+          "name": "num_rational",
+          "package": "num-rational 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)"
+        },
+        {
+          "kinds": [
+            {
+              "kind": null,
+              "target": null
+            }
+          ],
+          "name": "num_traits",
+          "package": "num-traits 0.2.19 (registry+https://github.com/rust-lang/crates.io-index)"
         },
         {
           "kinds": [

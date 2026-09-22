@@ -56,9 +56,30 @@ fn rational(coefficient: i128, scale: u32) -> Expected {
 fn generate(seed: u64) -> Vec<Case> {
     let mut generator = Generator(seed);
     let invalid = [
-        "", "+1", "01", "-01", ".5", "5.", "1e", "1e+", "1e-", "--1", " 1", "1 ",
-        "1\n", "1\0", "1_0", "NaN", "Infinity", "+Infinity", "-Infinity", "\"1\"", "１",
-        "−1", "1e２", "[1]",
+        "",
+        "+1",
+        "01",
+        "-01",
+        ".5",
+        "5.",
+        "1e",
+        "1e+",
+        "1e-",
+        "--1",
+        " 1",
+        "1 ",
+        "1\n",
+        "1\0",
+        "1_0",
+        "NaN",
+        "Infinity",
+        "+Infinity",
+        "-Infinity",
+        "\"1\"",
+        "１",
+        "−1",
+        "1e２",
+        "[1]",
     ];
     let boundary_cases = [
         text_case("1e4096".into(), Expected::PositiveLarge, true),
