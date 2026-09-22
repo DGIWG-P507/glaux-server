@@ -6,14 +6,14 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build and database-test foundation — 21 September 2026.**
+**Initial build, database tests and enforced CI — 21 September 2026.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
-- Apache-2.0 licensing and the contributor/review workflow are in place. Required automated-check enforcement is approved but still awaits implementation under [issue #6](https://github.com/DGIWG-P507/glaux-server/issues/6).
-- The initial three-package Rust workspace and GitHub build/test workflow are present. The [disposable database harness](docs/database-tests.md) adds actual PostgreSQL/PostGIS identity, initial-extension migration, isolation and lifecycle-failure checks. This is not a runnable CSAPI service: resource behavior, HTTP endpoints and Rust application storage remain unimplemented. [PR #312](https://github.com/DGIWG-P507/glaux-server/pull/312) and [issue #5](https://github.com/DGIWG-P507/glaux-server/issues/5) record actual execution, limitations and review.
+- Apache-2.0 licensing and the contributor/review workflow are in place. The [active main-branch rule](https://github.com/DGIWG-P507/glaux-server/rules/23796335) requires a pull request and passing, up-to-date CI, with no bypass or mandatory human approval. [Issue #6](https://github.com/DGIWG-P507/glaux-server/issues/6) and [PR #314](https://github.com/DGIWG-P507/glaux-server/pull/314) record settings, failed/missing-check blocking proofs, actual runs and review.
+- The initial three-package Rust workspace and [CI suite](docs/ci.md) cover formatting, Clippy, build, the initial executable regression, seven real database lifecycle tests and nine controls against false-green results. The [dependency/licence inventory](docs/dependencies.md) records what those runs use. This is not a runnable CSAPI service: resource behavior, HTTP endpoints and Rust application storage remain unimplemented.
 
-Use the [build/test instructions](docs/setup.md#current-build-and-test-commands) and the [Build workflow](https://github.com/DGIWG-P507/glaux-server/actions/workflows/build.yml). Builds and disposable database tests run on GitHub-hosted Linux; no Rust/database installation on the company laptop or permanent cloud service is required. #6 completes the check suite and merge enforcement. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records planning decisions; issues and PRs record execution.
+Use the [clean check instructions](docs/ci.md#reproduce-the-checks) and the [Build workflow](https://github.com/DGIWG-P507/glaux-server/actions/workflows/build.yml). Builds and disposable database tests run on GitHub-hosted Linux; no Rust/database installation on the company laptop or permanent cloud service is required. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records planning decisions; issues and PRs record execution.
 
 ## Planned capabilities
 
@@ -59,7 +59,7 @@ The [research synthesis and supplements](https://github.com/DGIWG-P507/glaux/blo
 
 Start with [CONTRIBUTING.md](CONTRIBUTING.md), the [published implementation issues](https://github.com/DGIWG-P507/glaux-server/issues) and, for coding assistants, [AGENTS.md](AGENTS.md). The assisted workflow advances one authorized issue at a time through a task branch, pull request, applicable checks and a separate assistant review of the actual change and evidence. Only completed, reviewed work is merged; an incomplete or blocking review leaves the PR open.
 
-Assistant review is launched by the working session, not by an enabled GitHub AI-review service. The approved required-check policy still needs configuration and proof under issue #6; written instructions are not a claim that GitHub already enforces it. Detailed review, merge and pre-CI verification rules remain in CONTRIBUTING.
+Assistant review is launched by the working session, not by an enabled GitHub AI-review service. GitHub enforces the required CI result; it does not mechanically enforce completion of that separate review. Detailed review and merge rules remain in CONTRIBUTING.
 
 ## License
 
