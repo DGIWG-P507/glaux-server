@@ -24,6 +24,8 @@ python3 -m compileall -q scripts
 cargo build --workspace --locked --offline
 python3 scripts/check-bootstrap.py
 python3 -u scripts/check-execution.py rust
+python3 scripts/check_corpus.py
+python3 scripts/test_corpus.py
 python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness import PIN, docker; print(docker("pull", "--platform", PIN["platform"], PIN["image"], timeout=180))'
 python3 -u scripts/check-execution.py database
 python3 -u scripts/test-ci-failures.py
@@ -42,6 +44,13 @@ Python style/static-analysis coverage. The executable regression and seven real
 database lifecycle tests actually run. Domain/standards unit/doctest targets are
 empty because they contain no behavior or executable examples yet, not because
 required tests were waived. Later owners add their behavioral tests and inventory.
+
+The [standards corpus](standards-corpus.md) has a separate standard-library
+Python packaging check and 15 controls. They check unchanged original bytes,
+complete local reference targets and fixture metadata with socket access blocked.
+They do not execute the 23 authored schema-validation expectations; #8 owns that.
+Controlled corruption and missing-target rejection are the failure-sensitivity
+proof for this packaging task, not a claim that schema validation ran.
 
 ## Evidence and failure sensitivity
 

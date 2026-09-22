@@ -1,0 +1,40 @@
+{
+  "type": "DataRecord",
+  "name": "record",
+  "fields": [
+    {
+      "type": "DataArray",
+      "name": "samples",
+      "elementCount": {
+        "value": 2
+      },
+      "elementType": {
+        "type": "DataRecord",
+        "name": "sample",
+        "fields": [
+          {
+            "name": "temperature",
+            "type": "Quantity",
+            "definition": "urn:glaux:fixture:temperature",
+            "label": "Temperature",
+            "uom": {
+              "code": "K"
+            }
+          },
+          {
+            "type": "DataRecord",
+            "name": "diagnostics",
+            "fields": [
+              {
+                "type": "Count",
+                "name": "sequence",
+                "definition": "urn:glaux:fixture:sequence",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

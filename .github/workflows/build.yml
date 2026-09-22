@@ -65,6 +65,11 @@ jobs:
         run: |
           docker version
           python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness import PIN, docker; print(PIN); print(docker("pull", "--platform", PIN["platform"], PIN["image"], timeout=180))'
+      - name: Check original corpus and offline fault controls
+        shell: bash
+        run: |
+          python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus.log"
+          python3 -u scripts/test_corpus.py 2>&1 | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-controls.log"
       - name: Exercise real database lifecycle and failure cases
         shell: bash
         run: |

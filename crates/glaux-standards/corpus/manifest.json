@@ -1,0 +1,2188 @@
+{
+  "format_version": 1,
+  "purpose": "Original initial schema corpus; packaging is not validation or conformance.",
+  "csapi_archive": {
+    "url": "https://codeload.github.com/opengeospatial/ogcapi-connected-systems/zip/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+    "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+    "sha256": "0575446bd5bb0c8ffcf29102f2efcb310fc732d20d726cabcfd1ae21913958cb"
+  },
+  "artifacts": [
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/common/batch_delete.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/batch_delete.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/batch_delete.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/batch_delete.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 234,
+      "sha256": "067b92640882d9dd554a42fa72684d18639c31c0283ee9557f0fc3f7ffac5213",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/common/batch_response.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/batch_response.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/batch_response.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/batch_response.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 747,
+      "sha256": "0f0c8116a94184f17a91c0efe77f2dd3e6f2d6e0cf6702c04fb79bf3dce94307",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/common/commonDefs.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/commonDefs.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/commonDefs.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/commonDefs.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 362,
+      "sha256": "c8e7a05a9f5747f65f0be936dfc91d1f424c5961cabbba16d3bb9cf971d84dd6",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/common/links.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/links.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/links.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/links.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 189,
+      "sha256": "b365bc0fc8325f8df468bbfc289d9775b217587849c9278ce4b522f7696da8f9",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/common/uris.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/uris.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/uris.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/common/uris.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1430,
+      "sha256": "f57f7cae0fa5a10072df900cfeed4defaf94d0fa50bcab0ad8f254c6fa4b8d77",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/deployedSystem.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deployedSystem.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deployedSystem.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deployedSystem.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 771,
+      "sha256": "003d96f3df3b80ba1efc7370049f29e283885251d3201640831cef6f45bde73b",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/deployedSystemArray.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deployedSystemArray.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deployedSystemArray.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deployedSystemArray.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 176,
+      "sha256": "6e05ff3df1629716863b4f1fa0c3e0526c1ec471d0b6e88c1c04adaccb879056",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/deployedSystemCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deployedSystemCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deployedSystemCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deployedSystemCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 438,
+      "sha256": "5d5a6153d0c6748af910be041bf0894e4c1356e85c91eed111275abaa5d094da",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/deployment.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deployment.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deployment.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deployment.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1116,
+      "sha256": "7bd87cada71605228047d7334ee50aacf7919e39ba527815a5498fb4aff01a24",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/deploymentArray.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deploymentArray.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deploymentArray.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deploymentArray.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 167,
+      "sha256": "91142a1a1a7ea1035f80c59feca290f400aee1d6a0099fb686d21c81321b865e",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/deploymentCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deploymentCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deploymentCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/deploymentCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 434,
+      "sha256": "f2509acd6bbed268349e1b073a35c9a391200fc45e15f9d060a67a5de3a9d0d5",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/feature.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/feature.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/feature.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/feature.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1596,
+      "sha256": "e54c8e5f8f4e4f3a1cdf73612ddccf3080aa0db525dfdf8f36c91b3673a0be53",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/procedure.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/procedure.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/procedure.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/procedure.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 397,
+      "sha256": "b69d7e63a24c99fc8b3e831f1a43d0f9d39a5dfa68b63914e4bdf80b85d27edc",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/procedureArray.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/procedureArray.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/procedureArray.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/procedureArray.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 165,
+      "sha256": "401bfde380b61bf360450b6ea0b793c789537be397e56b0e968026e437349c75",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/procedureCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/procedureCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/procedureCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/procedureCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 433,
+      "sha256": "a8063b086e81837bcb3b66af1791b54d4e5f728afe67e21e996f64faa6c695d5",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/samplingFeature.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/samplingFeature.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/samplingFeature.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/samplingFeature.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 596,
+      "sha256": "eaa13b9aeab243c0bc8741e916dfce394001c419bc780bd740ecf74719750a03",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/samplingFeatureArray.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/samplingFeatureArray.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/samplingFeatureArray.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/samplingFeatureArray.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 170,
+      "sha256": "820397e62c586a9a060e4e58eb3cb1486c4dd30880630c658a916cbfa3988bb5",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/samplingFeatureCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/samplingFeatureCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/samplingFeatureCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/samplingFeatureCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 439,
+      "sha256": "be0f10e0dd7c17bbf22b3c8e15899f957ee51c568370419e836e806013888b32",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/system.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/system.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/system.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/system.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1131,
+      "sha256": "9c5c56c8c7feb6fc697e685746178aade7e2a1ee3ed3c5e3eb6d203c26be45db",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/systemArray.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/systemArray.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/systemArray.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/systemArray.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 159,
+      "sha256": "d9be0ad895317bd8613ce513e289d25ef7424e496dfbc974888addf79fb1d05c",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/geojson/systemCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/systemCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/systemCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/geojson/systemCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 430,
+      "sha256": "85cbbad930cfb8e9d9369fb7465d02bfb73f37fca96bfa8a9a4c6090c32707c6",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/deployedSystem.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deployedSystem.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deployedSystem.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deployedSystem.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 519,
+      "sha256": "be2445e73d5f8a776aef75d0649e4c5804a6be7b518e2c0cdbbcf9af1397fdbc",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/deployedSystemArray.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deployedSystemArray.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deployedSystemArray.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deployedSystemArray.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 176,
+      "sha256": "6e05ff3df1629716863b4f1fa0c3e0526c1ec471d0b6e88c1c04adaccb879056",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/deployedSystemCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deployedSystemCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deployedSystemCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deployedSystemCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 324,
+      "sha256": "72d1d99f39e20cbacc0ba4de4a5bff1b800fb1ca80ecb3008c5c04542210ef70",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/deployment.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deployment.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deployment.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deployment.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 452,
+      "sha256": "afbb91652408ab7e96e8f2d52aab14341dd294d29aa2e37c49b1346ca5201b02",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/deploymentArray.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deploymentArray.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deploymentArray.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deploymentArray.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 167,
+      "sha256": "91142a1a1a7ea1035f80c59feca290f400aee1d6a0099fb686d21c81321b865e",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/deploymentCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deploymentCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deploymentCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/deploymentCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 320,
+      "sha256": "bec07a3b294f7e60a69352bc523e3473fe88a69723036e0d2856d3e07f14a756",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/procedure.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/procedure.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/procedure.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/procedure.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 745,
+      "sha256": "3527a6ccbf3147ccae01aade49fd36e79beb4fdf467484fab393a03777c9eb81",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/procedureArray.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/procedureArray.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/procedureArray.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/procedureArray.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 165,
+      "sha256": "401bfde380b61bf360450b6ea0b793c789537be397e56b0e968026e437349c75",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/procedureCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/procedureCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/procedureCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/procedureCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 319,
+      "sha256": "8bd9131dbccc2be7cf11acd91b8bb6e0c4eb3f910c6dbcec773264d6e1d9bcae",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/property.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/property.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/property.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/property.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 353,
+      "sha256": "e3d9be2febb441af8ef148de67c41ec9d244b0639507985e52acfafb41ffd071",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/propertyArray.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/propertyArray.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/propertyArray.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/propertyArray.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 164,
+      "sha256": "67e4eb001074821e421564f055027a1914a2fc74af4c0d4d09a1059ce01ae642",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/propertyCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/propertyCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/propertyCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/propertyCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 318,
+      "sha256": "3c56cce1802792a8da22def83d78258386ec02553f0c84bbddbf7efee4c435fc",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/sensormlDefs.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/sensormlDefs.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/sensormlDefs.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/sensormlDefs.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1107,
+      "sha256": "a9e0b022cd6d326c821409c03ed780259d3181a823bc6eae860fc2cb0b217f8e",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/system.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/system.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/system.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/system.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 689,
+      "sha256": "033fc020c490e43d8a2049496cbbfac69d3d037862432a4502b40b33d6a7815c",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/systemArray.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/systemArray.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/systemArray.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/systemArray.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 159,
+      "sha256": "d9be0ad895317bd8613ce513e289d25ef7424e496dfbc974888addf79fb1d05c",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/openapi/schemas/sensorml/systemCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/systemCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/systemCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/openapi/schemas/sensorml/systemCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 316,
+      "sha256": "4ea9be0cac2fd9c18ce7e74b3b75252101bb7a310651af553bdaf2009d2798e3",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part1/standard/23-001r0.adoc",
+      "kind": "source-header",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/standard/23-001r0.adoc",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/standard/23-001r0.adoc",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part1/standard/23-001r0.adoc",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 7168,
+      "sha256": "0d193aa83e654028ec10abdf849ac98efa56ef8a60af0a4a4935d05091891469",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/common/commonDefs.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/common/commonDefs.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/common/commonDefs.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/common/commonDefs.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 410,
+      "sha256": "9602f238c775dd2aadb6632d3af96fca784712fcdd3502d4cc2cb997f027ca71",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/common/sensormlDefs.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/common/sensormlDefs.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/common/sensormlDefs.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/common/sensormlDefs.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 167,
+      "sha256": "39dace78df5bbec9a3b267e0d7f77196628c76e6f8ba53157260cf6b0c8c8949",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/common/sweCommonDefs.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/common/sweCommonDefs.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/common/sweCommonDefs.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/common/sweCommonDefs.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 929,
+      "sha256": "87e129241b9ba71610829cfbe57823504ed95b381851e2b1b58de4e96132590c",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/baseStream.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/baseStream.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/baseStream.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/baseStream.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 931,
+      "sha256": "9d67f166630fddd703a6fad336f6e8f49af38d1c3a493883f3003d6fe67e96f6",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/command.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/command.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/command.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/command.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1834,
+      "sha256": "d94c9af42b603e9101227184f2e32f197ee069455b5ee53e9e372402686b26ec",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/commandCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 380,
+      "sha256": "99a915aad97cc414ff28a6484c4801e6c1c5775a2db25a3a5b06b2d6238e6b48",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/commandResult.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandResult.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandResult.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandResult.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 2671,
+      "sha256": "24ca46eadde2ea60865744d5e3d51c433734a549d45c19c031f15d607d339fc6",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/commandResultCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandResultCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandResultCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandResultCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 386,
+      "sha256": "65bfb87faa3cec3a6d2439efe2a3b1d518e6d2951f534b496c25ebf3219dc634",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/commandSchema.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchema.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchema.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchema.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 446,
+      "sha256": "e067f3dc402bdbeee673d669b31170b5c8bf62890aac7248b8e51891b593ce17",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/commandSchemaAnyOther.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchemaAnyOther.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchemaAnyOther.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchemaAnyOther.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 497,
+      "sha256": "6446afccb3ee8b01a9f09fb31c860c5c0ed98548d5016d9e9bdb207c352559db",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/commandSchemaJson.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchemaJson.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchemaJson.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchemaJson.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 754,
+      "sha256": "c74644b2ef5291871b25c41d43fa67508bec6396b785c3cad3b1cc72cdedfe77",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/commandSchemaProtobuf.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchemaProtobuf.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchemaProtobuf.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchemaProtobuf.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 624,
+      "sha256": "23125dc68742a0ab72a70f0b4b43772f8c41e580d00d13727ce7c35226d09473",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/commandSchemaSwe.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchemaSwe.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchemaSwe.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandSchemaSwe.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1663,
+      "sha256": "93007bd885a604e5c0f39f0ccb519fc9a43a3662b93876c81fefec27d85bf590",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/commandStatus.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandStatus.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandStatus.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandStatus.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1756,
+      "sha256": "3db0fd0037989319e0c4c6068668ed0a0515704457f79c1c067b95d2132145d9",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/commandStatusCode.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandStatusCode.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandStatusCode.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandStatusCode.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 2708,
+      "sha256": "fa37140a090b4e0711be53819a0e435a5799fec9c4a388f83b249a76afb33ff8",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/commandStatusCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandStatusCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandStatusCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/commandStatusCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 386,
+      "sha256": "8973597b348297dd0abb728722af04d4f237c306d788853d40430835a81829fe",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/controlStream_create.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/controlStream_create.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/controlStream_create.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/controlStream_create.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 463,
+      "sha256": "bcb8e5b990d3a0fb5355ddfad929f4b55f20e933c66cb02344adfdcf89a4c06c",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/controlStream.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/controlStream.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/controlStream.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/controlStream.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 4076,
+      "sha256": "99cadabae77054ce219fff921f2b30e200307aa7467d4592e21a383cc29c2653",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/controlStreamCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/controlStreamCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/controlStreamCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/controlStreamCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 386,
+      "sha256": "d3abf4b25bf0d7523cb576c1349ccf8bb0fe00f489d2cd0f8caac59948ee9066",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/dataStream_create.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/dataStream_create.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/dataStream_create.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/dataStream_create.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 459,
+      "sha256": "e322bd77d7abd6a3f801647024fc22fd43d4614e13483d86e1f21251a477775e",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/dataStream.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/dataStream.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/dataStream.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/dataStream.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 4784,
+      "sha256": "925e73e017799970b5f3b9aadabc3295d1de9e8087f0e6602687e12cf35a4731",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/dataStreamCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/dataStreamCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/dataStreamCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/dataStreamCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 383,
+      "sha256": "0f252d057e1e2ef2cf6b97d99358b84559618663f61c1aae65b0cc1adc1c776d",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/dataStreamSchemaDef.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/dataStreamSchemaDef.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/dataStreamSchemaDef.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/dataStreamSchemaDef.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1750,
+      "sha256": "3b181493e7e004a48ba640f6fa80b3fa779e73479e4ac2ae91e9d48e374ecb1c",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/observation.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observation.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observation.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observation.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1968,
+      "sha256": "f032030d7c77d7a1b100b171525db8b4a1cad444e8dfe61b3e1b65cc2d1e1a9d",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/observationCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 384,
+      "sha256": "91b91ace2320c17b7b29e833ee34e24f21dda71034d4d09da9269180ef36c954",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/observationSchema.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchema.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchema.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchema.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 458,
+      "sha256": "cca786be622a134ae48ef011d19bff2c6ba41078eccdb9714dbfa6367effc5ce",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/observationSchemaAnyOther.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaAnyOther.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaAnyOther.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaAnyOther.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 489,
+      "sha256": "c0f677d6bd92b69e56dd7653eac95413ec78ce4aa8a7f39d484be7c72d40e2ff",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/observationSchemaJson.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaJson.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaJson.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaJson.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1333,
+      "sha256": "44ca83fb7fb796f4998d0006026e519d204418eeeb5d901d97f0a46a93bc3bad",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/observationSchemaProtobuf.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaProtobuf.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaProtobuf.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaProtobuf.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 612,
+      "sha256": "ca5449080afdce6bb84ac9b44fcc1a52791f1dc9e5c5dc0c1e8c01cd4ed020dd",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/observationSchemaSwe.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaSwe.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaSwe.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/observationSchemaSwe.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1639,
+      "sha256": "9cebf284c3bcbae1d53bb7d047df37d4ca56ea01f5139be16ba4b0b2b26bdc00",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/systemEvent.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/systemEvent.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/systemEvent.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/systemEvent.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 463,
+      "sha256": "1fada67d93b2128c5755cc06f3b0d44035d2b98f5f31404c3782afd851cba39b",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/openapi/schemas/json/systemEventCollection.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/systemEventCollection.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/systemEventCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/openapi/schemas/json/systemEventCollection.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 384,
+      "sha256": "20dadaacc652d055971d68fe14bbcf462ad000d76e33ef80ed37ae3625c83ac4",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/api/part2/standard/23-002r0.adoc",
+      "kind": "source-header",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/standard/23-002r0.adoc",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/standard/23-002r0.adoc",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/api/part2/standard/23-002r0.adoc",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 6642,
+      "sha256": "5e1c11d02f87c78d736d8477e36d87583dd90c0929cc297807823ccd09d46c33",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/common/link.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/common/link.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/common/link.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/common/link.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1976,
+      "sha256": "3191268fa550fde1bc8e487457ccc6d795cdeb5e447e452e1220db441fd723ce",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/common/timeInstant.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/common/timeInstant.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/common/timeInstant.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/common/timeInstant.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 135,
+      "sha256": "6ebf86e747c4aafbcd2eb05172193f5c03ad69df7e4ecd467dd3c27b0967e1ac",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/common/timeInstantOrNow.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/common/timeInstantOrNow.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/common/timeInstantOrNow.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/common/timeInstantOrNow.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 201,
+      "sha256": "29111db71007bd1638993a8777704971b9d25f81173688eeb9ab538150309bf8",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/common/timePeriod.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/common/timePeriod.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/common/timePeriod.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/common/timePeriod.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 196,
+      "sha256": "92715bd7e479b3fd1d0a9c4ccd743d58c39e9b5521db3c5923221090988c20e5",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/LICENSE",
+      "kind": "licence",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/LICENSE",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/LICENSE",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/LICENSE",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 4443,
+      "sha256": "b3b9a76d230f057844d004c374406453d92f863caecaa42ccd9c7863e143fed1",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/AbstractPhysicalProcess.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/AbstractPhysicalProcess.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/AbstractPhysicalProcess.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/AbstractPhysicalProcess.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 4479,
+      "sha256": "797b538d2aac9d23958d6e584ee070635e893a4e2d7b2d358d29c0c91d7aeef7",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/AbstractProcess.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/AbstractProcess.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/AbstractProcess.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/AbstractProcess.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 3183,
+      "sha256": "0e36b3f28b601f535130df1ccef4d51e74bd51b7f0b95d112ce8c73ea510d200",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/AggregateProcess.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/AggregateProcess.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/AggregateProcess.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/AggregateProcess.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1706,
+      "sha256": "245715c95625189a0954184ef7be883fed520421c66884b56587788a977d3f50",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/commonDefs.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/commonDefs.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/commonDefs.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/commonDefs.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 2475,
+      "sha256": "ea589c10831b44c82666be300830762b549b697b5a8cc8ef03a2bbf925ad5b03",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/ContactLink.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/ContactLink.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/ContactLink.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/ContactLink.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 499,
+      "sha256": "8a5a0550d837aaa8a3a3548c4afb661db2e272c7235a4c805172b9f555fa8433",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/DeployedSystem.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/DeployedSystem.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/DeployedSystem.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/DeployedSystem.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 581,
+      "sha256": "17d9a6e2473e473b8b94255adb943bc4ddc5a27e6abeabe6359894bf6541f8c1",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/Deployment.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Deployment.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Deployment.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Deployment.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 991,
+      "sha256": "d0ebea7055822ec9bf4b579f4e085ce7bfa7c23f01cb815317f090bf31ec42d0",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/DerivedProperty.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/DerivedProperty.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/DerivedProperty.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/DerivedProperty.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1770,
+      "sha256": "30783624a8bf5e143b297875b4bd89f897de5f2ae8be722e78cd07f4cef60f72",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/DescribedObject.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/DescribedObject.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/DescribedObject.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/DescribedObject.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 5606,
+      "sha256": "82e98f218f272837f6b98258c0c94281670cb82f5693644d326247170b33202f",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/Document.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Document.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Document.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Document.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 674,
+      "sha256": "582293e1991b5b1a541dd7aea666baf847a152ecfe716ba455022c4dd1ae4cd9",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/Event.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Event.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Event.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Event.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1994,
+      "sha256": "763e76bde1313c9b79fe54341af676e32684c7e4050938fe902689efd1034307",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/LegalConstraint.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/LegalConstraint.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/LegalConstraint.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/LegalConstraint.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 838,
+      "sha256": "723b0c78a182aabf75039bf50c699ee5c21343b5a3c61376bd39ddb599385839",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/Mode.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Mode.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Mode.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Mode.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 379,
+      "sha256": "f84c071398e3e0b4518d2e22919fe374279930f7bae8ac31a828975d573915ef",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/PhysicalComponent.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/PhysicalComponent.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/PhysicalComponent.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/PhysicalComponent.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 359,
+      "sha256": "f3a5828dd86ceb3384857e01dbdf79ae5d461c455dc557ab13f6484f40698958",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/PhysicalSystem.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/PhysicalSystem.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/PhysicalSystem.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/PhysicalSystem.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 518,
+      "sha256": "fcc2750b2744204872bdcd89b2556f0bc6975bb4b58a848764e5a9903d29f17c",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/Pose.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Pose.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Pose.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Pose.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 4447,
+      "sha256": "9430d372c32390fa08077da454f2fef7b73f052c7d7cff2525ac68ec2f7d453d",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/ResponsibleParty.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/ResponsibleParty.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/ResponsibleParty.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/ResponsibleParty.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1861,
+      "sha256": "0cdc7a11dc8d276ea81817e436f60337c376be8b24fc55c0526a08211bf534c2",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/Settings.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Settings.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Settings.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/Settings.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 2331,
+      "sha256": "d673a5520f0d3cca282ae4ecaa5a17e541009f6b263b15e0967e1ac9b8e1f969",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/SimpleProcess.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/SimpleProcess.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/SimpleProcess.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/SimpleProcess.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 713,
+      "sha256": "dbce6b24b8ba837dd7bebfbb78f4da51a98b257d281b6b682dc4b384d10bba06",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/schemas/json/sweCommonDefs.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/sweCommonDefs.json",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/sweCommonDefs.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/schemas/json/sweCommonDefs.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1508,
+      "sha256": "290cb94d81595031e9bdd08903ee4711e25d4de8c5ef8cfdd1cfdad70c8825ce",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/sensorml/standard/23-000.adoc",
+      "kind": "source-header",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/standard/23-000.adoc",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/standard/23-000.adoc",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/sensorml/standard/23-000.adoc",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 2138,
+      "sha256": "9edc9fbceaaa8915025c133c84946c90fa8973101d12261b1b68e8543a428138",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/AbstractDataComponent.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/AbstractDataComponent.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/AbstractDataComponent.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/AbstractDataComponent.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/AbstractDataComponent.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 926,
+      "sha256": "468e11b9fff5a712428628a4a373f7f550ff89a59f30e5af10017fb22e58e661",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/AbstractDataComponent.json",
+          "retrieved_at": "2026-09-22T00:38:07.7433403Z",
+          "bytes": 926,
+          "sha256": "468e11b9fff5a712428628a4a373f7f550ff89a59f30e5af10017fb22e58e661"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/AbstractSimpleComponent.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/AbstractSimpleComponent.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/AbstractSimpleComponent.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/AbstractSimpleComponent.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/AbstractSimpleComponent.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1144,
+      "sha256": "ed64ba08d5912ed73f1e398433cec9dde802594dcdc870570c1d1b406dc769f6",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/AbstractSimpleComponent.json",
+          "retrieved_at": "2026-09-22T00:38:07.8724368Z",
+          "bytes": 1144,
+          "sha256": "ed64ba08d5912ed73f1e398433cec9dde802594dcdc870570c1d1b406dc769f6"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/AbstractSweIdentifiable.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/AbstractSweIdentifiable.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/AbstractSweIdentifiable.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/AbstractSweIdentifiable.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/AbstractSweIdentifiable.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 612,
+      "sha256": "22130e687acfa3efbddacc75b0107c99db0e72988acef33163457af767e284d9",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/AbstractSweIdentifiable.json",
+          "retrieved_at": "2026-09-22T00:38:08.0037724Z",
+          "bytes": 612,
+          "sha256": "22130e687acfa3efbddacc75b0107c99db0e72988acef33163457af767e284d9"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/basicTypes.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/basicTypes.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/basicTypes.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/basicTypes.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/basicTypes.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 8625,
+      "sha256": "13d915858e4f3ca4259c8c8c77a0eb4e9546f7678d0eed0584d020f102cdf2ff",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/basicTypes.json",
+          "retrieved_at": "2026-09-22T00:38:10.3049773Z",
+          "bytes": 8625,
+          "sha256": "13d915858e4f3ca4259c8c8c77a0eb4e9546f7678d0eed0584d020f102cdf2ff"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/Boolean.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Boolean.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/Boolean.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Boolean.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Boolean.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 483,
+      "sha256": "b99cd49310470954efae79d7c9c16eed3b2016ac5d3a8cc772c4bed870a4d270",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/Boolean.json",
+          "retrieved_at": "2026-09-22T00:38:08.1372067Z",
+          "bytes": 483,
+          "sha256": "b99cd49310470954efae79d7c9c16eed3b2016ac5d3a8cc772c4bed870a4d270"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/Category.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Category.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/Category.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Category.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Category.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 919,
+      "sha256": "a2a84571faa9f85e9dd8e807d9c6e6e7e1c3a7e6fd43abe2eb24774db4b9e285",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/Category.json",
+          "retrieved_at": "2026-09-22T00:38:08.2623421Z",
+          "bytes": 919,
+          "sha256": "a2a84571faa9f85e9dd8e807d9c6e6e7e1c3a7e6fd43abe2eb24774db4b9e285"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/CategoryRange.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/CategoryRange.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/CategoryRange.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/CategoryRange.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/CategoryRange.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1078,
+      "sha256": "d1da1b034cca3cddfa7a93aec2aa68f83cfc9c1a626f553500bd81ece1438baa",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/CategoryRange.json",
+          "retrieved_at": "2026-09-22T00:38:08.3876605Z",
+          "bytes": 1078,
+          "sha256": "d1da1b034cca3cddfa7a93aec2aa68f83cfc9c1a626f553500bd81ece1438baa"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/Count.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Count.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/Count.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Count.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Count.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 685,
+      "sha256": "e6a69ff929cccf0fc9116f0c45f66c3ab1c988c4531ffe16ff0a09435b742467",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/Count.json",
+          "retrieved_at": "2026-09-22T00:38:08.5160248Z",
+          "bytes": 685,
+          "sha256": "e6a69ff929cccf0fc9116f0c45f66c3ab1c988c4531ffe16ff0a09435b742467"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/CountRange.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/CountRange.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/CountRange.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/CountRange.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/CountRange.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 766,
+      "sha256": "30683b196454d51f416e953cc1a7286baf6e187b1f85daa2602bd658e90c133a",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/CountRange.json",
+          "retrieved_at": "2026-09-22T00:38:08.6375448Z",
+          "bytes": 766,
+          "sha256": "30683b196454d51f416e953cc1a7286baf6e187b1f85daa2602bd658e90c133a"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/DataArray.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/DataArray.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/DataArray.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/DataArray.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/DataArray.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 2335,
+      "sha256": "2ed614d7bcfd45c7cc5b53d9f267f3667548a8193cb3ff9b066588cdc422bd0c",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/DataArray.json",
+          "retrieved_at": "2026-09-22T00:38:08.7724171Z",
+          "bytes": 2335,
+          "sha256": "2ed614d7bcfd45c7cc5b53d9f267f3667548a8193cb3ff9b066588cdc422bd0c"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/DataChoice.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/DataChoice.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/DataChoice.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/DataChoice.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/DataChoice.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1254,
+      "sha256": "27e3efed2a28b47e4adde2ba77ac8ac607f1800244f119187994344157013652",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/DataChoice.json",
+          "retrieved_at": "2026-09-22T00:38:08.8986317Z",
+          "bytes": 1254,
+          "sha256": "27e3efed2a28b47e4adde2ba77ac8ac607f1800244f119187994344157013652"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/DataRecord.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/DataRecord.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/DataRecord.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/DataRecord.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/DataRecord.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1112,
+      "sha256": "64feeb694269cb3eedf428f57458e870003c88c7924e079f0f2bca8c8ca51917",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/DataRecord.json",
+          "retrieved_at": "2026-09-22T00:38:09.0205054Z",
+          "bytes": 1112,
+          "sha256": "64feeb694269cb3eedf428f57458e870003c88c7924e079f0f2bca8c8ca51917"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/DataStream.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/DataStream.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/DataStream.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/DataStream.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/DataStream.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1535,
+      "sha256": "aab223f3c7a9b85668d97252a7a79edbf0d03f0f27baf0eef4256afe1abf21e1",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/DataStream.json",
+          "retrieved_at": "2026-09-22T00:38:09.1526131Z",
+          "bytes": 1535,
+          "sha256": "aab223f3c7a9b85668d97252a7a79edbf0d03f0f27baf0eef4256afe1abf21e1"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/encodings.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/encodings.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/encodings.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/encodings.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/encodings.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 8221,
+      "sha256": "9d432bbec5ffebeda21d612ab1ec6b22d4e8011ac967820ba17c07b0391e73ab",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/encodings.json",
+          "retrieved_at": "2026-09-22T00:38:10.4281163Z",
+          "bytes": 8221,
+          "sha256": "9d432bbec5ffebeda21d612ab1ec6b22d4e8011ac967820ba17c07b0391e73ab"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/Geometry.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Geometry.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/Geometry.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Geometry.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Geometry.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1439,
+      "sha256": "16796a79e8d112cfab9e6f802356e362ba86f6b58702e8ab5c47983c0b2b8de7",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/Geometry.json",
+          "retrieved_at": "2026-09-22T00:38:09.2780824Z",
+          "bytes": 1439,
+          "sha256": "16796a79e8d112cfab9e6f802356e362ba86f6b58702e8ab5c47983c0b2b8de7"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/Matrix.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Matrix.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/Matrix.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Matrix.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Matrix.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1004,
+      "sha256": "adedf240f30ddfb216cff4faaee671ebd70d601a74d1c874600ce3bbc25ad6e4",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/Matrix.json",
+          "retrieved_at": "2026-09-22T00:38:09.4181138Z",
+          "bytes": 1004,
+          "sha256": "adedf240f30ddfb216cff4faaee671ebd70d601a74d1c874600ce3bbc25ad6e4"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/Quantity.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Quantity.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/Quantity.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Quantity.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Quantity.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 943,
+      "sha256": "dc23d3496ae02a6d1de756d441aa12f248e74a1ff3feafda826640af04115b52",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/Quantity.json",
+          "retrieved_at": "2026-09-22T00:38:09.5433786Z",
+          "bytes": 943,
+          "sha256": "dc23d3496ae02a6d1de756d441aa12f248e74a1ff3feafda826640af04115b52"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/QuantityRange.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/QuantityRange.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/QuantityRange.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/QuantityRange.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/QuantityRange.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1016,
+      "sha256": "758bc4fee2a9aeb07b7fd8e4886b886633c09657b71f489c67b657bb2f54c108",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/QuantityRange.json",
+          "retrieved_at": "2026-09-22T00:38:09.6695612Z",
+          "bytes": 1016,
+          "sha256": "758bc4fee2a9aeb07b7fd8e4886b886633c09657b71f489c67b657bb2f54c108"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/sweCommon.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/sweCommon.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/sweCommon.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/sweCommon.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/sweCommon.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1395,
+      "sha256": "efc265b38f3fd540693e8a352f463f1c9a98667ddb55d6d42f6cc00e08edcc14",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/sweCommon.json",
+          "retrieved_at": "2026-09-22T00:38:10.5540464Z",
+          "bytes": 1395,
+          "sha256": "efc265b38f3fd540693e8a352f463f1c9a98667ddb55d6d42f6cc00e08edcc14"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/Text.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Text.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/Text.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Text.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Text.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 682,
+      "sha256": "ead9ac23d8b7b5c0a217a775d1d445589978cdbfb398cbf07a346b68e29993d3",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/Text.json",
+          "retrieved_at": "2026-09-22T00:38:09.7957430Z",
+          "bytes": 682,
+          "sha256": "ead9ac23d8b7b5c0a217a775d1d445589978cdbfb398cbf07a346b68e29993d3"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/Time.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Time.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/Time.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Time.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Time.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1460,
+      "sha256": "9b3043fe48fabee3b79e4552a05a3f8afd41f46b898579923471c9249a3665b2",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/Time.json",
+          "retrieved_at": "2026-09-22T00:38:09.9219270Z",
+          "bytes": 1460,
+          "sha256": "9b3043fe48fabee3b79e4552a05a3f8afd41f46b898579923471c9249a3665b2"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/TimeRange.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/TimeRange.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/TimeRange.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/TimeRange.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/TimeRange.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1502,
+      "sha256": "b108d7db771965f1b049ddb0a771c7e05338db55518563c7e20a983cb46ccf80",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/TimeRange.json",
+          "retrieved_at": "2026-09-22T00:38:10.0490259Z",
+          "bytes": 1502,
+          "sha256": "b108d7db771965f1b049ddb0a771c7e05338db55518563c7e20a983cb46ccf80"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/schemas/json/Vector.json",
+      "kind": "schema",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Vector.json",
+      "aliases": [
+        "https://schemas.opengis.net/sweCommon/3.0/json/Vector.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Vector.json",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/schemas/json/Vector.json",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1569,
+      "sha256": "1ead8c287384f6043fe35d91f7590398e6c189455a1d33b6b8f6828eaea1380f",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": [
+        {
+          "url": "https://schemas.opengis.net/sweCommon/3.0/json/Vector.json",
+          "retrieved_at": "2026-09-22T00:38:10.1798936Z",
+          "bytes": 1569,
+          "sha256": "1ead8c287384f6043fe35d91f7590398e6c189455a1d33b6b8f6828eaea1380f"
+        }
+      ]
+    },
+    {
+      "path": "originals/csapi/swecommon/standard/24-014.adoc",
+      "kind": "source-header",
+      "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/standard/24-014.adoc",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/standard/24-014.adoc",
+      "effective_source_url": "https://raw.githubusercontent.com/opengeospatial/ogcapi-connected-systems/8e03b236a049849f2ccc24b4fd9fdce5ff69bed2/swecommon/standard/24-014.adoc",
+      "retrieved_at": "2026-09-22T00:38:07.2846750Z",
+      "source_revision": "8e03b236a049849f2ccc24b4fd9fdce5ff69bed2",
+      "bytes": 1872,
+      "sha256": "8ae24a9b6f17df484f9510a80f642670d4370ecd0e77d95a6c6dfd30e6cefee4",
+      "licence": "originals/csapi/LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/geojson/Feature.json",
+      "kind": "schema",
+      "uri": "https://geojson.org/schema/Feature.json",
+      "aliases": [
+        "https://raw.githubusercontent.com/geojson/schema/f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e/Feature.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/geojson/schema/f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e/Feature.json",
+      "effective_source_url": "https://raw.githubusercontent.com/geojson/schema/f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e/Feature.json",
+      "retrieved_at": "2026-09-22T00:38:10.6542886Z",
+      "source_revision": "f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e",
+      "bytes": 13777,
+      "sha256": "3957840b2ff19f9450ea97a12f85944d938c68a7a6bf115a2e69b98e007b9922",
+      "licence": "originals/licences/geojson-MIT.md",
+      "verified_mirrors": [
+        {
+          "url": "https://geojson.org/schema/Feature.json",
+          "retrieved_at": "2026-09-22T00:38:10.7452440Z",
+          "bytes": 13777,
+          "sha256": "3957840b2ff19f9450ea97a12f85944d938c68a7a6bf115a2e69b98e007b9922"
+        }
+      ]
+    },
+    {
+      "path": "originals/geojson/FeatureCollection.json",
+      "kind": "schema",
+      "uri": "https://geojson.org/schema/FeatureCollection.json",
+      "aliases": [
+        "https://raw.githubusercontent.com/geojson/schema/f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e/FeatureCollection.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/geojson/schema/f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e/FeatureCollection.json",
+      "effective_source_url": "https://raw.githubusercontent.com/geojson/schema/f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e/FeatureCollection.json",
+      "retrieved_at": "2026-09-22T00:38:10.7739721Z",
+      "source_revision": "f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e",
+      "bytes": 17207,
+      "sha256": "83e781f1513e447be9287b2180c300621f8b4c65245d7822a22fcf39431e0471",
+      "licence": "originals/licences/geojson-MIT.md",
+      "verified_mirrors": [
+        {
+          "url": "https://geojson.org/schema/FeatureCollection.json",
+          "retrieved_at": "2026-09-22T00:38:10.8041654Z",
+          "bytes": 17207,
+          "sha256": "83e781f1513e447be9287b2180c300621f8b4c65245d7822a22fcf39431e0471"
+        }
+      ]
+    },
+    {
+      "path": "originals/geojson/Geometry.json",
+      "kind": "schema",
+      "uri": "https://geojson.org/schema/Geometry.json",
+      "aliases": [
+        "https://raw.githubusercontent.com/geojson/schema/f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e/Geometry.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/geojson/schema/f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e/Geometry.json",
+      "effective_source_url": "https://raw.githubusercontent.com/geojson/schema/f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e/Geometry.json",
+      "retrieved_at": "2026-09-22T00:38:10.8292816Z",
+      "source_revision": "f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e",
+      "bytes": 4388,
+      "sha256": "152369d7eb6b3314ffc7deca1d66f9d498ed5b614ca38ed4e2c813fed01024fd",
+      "licence": "originals/licences/geojson-MIT.md",
+      "verified_mirrors": [
+        {
+          "url": "https://geojson.org/schema/Geometry.json",
+          "retrieved_at": "2026-09-22T00:38:10.8504320Z",
+          "bytes": 4388,
+          "sha256": "152369d7eb6b3314ffc7deca1d66f9d498ed5b614ca38ed4e2c813fed01024fd"
+        }
+      ]
+    },
+    {
+      "path": "originals/geojson/Point.json",
+      "kind": "schema",
+      "uri": "https://geojson.org/schema/Point.json",
+      "aliases": [
+        "https://raw.githubusercontent.com/geojson/schema/f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e/Point.json"
+      ],
+      "source_url": "https://raw.githubusercontent.com/geojson/schema/f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e/Point.json",
+      "effective_source_url": "https://raw.githubusercontent.com/geojson/schema/f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e/Point.json",
+      "retrieved_at": "2026-09-22T00:38:10.8717793Z",
+      "source_revision": "f2bc6e8f1e8e1ba376d901914ecf8d0fed947d6e",
+      "bytes": 552,
+      "sha256": "35dd9cc5537e3a02a58ec63c22001508bd0c26036803f86004bb7cad0e9ad8b1",
+      "licence": "originals/licences/geojson-MIT.md",
+      "verified_mirrors": [
+        {
+          "url": "https://geojson.org/schema/Point.json",
+          "retrieved_at": "2026-09-22T00:38:10.9004204Z",
+          "bytes": 552,
+          "sha256": "35dd9cc5537e3a02a58ec63c22001508bd0c26036803f86004bb7cad0e9ad8b1"
+        }
+      ]
+    },
+    {
+      "path": "originals/json-schema/2020-12/meta/applicator.json",
+      "kind": "schema",
+      "uri": "https://json-schema.org/draft/2020-12/meta/applicator",
+      "aliases": [],
+      "source_url": "https://json-schema.org/draft/2020-12/meta/applicator",
+      "effective_source_url": "https://json-schema.org/draft/2020-12/meta/applicator",
+      "retrieved_at": "2026-09-22T00:38:11.1469018Z",
+      "source_revision": null,
+      "bytes": 1560,
+      "sha256": "bf273b26f9f735b93ece78f2b61b36676e1d122ce78ab37ad5a2e45dfa1ca2b1",
+      "licence": "originals/licences/json-schema-LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/json-schema/2020-12/meta/content.json",
+      "kind": "schema",
+      "uri": "https://json-schema.org/draft/2020-12/meta/content",
+      "aliases": [],
+      "source_url": "https://json-schema.org/draft/2020-12/meta/content",
+      "effective_source_url": "https://json-schema.org/draft/2020-12/meta/content",
+      "retrieved_at": "2026-09-22T00:38:11.4045291Z",
+      "source_revision": null,
+      "bytes": 423,
+      "sha256": "a10456605b2b5bb12a1b4dcfc0300f02f54d3e8bb3646bed7724583866627682",
+      "licence": "originals/licences/json-schema-LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/json-schema/2020-12/meta/core.json",
+      "kind": "schema",
+      "uri": "https://json-schema.org/draft/2020-12/meta/core",
+      "aliases": [],
+      "source_url": "https://json-schema.org/draft/2020-12/meta/core",
+      "effective_source_url": "https://json-schema.org/draft/2020-12/meta/core",
+      "retrieved_at": "2026-09-22T00:38:11.0962824Z",
+      "source_revision": null,
+      "bytes": 1471,
+      "sha256": "21f79d143fab1f180245c331e5657057045b36794d41fe151e6e4fed65035299",
+      "licence": "originals/licences/json-schema-LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/json-schema/2020-12/meta/format-annotation.json",
+      "kind": "schema",
+      "uri": "https://json-schema.org/draft/2020-12/meta/format-annotation",
+      "aliases": [],
+      "source_url": "https://json-schema.org/draft/2020-12/meta/format-annotation",
+      "effective_source_url": "https://json-schema.org/draft/2020-12/meta/format-annotation",
+      "retrieved_at": "2026-09-22T00:38:11.3551892Z",
+      "source_revision": null,
+      "bytes": 342,
+      "sha256": "5c79404f831dd905c0f40fefac7c6f3e51bf3729b4a876a5c2020178d97f3bcc",
+      "licence": "originals/licences/json-schema-LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/json-schema/2020-12/meta/meta-data.json",
+      "kind": "schema",
+      "uri": "https://json-schema.org/draft/2020-12/meta/meta-data",
+      "aliases": [],
+      "source_url": "https://json-schema.org/draft/2020-12/meta/meta-data",
+      "effective_source_url": "https://json-schema.org/draft/2020-12/meta/meta-data",
+      "retrieved_at": "2026-09-22T00:38:11.3137140Z",
+      "source_revision": null,
+      "bytes": 794,
+      "sha256": "c664d438a84d58889c8edecd248ce2f945a4bc0e3b087323b11303dc136abfbe",
+      "licence": "originals/licences/json-schema-LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/json-schema/2020-12/meta/unevaluated.json",
+      "kind": "schema",
+      "uri": "https://json-schema.org/draft/2020-12/meta/unevaluated",
+      "aliases": [],
+      "source_url": "https://json-schema.org/draft/2020-12/meta/unevaluated",
+      "effective_source_url": "https://json-schema.org/draft/2020-12/meta/unevaluated",
+      "retrieved_at": "2026-09-22T00:38:11.2114584Z",
+      "source_revision": null,
+      "bytes": 406,
+      "sha256": "fc99f32188da41689a9382af174dd42e8b255e4374965c157b8286556b4ab2bc",
+      "licence": "originals/licences/json-schema-LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/json-schema/2020-12/meta/validation.json",
+      "kind": "schema",
+      "uri": "https://json-schema.org/draft/2020-12/meta/validation",
+      "aliases": [],
+      "source_url": "https://json-schema.org/draft/2020-12/meta/validation",
+      "effective_source_url": "https://json-schema.org/draft/2020-12/meta/validation",
+      "retrieved_at": "2026-09-22T00:38:11.2611705Z",
+      "source_revision": null,
+      "bytes": 2735,
+      "sha256": "e921c5b79264d3689af01c1af1ffdf692e09f1c45df90a0f08eb7288c9acdeab",
+      "licence": "originals/licences/json-schema-LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/json-schema/2020-12/schema.json",
+      "kind": "schema",
+      "uri": "https://json-schema.org/draft/2020-12/schema",
+      "aliases": [],
+      "source_url": "https://json-schema.org/draft/2020-12/schema",
+      "effective_source_url": "https://json-schema.org/draft/2020-12/schema",
+      "retrieved_at": "2026-09-22T00:38:11.0410576Z",
+      "source_revision": null,
+      "bytes": 2452,
+      "sha256": "41da76f5afb7ce062d248f762463a92f7ca47e4e0f905b224ba6afeef91ded0f",
+      "licence": "originals/licences/json-schema-LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/json-schema/draft-07/schema.json",
+      "kind": "schema",
+      "uri": "http://json-schema.org/draft-07/schema",
+      "aliases": [
+        "https://json-schema.org/draft-07/schema"
+      ],
+      "source_url": "https://json-schema.org/draft-07/schema",
+      "effective_source_url": "https://json-schema.org/draft-07/schema",
+      "retrieved_at": "2026-09-22T00:38:11.4647395Z",
+      "source_revision": null,
+      "bytes": 4979,
+      "sha256": "692e1d165e47afcb5f11b2ce1c639635ffa834035d6ecb6bcf3087481dae8404",
+      "licence": "originals/licences/json-schema-LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/licences/geojson-MIT.md",
+      "kind": "licence",
+      "uri": "https://raw.githubusercontent.com/geojson/schema/660d67d1d44d168aa2bba3931fb23618b058d14b/license.md",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/geojson/schema/660d67d1d44d168aa2bba3931fb23618b058d14b/license.md",
+      "effective_source_url": "https://raw.githubusercontent.com/geojson/schema/660d67d1d44d168aa2bba3931fb23618b058d14b/license.md",
+      "retrieved_at": "2026-09-22T00:38:10.9233598Z",
+      "source_revision": "660d67d1d44d168aa2bba3931fb23618b058d14b",
+      "bytes": 1068,
+      "sha256": "1cde2b2cc000fdc8edaeb8811ddf43f6a4470e0ab55abf27a8f4ed1d399ae018",
+      "licence": "originals/licences/geojson-MIT.md",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/licences/json-schema-2020-12-README.md",
+      "kind": "licence",
+      "uri": "https://raw.githubusercontent.com/json-schema-org/json-schema-spec/add836e705c9a07434c467b6b90946ba45258a73/README.md",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/json-schema-org/json-schema-spec/add836e705c9a07434c467b6b90946ba45258a73/README.md",
+      "effective_source_url": "https://raw.githubusercontent.com/json-schema-org/json-schema-spec/add836e705c9a07434c467b6b90946ba45258a73/README.md",
+      "retrieved_at": "2026-09-22T00:38:11.4892667Z",
+      "source_revision": "add836e705c9a07434c467b6b90946ba45258a73",
+      "bytes": 6139,
+      "sha256": "1ac6841ef529763afcf459796bf49831f37100467e87e19a9152286c37559ae9",
+      "licence": "originals/licences/json-schema-LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/licences/json-schema-draft-07-README.md",
+      "kind": "licence",
+      "uri": "https://raw.githubusercontent.com/json-schema-org/json-schema-spec/1afc34b65ead445ff363cfc870a28de0ca56e20f/README.md",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/json-schema-org/json-schema-spec/1afc34b65ead445ff363cfc870a28de0ca56e20f/README.md",
+      "effective_source_url": "https://raw.githubusercontent.com/json-schema-org/json-schema-spec/1afc34b65ead445ff363cfc870a28de0ca56e20f/README.md",
+      "retrieved_at": "2026-09-22T00:38:11.5173424Z",
+      "source_revision": "1afc34b65ead445ff363cfc870a28de0ca56e20f",
+      "bytes": 3723,
+      "sha256": "b642440ee3ec9fbde81cf85ff94963c6ac481260abf2c7bab45c75c3a919d801",
+      "licence": "originals/licences/json-schema-LICENSE",
+      "verified_mirrors": []
+    },
+    {
+      "path": "originals/licences/json-schema-LICENSE",
+      "kind": "licence",
+      "uri": "https://raw.githubusercontent.com/json-schema-org/json-schema-spec/4f56a9900674b27804f0ec32e3b7fdfa4efad695/LICENSE",
+      "aliases": [],
+      "source_url": "https://raw.githubusercontent.com/json-schema-org/json-schema-spec/4f56a9900674b27804f0ec32e3b7fdfa4efad695/LICENSE",
+      "effective_source_url": "https://raw.githubusercontent.com/json-schema-org/json-schema-spec/4f56a9900674b27804f0ec32e3b7fdfa4efad695/LICENSE",
+      "retrieved_at": "2026-09-22T00:38:11.5461036Z",
+      "source_revision": "4f56a9900674b27804f0ec32e3b7fdfa4efad695",
+      "bytes": 11739,
+      "sha256": "909b25a80d4945b21d3adb2fb17f90bf592e0274bdf117c069c088a8e44dc7b6",
+      "licence": "originals/licences/json-schema-LICENSE",
+      "verified_mirrors": []
+    }
+  ]
+}
