@@ -70,7 +70,9 @@ fn quantity(round: usize, bits: u64, label: Option<&str>) -> Vec<u8> {
         r#""type":"Quantity""#.to_owned(),
         format!(r#""definition":"urn:glaux:fuzz:quantity:{round}""#),
         r#""uom":{"code":"K"}"#.to_owned(),
-        format!(r#""extension":{{"case":{round},"$ref":"http://127.0.0.1:9/canary","nested":[true,null,{{"href":"file:///not-a-schema"}}]}}"#),
+        format!(
+            r#""extension":{{"case":{round},"$ref":"http://127.0.0.1:9/canary","nested":[true,null,{{"href":"file:///not-a-schema"}}]}}"#
+        ),
     ];
     if let Some(label) = label {
         members.push(format!(r#""label":{label}"#));
@@ -196,7 +198,9 @@ fn generate(partition: usize, round: usize, bits: u64) -> Case {
                 let (_, valid) = wrapper(round, &label(round));
                 let valid = String::from_utf8(valid).expect("UTF-8 source variant");
                 assert_eq!(valid.matches("\"BinaryEncoding\"").count(), 1);
-                bytes = valid.replace("\"BinaryEncoding\"", "\"JSONEncoding\"").into_bytes();
+                bytes = valid
+                    .replace("\"BinaryEncoding\"", "\"JSONEncoding\"")
+                    .into_bytes();
             }
             (contract, bytes, Some(Err(Failure::Structure)))
         }
@@ -223,7 +227,11 @@ fn generate(partition: usize, round: usize, bits: u64) -> Case {
         }
         _ => unreachable!("fixed campaign partition"),
     };
-    Case { contract, bytes, expected }
+    Case {
+        contract,
+        bytes,
+        expected,
+    }
 }
 
 fn main() {
@@ -234,18 +242,29 @@ fn main() {
     let mut distinct = BTreeSet::new();
     let mut distinct_accepted = BTreeSet::new();
     for index in 0..1024 {
-        assert!(start.elapsed() < Duration::from_secs(30), "bounded fuzz budget exceeded");
+        assert!(
+            start.elapsed() < Duration::from_secs(30),
+            "bounded fuzz budget exceeded"
+        );
         let partition = index % PARTITIONS.len();
         let case = generate(partition, index / PARTITIONS.len(), random(&mut state));
-        assert!(case.bytes.len() + 4 <= MAX_BYTES, "generator exceeded its input budget");
+        assert!(
+            case.bytes.len() + 4 <= MAX_BYTES,
+            "generator exceeded its input budget"
+        );
         let result = validator.validate(case.contract, &case.bytes);
         assert_eq!(
             result,
             validator.validate(case.contract, &case.bytes),
-            "nondeterministic case {index}: {:?}", case.bytes
+            "nondeterministic case {index}: {:?}",
+            case.bytes
         );
         if let Some(expected) = case.expected {
-            assert_eq!(result, expected, "source-derived case {index}: {:?}", case.bytes);
+            assert_eq!(
+                result, expected,
+                "source-derived case {index}: {:?}",
+                case.bytes
+            );
         }
         // JSON's insignificant outer whitespace cannot change acceptance. This
         // metamorphic check does not share the parser's internal representation.
@@ -266,13 +285,23 @@ fn main() {
         distinct.insert((case.contract, case.bytes));
     }
     for (name, [accepted, rejected]) in PARTITIONS.iter().zip(outcomes) {
-        assert_eq!(accepted + rejected, 128, "partition did not execute: {name}");
+        assert_eq!(
+            accepted + rejected,
+            128,
+            "partition did not execute: {name}"
+        );
         println!("Fuzz partition {name}: accepted={accepted}; rejected={rejected}");
     }
     let accepted: usize = outcomes.iter().map(|counts| counts[0]).sum();
     let rejected: usize = outcomes.iter().map(|counts| counts[1]).sum();
-    assert!(accepted >= 256 && rejected >= 512, "expected verdict partitions did not execute");
-    assert!(distinct_accepted.len() >= 256, "accepted seeds were repeated unchanged");
+    assert!(
+        accepted >= 256 && rejected >= 512,
+        "expected verdict partitions did not execute"
+    );
+    assert!(
+        distinct_accepted.len() >= 256,
+        "accepted seeds were repeated unchanged"
+    );
     assert!(distinct.len() >= 640, "mutation diversity collapsed");
     assert_eq!(MAX_DEPTH, 32, "reviewed parser depth budget drifted");
     assert_eq!(
@@ -283,10 +312,14 @@ fn main() {
         validator.validate(Contract::Quantity, &vec![b'['; MAX_DEPTH + 1]),
         Err(Failure::Depth)
     );
-    assert!(start.elapsed() < Duration::from_secs(30), "bounded fuzz budget exceeded");
+    assert!(
+        start.elapsed() < Duration::from_secs(30),
+        "bounded fuzz budget exceeded"
+    );
     println!(
         "Schema-parser fuzz v2: 1024 cases; seed=0x{SEED:016x}; accepted={accepted}; rejected={rejected}; distinct={}; distinct_accepted={}; source-derived verdicts, determinism, required labels, nested encoding binding, whitespace and explicit bounds checked.",
-        distinct.len(), distinct_accepted.len()
+        distinct.len(),
+        distinct_accepted.len()
     );
     println!("Required schema-parser fuzz invariants passed: 1024 cases.");
 }

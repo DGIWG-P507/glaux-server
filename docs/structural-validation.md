@@ -7,10 +7,10 @@ sources are the [Guide §§2.4, 4.3 and 9.2](https://github.com/DGIWG-P507/glaux
 and [Roadmap task 1.2.2](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-roadmap.md).
 The [original corpus](standards-corpus.md) remains unchanged.
 
-This document describes the implementation and authored checks. It does not
-record a successful build, fixture execution, fuzz run or conformance result.
-The issue/PR delivery record must identify the tested commit, actual commands,
-outcomes, failure controls and separate review before claiming completion.
+This document describes the implementation, checks and selected development
+evidence. It does not substitute for the final required CI and delivery record.
+The issue/PR identifies the tested commit, actual commands, outcomes, failure
+controls and separate review; structural proof is not service conformance.
 
 ## Dependency selection and scope
 
