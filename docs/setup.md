@@ -56,7 +56,7 @@ HTTP, full resource behavior, codecs, brokers and conformance checks remain unim
 
 [#6](https://github.com/DGIWG-P507/glaux-server/issues/6) owns the initial formatting/lint/build/unit/database suite, dependency/licence inventory, clean reproduction and false-green checks. [PR #314](https://github.com/DGIWG-P507/glaux-server/pull/314) records the actual main-rule application and failed/missing-check blocking probes, final execution and review. Automated checks do not mechanically enforce separate review. The eventual native/Compose reference instructions remain deliverables.
 
-Issues #4–#11 are complete. [#12 / task 1.2.6](https://github.com/DGIWG-P507/glaux-server/issues/12) adds [direction-aware validation](direction-validation.md) and initial System/stream/observation fixtures without endpoints; its issue/PR record actual checks, review and delivery. After its reviewed merge and closure, the next candidate is [#13 / task 1.2.7](https://github.com/DGIWG-P507/glaux-server/issues/13), only on a separate `proceed`. No local installation, persistent cloud provisioning or production access is implicit.
+Issues #4–#11 are complete. [#12 / task 1.2.6](https://github.com/DGIWG-P507/glaux-server/issues/12) adds [direction-aware validation](direction-validation.md) and initial System/stream/observation fixtures without endpoints; its issue/PR record actual checks, review and delivery. After its reviewed merge and closure, the next candidate is [#13 / task 1.3.1](https://github.com/DGIWG-P507/glaux-server/issues/13), initial canonical identity and typed-association storage, only on a separate `proceed`. No local installation, persistent cloud provisioning or production access is implicit.
 
 ## Initial inspection record
 

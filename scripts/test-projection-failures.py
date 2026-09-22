@@ -21,8 +21,8 @@ CASES = [
      ["left: Ok(())", 'right: Err(WriteOnly("/schema"))']),
     ("protected-uid-bypass",
      "projection::policy_tests::trusted_context_separates_uid_parent_and_ignored_local_id",
-     "context.existing_uid.is_some_and(|expected| expected != &uid)",
-     "context.existing_uid.is_some_and(|expected| expected != &uid && false)",
+     ".is_some_and(|expected| expected != &uid)",
+     ".is_some_and(|expected| expected != &uid && false)",
      ['left: Ok(Object {"definition": String("http://www.w3.org/ns/sosa/Sensor"), '
       '"label": String("Sensor"), "type": String("PhysicalSystem"), '
       '"uniqueId": String("urn:example:sensor:two")})',

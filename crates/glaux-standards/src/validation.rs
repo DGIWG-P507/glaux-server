@@ -226,7 +226,10 @@ pub(crate) fn catalog() -> Result<BTreeMap<String, Value>, String> {
         .collect()
 }
 
-pub(crate) fn compile(catalog: &BTreeMap<String, Value>, uri: &str) -> Result<jsonschema::Validator, String> {
+pub(crate) fn compile(
+    catalog: &BTreeMap<String, Value>,
+    uri: &str,
+) -> Result<jsonschema::Validator, String> {
     compile_with_denial(catalog, uri, DenyRetrieval::default())
 }
 

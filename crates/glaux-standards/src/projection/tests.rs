@@ -3,7 +3,8 @@ use std::sync::OnceLock;
 
 fn validator() -> &'static ProjectionValidator {
     static VALIDATOR: OnceLock<ProjectionValidator> = OnceLock::new();
-    VALIDATOR.get_or_init(|| ProjectionValidator::new().expect("pinned projections compile offline"))
+    VALIDATOR
+        .get_or_init(|| ProjectionValidator::new().expect("pinned projections compile offline"))
 }
 
 fn bytes(value: &Value) -> Vec<u8> {
@@ -186,19 +187,31 @@ fn generated_response_members_remain_required() {
         let members: &[&str] = match resource {
             Resource::SystemGeoJson | Resource::SystemSensorMl => &["/id", "/links"],
             Resource::DataStream => &[
-                "/id", "/formats", "/system@link", "/observedProperties",
-                "/phenomenonTime", "/resultTime", "/resultType", "/live",
+                "/id",
+                "/formats",
+                "/system@link",
+                "/observedProperties",
+                "/phenomenonTime",
+                "/resultTime",
+                "/resultType",
+                "/live",
             ],
             Resource::ControlStream => &[
-                "/id", "/formats", "/system@link", "/controlledProperties",
-                "/issueTime", "/executionTime", "/live",
+                "/id",
+                "/formats",
+                "/system@link",
+                "/controlledProperties",
+                "/issueTime",
+                "/executionTime",
+                "/live",
             ],
             Resource::Observation => &["/id", "/datastream@id"],
         };
         for &member in members {
             let mut incomplete = response.clone();
             remove(&mut incomplete, member);
-            let expected = if matches!(resource, Resource::SystemGeoJson | Resource::SystemSensorMl) {
+            let expected = if matches!(resource, Resource::SystemGeoJson | Resource::SystemSensorMl)
+            {
                 ProjectionError::Missing(member)
             } else {
                 ProjectionError::Structure
@@ -218,7 +231,11 @@ fn writable_required_members_survive_request_projection() {
     for (resource, request, _) in fixtures() {
         let members: &[&str] = match resource {
             Resource::SystemGeoJson => &[
-                "/type", "/geometry", "/properties/featureType", "/properties/uid", "/properties/name",
+                "/type",
+                "/geometry",
+                "/properties/featureType",
+                "/properties/uid",
+                "/properties/name",
             ],
             Resource::SystemSensorMl => &["/type", "/definition", "/uniqueId", "/label"],
             Resource::DataStream => &["/name"],
@@ -272,7 +289,10 @@ fn stream_schema_is_write_only_in_responses() {
                 "{resource:?}: even a null schema member is a write-only output leak"
             );
         }
-        assert_eq!(v.validate(resource, Projection::Response, &bytes(&response)), Ok(()));
+        assert_eq!(
+            v.validate(resource, Projection::Response, &bytes(&response)),
+            Ok(())
+        );
     }
 }
 
@@ -318,11 +338,17 @@ fn with_nested_record(resource: Resource, mut value: Value) -> (Value, &'static 
 fn nested_quantity_label_requirements_survive_projection() {
     let v = validator();
     for (resource, request, response) in fixtures() {
-        if !matches!(resource, Resource::SystemSensorMl | Resource::DataStream | Resource::ControlStream) {
+        if !matches!(
+            resource,
+            Resource::SystemSensorMl | Resource::DataStream | Resource::ControlStream
+        ) {
             continue;
         }
-        let mut cases = vec![(Projection::CreateRequest, request.clone()),
-            (Projection::ReplaceRequest, request.clone()), (Projection::MergedPatch, request)];
+        let mut cases = vec![
+            (Projection::CreateRequest, request.clone()),
+            (Projection::ReplaceRequest, request.clone()),
+            (Projection::MergedPatch, request),
+        ];
         // Stream responses do not carry the schema; a System's SensorML
         // output description does, and must obey the same Quantity contract.
         if resource == Resource::SystemSensorMl {
@@ -333,7 +359,11 @@ fn nested_quantity_label_requirements_survive_projection() {
             assert_eq!(v.validate(resource, projection, &bytes(&valid)), Ok(()));
             for label in [None, Some(json!("")), Some(Value::Null), Some(json!(19))] {
                 let mut invalid = valid.clone();
-                let component = invalid.pointer_mut(component_path).unwrap().as_object_mut().unwrap();
+                let component = invalid
+                    .pointer_mut(component_path)
+                    .unwrap()
+                    .as_object_mut()
+                    .unwrap();
                 if let Some(label) = label {
                     component.insert("label".into(), label);
                 } else {
@@ -348,7 +378,10 @@ fn nested_quantity_label_requirements_survive_projection() {
             // minLength=1 is not a whitespace prohibition or label invention.
             let mut whitespace_label = valid;
             whitespace_label.pointer_mut(component_path).unwrap()["label"] = json!(" ");
-            assert_eq!(v.validate(resource, projection, &bytes(&whitespace_label)), Ok(()));
+            assert_eq!(
+                v.validate(resource, projection, &bytes(&whitespace_label)),
+                Ok(())
+            );
         }
     }
 }
@@ -358,22 +391,32 @@ fn malformed_generated_members_are_not_ignored() {
     let v = validator();
     for (resource, _, response) in fixtures() {
         // Present generated metadata retains its source type constraints even
-        // though requests may omit it. Do not test only absent-member cases.
+        // though requests may omit it. PUT's outer id is the explicit exception:
+        // the selected transaction draft requires ignoring it unconditionally.
         let mutations: Vec<(&str, Value)> = match resource {
-            Resource::SystemGeoJson | Resource::SystemSensorMl =>
-                vec![("/id", json!([])), ("/links", json!({}))],
+            Resource::SystemGeoJson | Resource::SystemSensorMl => {
+                vec![("/id", json!([])), ("/links", json!({}))]
+            }
             Resource::DataStream => vec![
-                ("/formats", json!([])), ("/formats", json!([7])),
-                ("/system@link", Value::Null), ("/system@link", json!({})),
-                ("/observedProperties", json!([])), ("/phenomenonTime", json!(false)),
-                ("/resultTime", json!({})), ("/resultType", json!("unknown-kind")),
+                ("/formats", json!([])),
+                ("/formats", json!([7])),
+                ("/system@link", Value::Null),
+                ("/system@link", json!({})),
+                ("/observedProperties", json!([])),
+                ("/phenomenonTime", json!(false)),
+                ("/resultTime", json!({})),
+                ("/resultType", json!("unknown-kind")),
                 ("/live", json!("true")),
             ],
             Resource::ControlStream => vec![
-                ("/formats", json!([])), ("/formats", json!([7])),
-                ("/system@link", Value::Null), ("/system@link", json!({})),
-                ("/controlledProperties", json!([])), ("/issueTime", json!({})),
-                ("/executionTime", json!(false)), ("/live", json!("true")),
+                ("/formats", json!([])),
+                ("/formats", json!([7])),
+                ("/system@link", Value::Null),
+                ("/system@link", json!({})),
+                ("/controlledProperties", json!([])),
+                ("/issueTime", json!({})),
+                ("/executionTime", json!(false)),
+                ("/live", json!("true")),
             ],
             Resource::Observation => vec![("/id", json!([])), ("/datastream@id", json!(true))],
         };
@@ -381,9 +424,14 @@ fn malformed_generated_members_are_not_ignored() {
             let mut invalid = response.clone();
             *invalid.pointer_mut(path).unwrap() = replacement;
             for projection in [Projection::ReplaceRequest, Projection::Response] {
+                let expected = if path == "/id" && projection == Projection::ReplaceRequest {
+                    Ok(())
+                } else {
+                    Err(ProjectionError::Structure)
+                };
                 assert_eq!(
                     v.validate(resource, projection, &bytes(&invalid)),
-                    Err(ProjectionError::Structure),
+                    expected,
                     "{resource:?} {projection:?}: invalid known member {path}"
                 );
             }
@@ -394,40 +442,109 @@ fn malformed_generated_members_are_not_ignored() {
 #[test]
 fn only_resource_local_ids_are_ignored() {
     let v = validator();
-    for (resource, mut request, _) in fixtures() {
-        request["id"] = json!("untrusted-body-local-id");
-        for &projection in request_projections(resource) {
-            assert_eq!(v.validate(resource, projection, &bytes(&request)), Ok(()));
+    for (resource, request, response) in fixtures() {
+        // Guide 4.6 and the selected Features transaction revision's replace
+        // /put-rid and update /rid rules ignore the submitted root id, not just
+        // a well-typed or matching value. Parsing budgets still apply first.
+        for outer_id in [Value::Null, json!([]), json!(""), json!("different-local-id")] {
+            let mut submitted = request.clone();
+            submitted["id"] = outer_id.clone();
+            for &projection in request_projections(resource) {
+                let expected = if projection == Projection::CreateRequest
+                    && outer_id != json!("different-local-id")
+                {
+                    Err(ProjectionError::Structure)
+                } else {
+                    Ok(())
+                };
+                assert_eq!(
+                    v.validate(resource, projection, &bytes(&submitted)),
+                    expected,
+                    "{resource:?} {projection:?}: submitted outer id {outer_id}"
+                );
+            }
+            if outer_id != json!("different-local-id") {
+                let mut invalid_response = response.clone();
+                invalid_response["id"] = outer_id;
+                assert_eq!(
+                    v.validate(resource, Projection::Response, &bytes(&invalid_response)),
+                    Err(ProjectionError::Structure),
+                    "output keeps its id shape requirement"
+                );
+                assert_eq!(
+                    v.validate_original(resource, &bytes(&invalid_response)),
+                    Err(ProjectionError::Structure),
+                    "the original schema diagnostic must not inherit PUT's id exception"
+                );
+            }
         }
-        if matches!(resource, Resource::SystemSensorMl | Resource::DataStream | Resource::ControlStream) {
+        if matches!(
+            resource,
+            Resource::SystemSensorMl | Resource::DataStream | Resource::ControlStream
+        ) {
             let (valid, component_path) = with_nested_record(resource, request);
-            assert_eq!(v.validate(resource, Projection::CreateRequest, &bytes(&valid)), Ok(()));
+            assert_eq!(
+                v.validate(resource, Projection::CreateRequest, &bytes(&valid)),
+                Ok(())
+            );
             let mut invalid = valid;
             invalid.pointer_mut(component_path).unwrap()["id"] = json!(19);
-            assert_eq!(
-                v.validate(resource, Projection::CreateRequest, &bytes(&invalid)),
-                Err(ProjectionError::Structure),
-                "nested component id is content, not the ignored outer resource id"
-            );
+            for &projection in request_projections(resource) {
+                assert_eq!(
+                    v.validate(resource, projection, &bytes(&invalid)),
+                    Err(ProjectionError::Structure),
+                    "nested component id is content, not the ignored outer resource id"
+                );
+            }
         }
     }
-    let (_, system_request, _) = fixtures().into_iter()
-        .find(|(resource, _, _)| *resource == Resource::SystemSensorMl).unwrap();
+    let (_, system_request, _) = fixtures()
+        .into_iter()
+        .find(|(resource, _, _)| *resource == Resource::SystemSensorMl)
+        .unwrap();
     let (expected, _) = with_nested_record(Resource::SystemSensorMl, system_request);
     let mut submitted = expected.clone();
     submitted["id"] = json!("ignored-outer-id");
-    let actual = v.request(
-        Resource::SystemSensorMl,
-        Projection::CreateRequest,
-        &bytes(&submitted),
-        RequestContext::default(),
-    ).unwrap();
+    let actual = v
+        .request(
+            Resource::SystemSensorMl,
+            Projection::CreateRequest,
+            &bytes(&submitted),
+            RequestContext::default(),
+        )
+        .unwrap();
     // Exact independently specified extraction: remove only the outer ID,
     // retain both distinct content IDs and every other source member.
     assert_eq!(actual, expected);
     assert!(actual.get("id").is_none());
-    assert_eq!(actual.pointer("/outputs/0/id"), Some(&json!("record-content-id")));
-    assert_eq!(actual.pointer("/outputs/0/fields/0/id"), Some(&json!("quantity-content-id")));
+    assert_eq!(
+        actual.pointer("/outputs/0/id"),
+        Some(&json!("record-content-id"))
+    );
+    assert_eq!(
+        actual.pointer("/outputs/0/fields/0/id"),
+        Some(&json!("quantity-content-id"))
+    );
+    let existing_uid: Uid = "urn:glaux:fixture:thermometer".parse().unwrap();
+    for outer_id in [Value::Null, json!([]), json!(""), json!("different-local-id")] {
+        submitted["id"] = outer_id;
+        for projection in [Projection::ReplaceRequest, Projection::MergedPatch] {
+            let actual = v.request(
+                Resource::SystemSensorMl,
+                projection,
+                &bytes(&submitted),
+                RequestContext {
+                    existing_uid: Some(&existing_uid),
+                    ..Default::default()
+                },
+            );
+            assert_eq!(
+                actual,
+                Ok(expected.clone()),
+                "PUT/PATCH must discard only the outer id and preserve exact nested content"
+            );
+        }
+    }
 }
 
 #[test]
@@ -435,8 +552,15 @@ fn wrong_direction_and_original_schema_results_are_distinct() {
     let v = validator();
     for (resource, request, response) in fixtures() {
         let is_system = matches!(resource, Resource::SystemGeoJson | Resource::SystemSensorMl);
-        let original_expected = if is_system { Ok(()) } else { Err(ProjectionError::Structure) };
-        assert_eq!(v.validate_original(resource, &bytes(&request)), original_expected);
+        let original_expected = if is_system {
+            Ok(())
+        } else {
+            Err(ProjectionError::Structure)
+        };
+        assert_eq!(
+            v.validate_original(resource, &bytes(&request)),
+            original_expected
+        );
         assert_eq!(
             v.validate(resource, Projection::Response, &bytes(&request)),
             Err(if is_system {
@@ -449,9 +573,15 @@ fn wrong_direction_and_original_schema_results_are_distinct() {
                 ProjectionError::Structure
             })
         );
-        assert_eq!(v.validate(resource, Projection::CreateRequest, &bytes(&request)), Ok(()));
+        assert_eq!(
+            v.validate(resource, Projection::CreateRequest, &bytes(&request)),
+            Ok(())
+        );
         // Request projection must not mutate the source validator's result.
-        assert_eq!(v.validate_original(resource, &bytes(&request)), original_expected);
+        assert_eq!(
+            v.validate_original(resource, &bytes(&request)),
+            original_expected
+        );
         if matches!(resource, Resource::DataStream | Resource::ControlStream) {
             assert_eq!(
                 v.validate(resource, Projection::CreateRequest, &bytes(&response)),
