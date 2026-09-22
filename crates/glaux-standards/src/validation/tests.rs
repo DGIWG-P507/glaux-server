@@ -114,7 +114,7 @@ fn limits_and_safe_parse() {
         v.validate(Contract::Quantity, &vec![b' '; MAX_BYTES + 1]),
         Err(Failure::Size)
     );
-    assert_eq!(parse(&vec![b'['; MAX_DEPTH + 1]), Err(Failure::Depth));
+    assert_eq!(parse(&[b'['; MAX_DEPTH + 1]), Err(Failure::Depth));
     let at_depth = format!("{}0{}", "[".repeat(MAX_DEPTH), "]".repeat(MAX_DEPTH));
     assert!(parse(at_depth.as_bytes()).is_ok());
     let string = serde_json::to_vec(&"x".repeat(MAX_STRING_BYTES)).unwrap();

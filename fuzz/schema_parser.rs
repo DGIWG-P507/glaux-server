@@ -316,7 +316,7 @@ fn main() {
         Err(Failure::Size)
     );
     assert_eq!(
-        validator.validate(Contract::Quantity, &vec![b'['; MAX_DEPTH + 1]),
+        validator.validate(Contract::Quantity, &[b'['; MAX_DEPTH + 1]),
         Err(Failure::Depth)
     );
     assert!(
