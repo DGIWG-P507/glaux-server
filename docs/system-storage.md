@@ -93,8 +93,10 @@ configuration, role provisioning and service startup belong to later tasks.
 
 ## Verification and limits
 
-The [independent truth table and executable proof](system-storage-tests.md) were
-specified before SQL implementation. The hosted suite uses the existing owned,
+The initial [independent truth table](system-storage-tests.md) was committed
+before SQL implementation. The executable proof and additional cases were
+developed during implementation; no pre-implementation behavioral-red run is
+claimed. The hosted suite uses the existing owned,
 network-isolated PostgreSQL/PostGIS harness: the Rust binary is copied into its
 validated container, never connected to an external database. It checks exact
 values and whole-table rollback, not merely matching counts or self-roundtrips.

@@ -273,7 +273,7 @@ async fn proof() {
         .await
         .expect("owned disposable PostgreSQL is required");
     let location: (String, String, String) =
-        sqlx::query_as("SELECT current_database(), current_user, inet_server_addr()::text")
+        sqlx::query_as("SELECT current_database(), current_user, host(inet_server_addr())")
             .fetch_one(&mut connection)
             .await
             .unwrap();
