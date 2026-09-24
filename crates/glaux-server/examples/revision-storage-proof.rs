@@ -93,11 +93,7 @@ async fn snapshot(connection: &mut PgConnection) -> String {
     .unwrap()
 }
 
-async fn check_artifact(
-    connection: &mut PgConnection,
-    expected: &NewSourceArtifact,
-    digest: &str,
-) {
+async fn check_artifact(connection: &mut PgConnection, expected: &NewSourceArtifact, digest: &str) {
     let actual = ArtifactRepository::get(connection, expected.id)
         .await
         .unwrap()
@@ -160,8 +156,24 @@ fn time_fixtures() -> Vec<TimeFixture> {
     let hundred_b = format!("000000001{}2", "0".repeat(90));
     let maximum = format!("{}1", "0".repeat(4074));
     vec![
-        time_fixture("1970-01-01T00:00:00.0000011Z", 0, false, "0.0000011", 7, 0, false),
-        time_fixture("1970-01-01T00:00:00.0000012Z", 0, false, "0.0000012", 7, 0, false),
+        time_fixture(
+            "1970-01-01T00:00:00.0000011Z",
+            0,
+            false,
+            "0.0000011",
+            7,
+            0,
+            false,
+        ),
+        time_fixture(
+            "1970-01-01T00:00:00.0000012Z",
+            0,
+            false,
+            "0.0000012",
+            7,
+            0,
+            false,
+        ),
         time_fixture(
             "1969-12-31T18:59:59.999999999-05:00",
             -1,
@@ -229,20 +241,27 @@ async fn immutable_rejection(connection: &mut PgConnection, statement: &'static 
     let error = result.expect_err("retained history mutation must reject, not succeed");
     let database_error = error.as_database_error().unwrap();
     assert_eq!(database_error.code().as_deref(), Some("55000"));
-    assert!(database_error.message().contains("retained history is immutable"));
+    assert!(
+        database_error
+            .message()
+            .contains("retained history is immutable")
+    );
     assert_eq!(snapshot(connection).await, before);
 }
 
 async fn run(connection: &mut PgConnection) {
-    let identity: (String, String, String) = sqlx::query_as(
-        "SELECT current_database(),current_user,host(inet_server_addr())",
-    )
-    .fetch_one(&mut *connection)
-    .await
-    .unwrap();
+    let identity: (String, String, String) =
+        sqlx::query_as("SELECT current_database(),current_user,host(inet_server_addr())")
+            .fetch_one(&mut *connection)
+            .await
+            .unwrap();
     assert_eq!(
         identity,
-        ("glaux_harness_test".into(), "postgres".into(), "127.0.0.1".into())
+        (
+            "glaux_harness_test".into(),
+            "postgres".into(),
+            "127.0.0.1".into()
+        )
     );
     for statement in ["SET statement_timeout=5000", "SET lock_timeout=1000"] {
         sqlx::query(statement)
@@ -287,7 +306,10 @@ async fn run(connection: &mut PgConnection) {
         .fetch_one(&mut *connection)
         .await
         .unwrap();
-        assert_eq!(sql_type, "numeric", "fixed scale can round valid timestamps");
+        assert_eq!(
+            sql_type, "numeric",
+            "fixed scale can round valid timestamps"
+        );
     }
     passed("migration-preservation");
 
@@ -298,20 +320,30 @@ async fn run(connection: &mut PgConnection) {
     ArtifactRepository::insert(connection, &b).await.unwrap();
     check_artifact(connection, &a, SHA_A).await;
     check_artifact(connection, &b, SHA_B).await;
-    assert!(ArtifactRepository::get(connection, artifact_id("41ff"))
-        .await
-        .unwrap()
-        .is_none());
+    assert!(
+        ArtifactRepository::get(connection, artifact_id("41ff"))
+            .await
+            .unwrap()
+            .is_none()
+    );
     passed("exact-artifacts");
 
     let receipt = time_fixture(
-        RECEIPT, 1483228800, false, "0.12345678901234567890", 20, 3600, true,
+        RECEIPT,
+        1483228800,
+        false,
+        "0.12345678901234567890",
+        20,
+        3600,
+        true,
     );
     let fixtures = time_fixtures();
     for (index, fixture) in fixtures.iter().enumerate() {
         let suffix = format!("42{:02x}", index + 1);
         let record = revision(&suffix, "4101", Some(&fixture.source));
-        RevisionRepository::append(connection, &record).await.unwrap();
+        RevisionRepository::append(connection, &record)
+            .await
+            .unwrap();
         let actual = RevisionRepository::get(connection, record.id)
             .await
             .unwrap()
@@ -337,7 +369,10 @@ async fn run(connection: &mut PgConnection) {
         .fetch_one(&mut *connection)
         .await
         .unwrap();
-        assert!(exact, "raw SQL keys differ from independent time coordinates");
+        assert!(
+            exact,
+            "raw SQL keys differ from independent time coordinates"
+        );
     }
     let no_semantic = revision("4209", "4102", None);
     RevisionRepository::append(connection, &no_semantic)
@@ -377,19 +412,23 @@ async fn run(connection: &mut PgConnection) {
     .fetch_one(&mut *connection)
     .await
     .unwrap();
-    assert!(lossy_equal, "the deliberate timestamp control must collapse these values");
-    assert!(RevisionRepository::get(connection, revision_id("42ff"))
-        .await
-        .unwrap()
-        .is_none());
+    assert!(
+        lossy_equal,
+        "the deliberate timestamp control must collapse these values"
+    );
+    assert!(
+        RevisionRepository::get(connection, revision_id("42ff"))
+            .await
+            .unwrap()
+            .is_none()
+    );
     passed("exact-times-and-references");
 
-    let previous: String = sqlx::query_scalar(
-        "SELECT json_agg(t ORDER BY id)::text FROM public.system_revision t",
-    )
-    .fetch_one(&mut *connection)
-    .await
-    .unwrap();
+    let previous: String =
+        sqlx::query_scalar("SELECT json_agg(t ORDER BY id)::text FROM public.system_revision t")
+            .fetch_one(&mut *connection)
+            .await
+            .unwrap();
     let later = revision("4301", "4103", Some("2017-01-01T00:00:00Z"));
     RevisionRepository::create_with_artifact(connection, &c, &later)
         .await
@@ -412,7 +451,10 @@ async fn run(connection: &mut PgConnection) {
         .unwrap();
     assert_eq!(actual.artifact_id, c.id);
     assert_eq!(actual.system_id, local("4001"));
-    assert_eq!(actual.semantic_time.unwrap().source_lexeme(), "2017-01-01T00:00:00Z");
+    assert_eq!(
+        actual.semantic_time.unwrap().source_lexeme(),
+        "2017-01-01T00:00:00Z"
+    );
     passed("append-preserves-history");
 
     let before = snapshot(connection).await;
@@ -427,8 +469,12 @@ async fn run(connection: &mut PgConnection) {
         let mut orphan_revision = revision("44f2", "44f1", None);
         orphan_revision.system_id = local(owner);
         assert!(matches!(
-            RevisionRepository::create_with_artifact(connection, &orphan_artifact, &orphan_revision)
-                .await,
+            RevisionRepository::create_with_artifact(
+                connection,
+                &orphan_artifact,
+                &orphan_revision
+            )
+            .await,
             Err(StorageError::InvalidAssociation)
         ));
         assert_eq!(snapshot(connection).await, before);
@@ -479,7 +525,10 @@ async fn run(connection: &mut PgConnection) {
         ),
     ] {
         let before = snapshot(connection).await;
-        sqlx::query("BEGIN").execute(&mut *connection).await.unwrap();
+        sqlx::query("BEGIN")
+            .execute(&mut *connection)
+            .await
+            .unwrap();
         sqlx::query(disable)
             .execute(&mut *connection)
             .await
@@ -488,8 +537,15 @@ async fn run(connection: &mut PgConnection) {
             .execute(&mut *connection)
             .await
             .unwrap();
-        assert_ne!(snapshot(connection).await, before, "disabled guard must expose mutation");
-        sqlx::query("ROLLBACK").execute(&mut *connection).await.unwrap();
+        assert_ne!(
+            snapshot(connection).await,
+            before,
+            "disabled guard must expose mutation"
+        );
+        sqlx::query("ROLLBACK")
+            .execute(&mut *connection)
+            .await
+            .unwrap();
         assert_eq!(snapshot(connection).await, before);
         immutable_rejection(connection, statement).await;
     }
@@ -506,21 +562,27 @@ async fn run(connection: &mut PgConnection) {
         "UPDATE public.system_revision SET receipt_source='1970-01-01T00:00:00Z'
          WHERE id=$1::text::uuid",
     ] {
-        sqlx::query("BEGIN").execute(&mut *connection).await.unwrap();
+        sqlx::query("BEGIN")
+            .execute(&mut *connection)
+            .await
+            .unwrap();
         sqlx::query("ALTER TABLE public.system_revision DISABLE TRIGGER system_revision_immutable")
             .execute(&mut *connection)
             .await
             .unwrap();
         sqlx::query(change)
-        .bind(revision_id("4201").to_string())
-        .execute(&mut *connection)
-        .await
-        .unwrap();
+            .bind(revision_id("4201").to_string())
+            .execute(&mut *connection)
+            .await
+            .unwrap();
         assert!(matches!(
             RevisionRepository::get(connection, revision_id("4201")).await,
             Err(StorageError::InvalidStoredValue)
         ));
-        sqlx::query("ROLLBACK").execute(&mut *connection).await.unwrap();
+        sqlx::query("ROLLBACK")
+            .execute(&mut *connection)
+            .await
+            .unwrap();
         assert_eq!(snapshot(connection).await, before);
     }
     for change in [
@@ -529,7 +591,10 @@ async fn run(connection: &mut PgConnection) {
         "UPDATE public.source_artifact SET bytes=bytes || decode('20','hex')
          WHERE id=$1::text::uuid",
     ] {
-        sqlx::query("BEGIN").execute(&mut *connection).await.unwrap();
+        sqlx::query("BEGIN")
+            .execute(&mut *connection)
+            .await
+            .unwrap();
         sqlx::query("ALTER TABLE public.source_artifact DISABLE TRIGGER source_artifact_immutable")
             .execute(&mut *connection)
             .await
@@ -549,13 +614,19 @@ async fn run(connection: &mut PgConnection) {
             ArtifactRepository::get(connection, a.id).await,
             Err(StorageError::InvalidStoredValue)
         ));
-        sqlx::query("ROLLBACK").execute(&mut *connection).await.unwrap();
+        sqlx::query("ROLLBACK")
+            .execute(&mut *connection)
+            .await
+            .unwrap();
         assert_eq!(snapshot(connection).await, before);
         check_artifact(connection, &a, SHA_A).await;
     }
     // A complete changed-byte/digest pair remains a valid artifact in isolation,
     // but cannot pass the independent literal-byte oracle for retained A.
-    sqlx::query("BEGIN").execute(&mut *connection).await.unwrap();
+    sqlx::query("BEGIN")
+        .execute(&mut *connection)
+        .await
+        .unwrap();
     sqlx::query("ALTER TABLE public.source_artifact DISABLE TRIGGER source_artifact_immutable")
         .execute(&mut *connection)
         .await
@@ -572,9 +643,15 @@ async fn run(connection: &mut PgConnection) {
         .await
         .unwrap()
         .unwrap();
-    assert_ne!(changed.bytes, A, "literal-byte oracle must detect changed source");
+    assert_ne!(
+        changed.bytes, A,
+        "literal-byte oracle must detect changed source"
+    );
     assert_ne!(changed.sha256, sha(SHA_A));
-    sqlx::query("ROLLBACK").execute(&mut *connection).await.unwrap();
+    sqlx::query("ROLLBACK")
+        .execute(&mut *connection)
+        .await
+        .unwrap();
     assert_eq!(snapshot(connection).await, before);
     check_artifact(connection, &a, SHA_A).await;
     passed("checked-reconstruction");
@@ -585,7 +662,9 @@ async fn run(connection: &mut PgConnection) {
         &vec![90; 1_048_576],
     );
     assert_eq!(maximum.media_type.len(), 1024);
-    ArtifactRepository::insert(connection, &maximum).await.unwrap();
+    ArtifactRepository::insert(connection, &maximum)
+        .await
+        .unwrap();
     check_artifact(
         connection,
         &maximum,
@@ -593,7 +672,9 @@ async fn run(connection: &mut PgConnection) {
     )
     .await;
     let empty = source("4502", "application/octet-stream", b"");
-    ArtifactRepository::insert(connection, &empty).await.unwrap();
+    ArtifactRepository::insert(connection, &empty)
+        .await
+        .unwrap();
     check_artifact(
         connection,
         &empty,
@@ -619,7 +700,11 @@ async fn run(connection: &mut PgConnection) {
 }
 
 fn main() {
-    assert_eq!(std::env::args().count(), 1, "no selection or target override");
+    assert_eq!(
+        std::env::args().count(),
+        1,
+        "no selection or target override"
+    );
     tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
