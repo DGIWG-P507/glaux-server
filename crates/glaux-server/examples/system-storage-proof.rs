@@ -577,7 +577,7 @@ async fn proof() {
     let pristine_ledger = ledger(&mut connection).await;
     assert_eq!(
         pristine_ledger.iter().map(|row| row.0).collect::<Vec<_>>(),
-        vec![1, 2, 3, 4]
+        vec![1, 2, 3, 4, 5]
     );
     migrate(&mut connection)
         .await

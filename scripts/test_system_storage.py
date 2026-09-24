@@ -139,7 +139,7 @@ def cli_fresh_migration(db):
     require(cli(db, "migrate") == "Database command completed.",
             "Explicit CLI migration did not complete on a fresh target")
     require(db.query("SELECT string_agg(version::text,',' ORDER BY version) "
-                     "FROM public._sqlx_migrations WHERE success") == "1,2,3,4",
+                     "FROM public._sqlx_migrations WHERE success") == "1,2,3,4,5",
             "CLI did not apply every packaged migration to the fresh target")
     require(db.query("SELECT string_agg(tablename,',' ORDER BY tablename) FROM pg_tables "
                      "WHERE schemaname='public' AND tablename IN "

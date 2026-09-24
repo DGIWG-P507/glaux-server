@@ -89,6 +89,13 @@ pub fn packaged_migrations() -> Migrator {
             include_str!("../migrations/0004_system_revisions.sql").into_sql_str(),
             false,
         ),
+        Migration::new(
+            5,
+            "immutable retained history".into(),
+            MigrationType::Simple,
+            include_str!("../migrations/0005_immutable_history.sql").into_sql_str(),
+            false,
+        ),
     ]);
     migrator.dangerous_set_table_name("public._sqlx_migrations");
     migrator
