@@ -111,6 +111,9 @@ jobs:
       - name: Prove System identity repository and real database constraints
         shell: bash
         run: python3 -u scripts/check-execution.py system-storage | tee "$RUNNER_TEMP/glaux-ci-evidence/system-storage.log"
+      - name: Prove exact revision and source-artifact storage
+        shell: bash
+        run: python3 -u scripts/check-execution.py revision-storage | tee "$RUNNER_TEMP/glaux-ci-evidence/revision-storage.log"
       - name: Verify required execution rejects disposable failures
         run: python3 -u scripts/test-ci-failures.py
       - name: Verify validation assertions detect disposable faults

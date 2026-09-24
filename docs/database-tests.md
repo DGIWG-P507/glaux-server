@@ -7,6 +7,11 @@ into the existing verified container and exercises actual repository operations;
 it does not expose a host port or accept a user database. The original lifecycle
 and exact-time checks below retain their narrower psql-based claims.
 
+Task #14 adds the [revision/source proof](revision-storage-tests.md), run with
+`python3 -u scripts/check-execution.py revision-storage`. It uses the same owned
+container boundary for exact bytes/digests, exact revision times, immutable
+history and failed-reference rollback; it is not a backup/restore or HTTP test.
+
 [Issue #5 / task 1.1.3](https://github.com/DGIWG-P507/glaux-server/issues/5)
 owns this initial harness. Its execution record links the tested head, failures,
 separate review and final result. This checks a real database through the pinned

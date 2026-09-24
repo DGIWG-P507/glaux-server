@@ -38,6 +38,7 @@ python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness imp
 python3 -u scripts/check-execution.py database
 python3 -u scripts/check-execution.py time-database
 python3 -u scripts/check-execution.py system-storage
+python3 -u scripts/check-execution.py revision-storage
 python3 -u scripts/test-ci-failures.py
 python3 -u scripts/test-validation-failures.py
 python3 -u scripts/test-projection-failures.py
@@ -55,7 +56,7 @@ are offline after the explicit locked dependency fetch. No local prerequisites a
 Formatting and Clippy check Rust; compileall checks Python syntax, not a claim of
 Python style/static-analysis coverage. The executable regression, named identity,
 numeric, time and standards tests, bounded parser campaigns, exact-time storage
-proof, System SQLx storage proof and seven real database lifecycle tests run. Empty doctest targets have no executable examples;
+proof, System SQLx identity and revision/source storage proofs, and seven real database lifecycle tests run. Empty doctest targets have no executable examples;
 they are not substituted for the named behavioral checks.
 
 The [identity boundary harness](../scripts/check_identity_boundary.py) runs only

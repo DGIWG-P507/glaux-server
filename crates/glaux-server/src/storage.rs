@@ -18,6 +18,8 @@ pub struct SystemRecord {
 pub enum StorageError {
     Conflict,
     InvalidAssociation,
+    InvalidInput,
+    Immutable,
     IncompatibleSchema,
     InvalidStoredValue,
     Database(sqlx::Error),
@@ -30,8 +32,10 @@ impl fmt::Display for StorageError {
         f.write_str(match self {
             Self::Conflict => "identity or association conflict",
             Self::InvalidAssociation => "invalid System association",
+            Self::InvalidInput => "storage input violates its bounded contract",
+            Self::Immutable => "retained history is immutable",
             Self::IncompatibleSchema => "database schema is not compatible",
-            Self::InvalidStoredValue => "stored identity violates its typed contract",
+            Self::InvalidStoredValue => "stored value violates its typed contract",
             Self::Database(_) => "database operation failed",
             Self::Migration(_) => "database migration failed",
         })
@@ -48,6 +52,7 @@ impl From<sqlx::Error> for StorageError {
         {
             Some("23505" | "23P01") => Self::Conflict,
             Some("23503" | "23514") => Self::InvalidAssociation,
+            Some("55000") => Self::Immutable,
             _ => Self::Database(error),
         }
     }
@@ -75,6 +80,20 @@ pub fn packaged_migrations() -> Migrator {
             "System parent".into(),
             MigrationType::Simple,
             include_str!("../migrations/0003_system_parent.sql").into_sql_str(),
+            false,
+        ),
+        Migration::new(
+            4,
+            "System revisions and source artifacts".into(),
+            MigrationType::Simple,
+            include_str!("../migrations/0004_system_revisions.sql").into_sql_str(),
+            false,
+        ),
+        Migration::new(
+            5,
+            "immutable retained history".into(),
+            MigrationType::Simple,
+            include_str!("../migrations/0005_immutable_history.sql").into_sql_str(),
             false,
         ),
     ]);
