@@ -1,5 +1,12 @@
 # Disposable database tests
 
+Task #13 adds the separate [System storage proof](system-storage-tests.md), run
+with `python3 -u scripts/check-execution.py system-storage` on the approved hosted
+runner after the locked build/image pull. It copies the built Rust SQLx proof
+into the existing verified container and exercises actual repository operations;
+it does not expose a host port or accept a user database. The original lifecycle
+and exact-time checks below retain their narrower psql-based claims.
+
 [Issue #5 / task 1.1.3](https://github.com/DGIWG-P507/glaux-server/issues/5)
 owns this initial harness. Its execution record links the tested head, failures,
 separate review and final result. This checks a real database through the pinned

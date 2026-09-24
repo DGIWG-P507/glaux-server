@@ -14,6 +14,7 @@ new dependencies.
 | Structural validation | `jsonschema =0.56.0`, defaults disabled; `serde_json =1.0.151`, `arbitrary_precision` and `raw_value`. Exact transitive graph, all-target features, archive checksums and notice hashes: [reviewed Cargo snapshot](cargo-dependencies.json). | Package terms and actual packaged notices are recorded per dependency; no HTTP/filesystem retrieval feature or HTTP client is enabled. See [selection and limits](structural-validation.md). |
 | Typed identities | `uuid =1.26.1`, `getrandom =0.4.3`, `fluent-uri =0.4.1`, each with defaults disabled. [Selection, contracts and limits](resource-identities.md). | Actual packaged licences/notices and unified features are recorded in the reviewed Cargo snapshot; existing transitive `getrandom` remains separately accounted. |
 | Exact numbers | `num-bigint =0.4.8`, `num-rational =0.4.2`, `num-traits =0.2.19`, defaults disabled; rational requests `num-bigint`. [Contracts and limits](exact-numbers.md). | Existing locked packages reused as direct domain dependencies; actual unified features and packaged MIT/Apache notices remain in the reviewed snapshot. |
+| Initial PostgreSQL repository | `sqlx =0.9.0` (defaults disabled: `postgres`, `runtime-tokio`, `migrate`, `tls-rustls-ring-webpki`); `tokio =1.53.1` (defaults disabled: `rt`, `time`, `net`, `sync`). Server package only. [Storage contract](system-storage.md). | Actual SQLx MIT/Apache and Tokio MIT packaged notices, plus the full transitive feature/archive/notice inventory, are in the reviewed snapshot. TLS incorporates separately recorded ring Apache/ISC, webpki ISC and WebPKI-root CDLA-Permissive terms; these are not all relabelled MIT/Apache. |
 | Rust, Cargo, rustfmt and Clippy | Rust `1.98.1`, minimal toolchain plus the two explicit components; actual component versions appear in each run. | Rust's [Apache-2.0 OR MIT terms and third-party notice instructions](https://github.com/rust-lang/rust/blob/1.98.1/COPYRIGHT); bundled components retain their own notices. |
 | Checkout action | `actions/checkout` v7.0.1, `3d3c42e5aac5ba805825da76410c181273ba90b1`. | [MIT project licence](https://github.com/actions/checkout/blob/3d3c42e5aac5ba805825da76410c181273ba90b1/LICENSE). |
 | Inventory upload action | `actions/upload-artifact` v7.0.1, `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a`. | [MIT project licence](https://github.com/actions/upload-artifact/blob/043fb46d1a93c77aae656e7c1c64a875d1fc6a0a/LICENSE). Bundled action dependencies are not relicensed by that heading. |
@@ -70,11 +71,16 @@ tools, image, package data, malformed accounting or cleanup failures are errors.
 
 ## What this does not establish
 
-Task #9's reviewed lock contains 82 registry packages (three more than #8), including target-specific
-dependencies not necessarily compiled on Linux. No HTTP client or jsonschema
-HTTP/filesystem retrieval feature is enabled. All declared expressions offer
-permissive terms; compound Unicode data terms remain recorded rather than reduced
-to the crate's MIT/Apache heading. This is dependency-selection accounting, not
+Task #13's reviewed lock/snapshot contains 209 registry packages (127 more than
+the previous 82), including target-specific and optional-driver metadata not
+necessarily compiled into the Linux server. Previously locked package versions
+are retained. SQLx enables only the selected PostgreSQL driver, but Cargo's
+all-target metadata also accounts its optional driver/macro packages; presence
+in that inventory is not a claim that MySQL/SQLite or query macros are enabled.
+No HTTP client or jsonschema
+HTTP/filesystem retrieval feature is enabled. All declared expressions and
+compound Unicode/TLS/data terms remain recorded rather than reduced
+to a crate's MIT/Apache heading. This is dependency-selection accounting, not
 a legal opinion or a completed release-redistribution check.
 
 Six archives contain no separately named licence/notice file: `jsonschema-regex`

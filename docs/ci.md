@@ -37,6 +37,7 @@ python3 scripts/test_corpus.py
 python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness import PIN, docker; print(docker("pull", "--platform", PIN["platform"], PIN["image"], timeout=180))'
 python3 -u scripts/check-execution.py database
 python3 -u scripts/check-execution.py time-database
+python3 -u scripts/check-execution.py system-storage
 python3 -u scripts/test-ci-failures.py
 python3 -u scripts/test-validation-failures.py
 python3 -u scripts/test-projection-failures.py
@@ -54,7 +55,7 @@ are offline after the explicit locked dependency fetch. No local prerequisites a
 Formatting and Clippy check Rust; compileall checks Python syntax, not a claim of
 Python style/static-analysis coverage. The executable regression, named identity,
 numeric, time and standards tests, bounded parser campaigns, exact-time storage
-proof and seven real database lifecycle tests run. Empty doctest targets have no executable examples;
+proof, System SQLx storage proof and seven real database lifecycle tests run. Empty doctest targets have no executable examples;
 they are not substituted for the named behavioral checks.
 
 The [identity boundary harness](../scripts/check_identity_boundary.py) runs only
@@ -77,7 +78,7 @@ proof for this packaging task, not a claim that schema validation ran.
 
 [check-execution.py](../scripts/check-execution.py) preserves command failure and
 requires actual successful execution evidence. It accepts exactly `rust`,
-`schema-fuzz`, `numeric-fuzz`, `time-fuzz`, `database` or `time-database`,
+`schema-fuzz`, `numeric-fuzz`, `time-fuzz`, `database`, `time-database` or `system-storage`,
 not arbitrary selectors. Every named Rust test must execute successfully, and
 each fuzz campaign must emit its completed-invariant marker; the wrapper imposes
 a 180-second process timeout. Both the [lifecycle runner](../scripts/test_database.py)

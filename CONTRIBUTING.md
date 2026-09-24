@@ -54,7 +54,7 @@ original-source verdicts, operation/direction shape and trusted-context guards.
 Keep those claims distinct when adding resource endpoints; a structural pass is
 not authorization or complete writable-domain validation.
 
-For database-harness changes, also run the [disposable database tests](docs/database-tests.md) in the authorised hosted Linux environment. They use Python's standard library and the pinned image's psql, not an application SQLx adapter. Keep the exact image/version checks, owned-target validation, fixture/reset isolation and fatal setup/cleanup errors; never supply a user database or broaden cleanup to unrelated containers/volumes. A Rust-only green result does not cover these required database checks.
+For database-harness changes, also run the [disposable database tests](docs/database-tests.md) in the authorised hosted Linux environment. The original lifecycle and exact-time checks use Python's standard library and the pinned image's psql. The [System storage proof](docs/system-storage-tests.md) additionally runs the real Rust SQLx adapter inside that same owned, network-isolated container. Keep the exact image/version checks, owned-target validation, fixture/reset isolation and fatal setup/cleanup errors; never supply a user database or broaden cleanup to unrelated containers/volumes. A Rust-only green result does not cover these required database checks.
 
 The project lead selected the branch/PR policy on September 18, 2026 and approved the explicit separate-review procedure and required-check enforcement decision on September 21, 2026:
 
