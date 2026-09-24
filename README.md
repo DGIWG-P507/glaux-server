@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, enforced CI, validation, exact values and System identity storage — 24 September 2026 UTC.**
+**Initial build, enforced CI, validation, exact values and System identity/revision storage — 24 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
@@ -54,8 +54,15 @@ endpoints, a patch engine or complete resource semantics.
 authority-qualified source identifiers and typed parent relationships using
 SQLx/PostgreSQL. Conflicting identities and invalid parents roll back the entire
 creation. Packaged migrations run only through an explicit administrative command;
-schema checks do not upgrade a database. Revision/artifact storage, audit/outbox
-transactions, full System descriptions and HTTP endpoints remain later work.
+schema checks do not upgrade a database. Full System descriptions and HTTP
+endpoints remain later work.
+
+[Initial revision/source storage](docs/revision-storage.md) retains original
+document bytes, media type and digest separately from generated representations.
+System revisions preserve their artifact bindings and exact semantic/receipt
+instants; later revisions do not rewrite earlier records. This does not yet
+select current state, interpret full valid-time intervals or implement the
+resource/revision/audit/outbox transaction.
 
 ## Planned capabilities
 

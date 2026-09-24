@@ -107,6 +107,11 @@ Concurrent cases synchronize on observed database locks, not assumed delays.
 No company-laptop runtime or installation is required. Results, initial failures,
 tested commits and separate review are recorded on the issue/PR; authored tests
 alone are not passing evidence. Full System schemas/endpoints, authorization,
-immutable revisions/source artifacts (#14), audit/outbox, non-reuse after future
+audit/outbox, non-reuse after future
 deletion, restore and other resource families remain with their owning tasks.
 No performance, release readiness or CSAPI conformance is claimed.
+
+The subsequent [revision/source storage slice](revision-storage.md) adds
+immutable history beside these identity operations. It does not change
+`SystemRepository::get` into a current-revision selector or make identity
+creation the later resource/revision/audit/outbox transaction.
