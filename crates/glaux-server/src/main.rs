@@ -21,10 +21,15 @@ fn main() -> ExitCode {
         );
         return ExitCode::from(2);
     };
-    // Network database connections authenticate the server; the isolated test
-    // example configures its own private loopback connection separately.
+    // SQLx attempts TLS even on Unix sockets unless explicitly disabled.
+    // Only its actual Unix-socket route is exempt from network TLS verification.
+    let ssl_mode = if options.get_socket().is_some() || options.get_host().starts_with('/') {
+        PgSslMode::Disable
+    } else {
+        PgSslMode::VerifyFull
+    };
     let options = options
-        .ssl_mode(PgSslMode::VerifyFull)
+        .ssl_mode(ssl_mode)
         .options([("statement_timeout", "10000"), ("lock_timeout", "5000")]);
     let Ok(runtime) = tokio::runtime::Builder::new_current_thread()
         .enable_all()

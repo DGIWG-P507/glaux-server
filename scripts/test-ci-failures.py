@@ -26,8 +26,8 @@ def replace(path, old, new):
 
 def assertion(root):
     replace(root / "crates/glaux-server/src/main.rs",
-            'use migrate or check-schema explicitly.");\n        return ExitCode::from(2);',
-            'use migrate or check-schema explicitly.");\n        return ExitCode::from(0);')
+            'return ExitCode::from(2);\n    }\n    let Some(options)',
+            'return ExitCode::from(0);\n    }\n    let Some(options)')
 
 
 def missing_image(root):
