@@ -37,8 +37,12 @@ def main():
         command = [sys.executable, "-u", "scripts/test_system_storage.py"]
         markers = ["System storage database: all required checks passed."]
         missing = "Required System storage database proof did not execute successfully"
+    elif sys.argv[1:] == ["revision-storage"]:
+        command = [sys.executable, "-u", "scripts/test_revision_storage.py"]
+        markers = ["Revision storage database: all required checks passed."]
+        missing = "Required revision storage database proof did not execute successfully"
     else:
-        sys.exit("Specify exactly rust, database, schema-fuzz, numeric-fuzz, time-fuzz, time-database or system-storage; no test-selection override.")
+        sys.exit("Specify exactly rust, database, schema-fuzz, numeric-fuzz, time-fuzz, time-database, system-storage or revision-storage; no test-selection override.")
     print("Required command: " + " ".join(command), flush=True)
     try:
         result = subprocess.run(
