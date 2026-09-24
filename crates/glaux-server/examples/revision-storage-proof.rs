@@ -409,7 +409,10 @@ async fn run(connection: &mut PgConnection) {
             .await
             .unwrap();
     }
-    packaged_migrations().run_to(connection, 3).await.unwrap();
+    packaged_migrations()
+        .run_to(3, &mut *connection)
+        .await
+        .unwrap();
     for statement in [
         "INSERT INTO public.resource_identity VALUES
          ('01890f20-7b5a-7cc3-98c4-dc0c0c074001','system','urn:glaux:revision:system')",
