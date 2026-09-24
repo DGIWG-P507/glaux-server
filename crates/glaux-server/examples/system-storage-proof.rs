@@ -1,5 +1,6 @@
 //! Fixed synthetic real-database proof, run only inside the owned test container.
-//! Expected fixtures were committed in docs/system-storage-tests.md before SQL.
+//! Initial expectations precede SQL; later discriminating fixture refinements
+//! are distinguished in docs/system-storage-tests.md.
 //! No URL override, skip-on-missing-storage or production serializer oracle.
 
 use std::time::Duration;
@@ -54,6 +55,22 @@ fn other_authority() -> SystemRecord {
         "3903", "urn:glaux:fixture:system:B",
         vec![source("authority-B", "sensor-1")], None,
     )
+}
+
+// Fixed test-only xorshift64 bytes avoid a compressible 4 KiB fixture hiding
+// PostgreSQL's B-tree index-row ceiling. This is not an identity generator.
+fn lexical_bytes(mut state: u64, length: usize) -> String {
+    const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    (0..length).map(|_| {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        ALPHABET[(state & 63) as usize] as char
+    }).collect()
+}
+
+fn change_last(value: &str) -> String {
+    format!("{}{}", &value[..value.len() - 1], if value.ends_with('a') { 'b' } else { 'a' })
 }
 
 // Expected data is constructed only from the committed literals, never from
@@ -178,20 +195,26 @@ async fn proof() {
     let tables_before = public_tables(&mut connection).await;
     assert!(matches!(check_schema(&mut connection).await, Err(StorageError::IncompatibleSchema)));
     assert_eq!(public_tables(&mut connection).await, tables_before, "schema check must not apply migrations");
+    sqlx::query("CREATE SCHEMA storage_probe").execute(&mut connection).await.unwrap();
+    sqlx::query("SET search_path = storage_probe, public").execute(&mut connection).await.unwrap();
+    assert!(matches!(migrate(&mut connection).await, Err(StorageError::IncompatibleSchema)), "migration must reject a non-public creation namespace before any DDL");
+    assert_eq!(public_tables(&mut connection).await, tables_before);
+    let other_objects: Vec<(String,)> = sqlx::query_as(
+        "SELECT c.relname::text FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='storage_probe' ORDER BY c.relname",
+    ).fetch_all(&mut connection).await.unwrap();
+    assert!(other_objects.is_empty(), "rejected namespace must have no migration ledger or application objects");
+    sqlx::query("SET search_path = public, pg_catalog").execute(&mut connection).await.unwrap();
 
     let p = parent();
-    let mut predecessor = packaged_migrations();
-    predecessor.migrations.to_mut().retain(|migration| migration.version <= 2);
-    assert_eq!(predecessor.migrations.iter().map(|migration| migration.version).collect::<Vec<_>>(), vec![1, 2]);
-    predecessor.run(&mut connection).await.expect("explicit predecessor migrations");
+    packaged_migrations().run_to(2, &mut connection).await.expect("explicit predecessor migrations preserve the packaged ledger namespace");
     // Independent predecessor seed: do not depend on the repository create
     // function (whose latest implementation also writes the parent relation).
-    sqlx::query("INSERT INTO resource_identity (id, family, uid) VALUES ($1::uuid, 'system', $2)")
+    sqlx::query("INSERT INTO resource_identity (id, family, uid) VALUES ($1::text::uuid, 'system', $2)")
         .bind(p.id.to_string()).bind(p.uid.as_str()).execute(&mut connection).await.unwrap();
-    sqlx::query("INSERT INTO system_identity (id, label) VALUES ($1::uuid, $2)")
+    sqlx::query("INSERT INTO system_identity (id, label) VALUES ($1::text::uuid, $2)")
         .bind(p.id.to_string()).bind(LABEL).execute(&mut connection).await.unwrap();
     for alias in &p.sources {
-        sqlx::query("INSERT INTO source_identity (resource_id, authority, identifier) VALUES ($1::uuid, $2, $3)")
+        sqlx::query("INSERT INTO source_identity (resource_id, authority, identifier) VALUES ($1::text::uuid, $2, $3)")
             .bind(p.id.to_string()).bind(alias.authority().as_str()).bind(alias.identifier().as_str())
             .execute(&mut connection).await.unwrap();
     }
@@ -201,6 +224,7 @@ async fn proof() {
         .fetch_one(&mut connection).await.unwrap();
     assert_eq!(absent_parent, (None,));
     let predecessor_ledger = ledger(&mut connection).await;
+    assert_eq!(predecessor_ledger.iter().map(|row| row.0).collect::<Vec<_>>(), vec![1, 2]);
     assert!(matches!(check_schema(&mut connection).await, Err(StorageError::IncompatibleSchema)));
     assert_eq!(ledger(&mut connection).await, predecessor_ledger);
     assert_eq!(snapshot(&mut connection, false).await, predecessor_rows);
@@ -235,24 +259,31 @@ async fn proof() {
         Some(p.id),
     );
     expect_conflict(&mut connection, &duplicate_source, &initial).await;
+    let repeated_alias = record(
+        "3947", "urn:glaux:rejected:repeated-alias",
+        vec![source("fresh", "twice"), source("fresh", "twice")], None,
+    );
+    expect_conflict(&mut connection, &repeated_alias, &initial).await;
     println!("System storage group passed: conflicts-atomic");
 
     let missing_parent = record("3943", "urn:glaux:rejected:missing-parent", vec![source("attempt", "missing-parent")], Some(id("39ff")));
     expect_invalid_parent(&mut connection, &missing_parent, &initial).await;
-    sqlx::query("INSERT INTO resource_identity (id, family, uid) VALUES ($1::uuid, 'system', 'urn:glaux:fixture:identity-only')")
+    sqlx::query("INSERT INTO resource_identity (id, family, uid) VALUES ($1::text::uuid, 'system', 'urn:glaux:fixture:identity-only')")
         .bind(id("39f0").to_string()).execute(&mut connection).await.unwrap();
     let with_identity_only = expected(&[&p, &a, &b], true);
     assert_eq!(snapshot(&mut connection, true).await, with_identity_only);
     let wrong_parent = record("3944", "urn:glaux:rejected:identity-only-parent", vec![source("attempt", "identity-only-parent")], Some(id("39f0")));
     expect_invalid_parent(&mut connection, &wrong_parent, &with_identity_only).await;
+    let self_parent = record("3948", "urn:glaux:rejected:self-parent", vec![source("attempt", "self-parent")], Some(id("3948")));
+    expect_invalid_parent(&mut connection, &self_parent, &with_identity_only).await;
     assert!(SystemRepository::get(&mut connection, id("39f0")).await.unwrap().is_none(), "common identity alone is not a System");
     println!("System storage group passed: typed-parent-rollback");
 
-    let long_uid = format!("urn:glaux:long:{}", "a".repeat(4096 - "urn:glaux:long:".len()));
-    let other_long_uid = format!("{}b", &long_uid[..4095]);
-    let long_authority = "q".repeat(4096);
-    let long_identifier = "v".repeat(4096);
-    let other_long_identifier = format!("{}w", &long_identifier[..4095]);
+    let long_uid = format!("urn:glaux:long:{}", lexical_bytes(0x1234_5678_9abc_def1, 4096 - "urn:glaux:long:".len()));
+    let other_long_uid = change_last(&long_uid);
+    let long_authority = lexical_bytes(0x2345_6789_abcd_ef12, 4096);
+    let long_identifier = lexical_bytes(0x3456_789a_bcde_f123, 4096);
+    let other_long_identifier = change_last(&long_identifier);
     assert_eq!(long_uid.len(), 4096);
     assert_eq!(other_long_uid.len(), 4096);
     assert_eq!(long_authority.len(), 4096);
@@ -262,11 +293,25 @@ async fn proof() {
     let l2 = record("3905", &other_long_uid, vec![source(&long_authority, &other_long_identifier)], None);
     SystemRepository::create(&mut connection, &l1).await.unwrap();
     SystemRepository::create(&mut connection, &l2).await.unwrap();
-    let complete = expected(&[&p, &a, &b, &l1, &l2], true);
+    let c1 = record("3906", "https://EXAMPLE.test/items/%41", vec![source("a", "bc"), source("a:", "b")], None);
+    let c2 = record("3907", "https://example.test/items/%41", vec![source("ab", "c"), source("a", ":b")], None);
+    let c3 = record("3908", "https://EXAMPLE.test/items/A", vec![source("Authority", "Sensor"), source("authority", "Sensor")], None);
+    let c4 = record("3909", "https://EXAMPLE.test/items/%4a", vec![source("Authority", "sensor")], None);
+    let c5 = record("390a", "https://EXAMPLE.test/items/%4A", vec![], None);
+    for fixture in [&c1, &c2, &c3, &c4, &c5] {
+        SystemRepository::create(&mut connection, fixture).await.unwrap();
+    }
+    let fixtures = [&p, &a, &b, &l1, &l2, &c1, &c2, &c3, &c4, &c5];
+    let complete = expected(&fixtures, true);
     assert_eq!(snapshot(&mut connection, true).await, complete);
-    for fixture in [&l1, &l2] {
+    for fixture in fixtures {
         assert_lookup(&mut connection, fixture).await;
     }
+    let wide_values: (bool, bool, bool) = sqlx::query_as(
+        "SELECT pg_column_size(r.uid)>3000, pg_column_size(s.authority)>3000, pg_column_size(s.identifier)>3000 \
+         FROM resource_identity r JOIN source_identity s ON s.resource_id=r.id WHERE r.id=$1::text::uuid",
+    ).bind(l1.id.to_string()).fetch_one(&mut connection).await.unwrap();
+    assert_eq!(wide_values, (true, true, true), "long fixtures must not compress below the ordinary B-tree key limit");
     let duplicate_long_uid = record("3945", &long_uid, vec![source("attempt", "long-uid")], None);
     expect_conflict(&mut connection, &duplicate_long_uid, &complete).await;
     let duplicate_long_source = record("3946", "urn:glaux:rejected:long-source", vec![source(&long_authority, &long_identifier)], None);
@@ -279,7 +324,17 @@ async fn proof() {
     check_schema(&mut connection).await.unwrap();
     assert_eq!(ledger(&mut connection).await, pristine_ledger, "reapply must not rewrite migration evidence");
     assert_eq!(snapshot(&mut connection, true).await, complete);
-    for fixture in [&p, &a, &b, &l1, &l2] {
+    sqlx::query("SET search_path = storage_probe, public").execute(&mut connection).await.unwrap();
+    check_schema(&mut connection).await.expect("read-only check always uses the public ledger");
+    assert!(matches!(migrate(&mut connection).await, Err(StorageError::IncompatibleSchema)));
+    assert_eq!(ledger(&mut connection).await, pristine_ledger);
+    assert_eq!(snapshot(&mut connection, true).await, complete);
+    let other_objects: Vec<(String,)> = sqlx::query_as(
+        "SELECT c.relname::text FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='storage_probe' ORDER BY c.relname",
+    ).fetch_all(&mut connection).await.unwrap();
+    assert!(other_objects.is_empty());
+    sqlx::query("SET search_path = public, pg_catalog").execute(&mut connection).await.unwrap();
+    for fixture in fixtures {
         assert_lookup(&mut connection, fixture).await;
     }
     println!("System storage group passed: migration-reapply-preservation");
