@@ -12,7 +12,7 @@ jobs:
   rust-bootstrap:
     name: Rust bootstrap
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
     env:
       CARGO_TERM_COLOR: never
       RUST_BACKTRACE: "1"
@@ -108,6 +108,9 @@ jobs:
       - name: Prove exact time through the real isolated database
         shell: bash
         run: python3 -u scripts/check-execution.py time-database | tee "$RUNNER_TEMP/glaux-ci-evidence/time-database.log"
+      - name: Prove System identity repository and real database constraints
+        shell: bash
+        run: python3 -u scripts/check-execution.py system-storage | tee "$RUNNER_TEMP/glaux-ci-evidence/system-storage.log"
       - name: Verify required execution rejects disposable failures
         run: python3 -u scripts/test-ci-failures.py
       - name: Verify validation assertions detect disposable faults

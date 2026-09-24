@@ -6,12 +6,12 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, enforced CI, request/response validation and exact value primitives — 22 September 2026 UTC.**
+**Initial build, enforced CI, validation, exact values and System identity storage — 24 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
 - Apache-2.0 licensing and the contributor/review workflow are in place. The [active main-branch rule](https://github.com/DGIWG-P507/glaux-server/rules/23796335) requires a pull request and passing, up-to-date CI, with no bypass or mandatory human approval. [Issue #6](https://github.com/DGIWG-P507/glaux-server/issues/6) and [PR #314](https://github.com/DGIWG-P507/glaux-server/pull/314) record settings, failed/missing-check blocking proofs, actual runs and review.
-- The initial three-package Rust workspace and [CI suite](docs/ci.md) cover formatting, Clippy, build, the initial executable regression, seven real database lifecycle tests and nine controls against false-green results. The [dependency/licence inventory](docs/dependencies.md) records what those runs use. This is not a runnable CSAPI service: resource behavior, HTTP endpoints and Rust application storage remain unimplemented.
+- The initial three-package Rust workspace and [CI suite](docs/ci.md) cover formatting, Clippy, build, executable regressions, real database lifecycle/storage tests and controls against false-green results. The [dependency/licence inventory](docs/dependencies.md) records what those runs use. The first internal System identity repository exists; this is not yet a runnable CSAPI service or HTTP endpoint.
 
 Use the [clean check instructions](docs/ci.md#reproduce-the-checks) and the [Build workflow](https://github.com/DGIWG-P507/glaux-server/actions/workflows/build.yml). Builds and disposable database tests run on GitHub-hosted Linux; no Rust/database installation on the company laptop or permanent cloud service is required. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records planning decisions; issues and PRs record execution.
 
@@ -28,7 +28,8 @@ Structural success is not full SWE semantics, codec support or conformance.
 locators, URI-form published UIDs and authority-qualified source identifiers.
 Strict parsing, fallible generation and type-boundary checks prevent accidental
 mixing; identifiers do not grant permission or establish observation time.
-Database uniqueness, resource-family models and HTTP behavior remain later work.
+The initial System repository now enforces database uniqueness; complete
+resource-family models and HTTP behavior remain later work.
 
 [Exact numeric primitives](docs/exact-numbers.md) now preserve large Counts and
 decimal measured values without silent rounding, compare values exactly and keep
@@ -39,8 +40,8 @@ still later work.
 [Exact time primitives](docs/exact-time.md) preserve timestamp fractions and
 source context, normalize offsets and keep known leap seconds distinct. Their
 real-database proof stores and compares exact values beyond timestamp resolution.
-Observation endpoints, interval filters and the application database adapter
-remain later work.
+Observation endpoints, interval filters and observation-specific database
+operations remain later work.
 
 [Direction-aware validation](docs/direction-validation.md) now separates initial
 System, stream and observation requests from responses: clients need not supply
@@ -48,6 +49,13 @@ server-generated fields, and responses must not leak input-only schemas.
 Protected identity, parent and locked-schema checks are explicit; the original
 standards schemas remain unchanged. This is a validation foundation, not HTTP
 endpoints, a patch engine or complete resource semantics.
+
+[Initial System storage](docs/system-storage.md) preserves canonical identities,
+authority-qualified source identifiers and typed parent relationships using
+SQLx/PostgreSQL. Conflicting identities and invalid parents roll back the entire
+creation. Packaged migrations run only through an explicit administrative command;
+schema checks do not upgrade a database. Revision/artifact storage, audit/outbox
+transactions, full System descriptions and HTTP endpoints remain later work.
 
 ## Planned capabilities
 
@@ -76,7 +84,7 @@ One deployable **Rust service** will use Axum/Tokio for HTTP and asynchronous wo
 
 Live publication will use an optional Server-Sent Events (SSE) interface as a Glaux extension and outbound MQTT 5 for the selected experimental Part 3 binding. The basic reference server is designed to be exercised without first completing other Glaux applications or installing enterprise identity infrastructure; broker-backed features have their own dependencies.
 
-Verification will combine standards-derived expectations, real database tests and independent-client exercises, including failure and access-control cases. The build pins Rust 1.98.1, its workspace lockfile, and the initial `jsonschema`/`serde_json` dependency graph. Schema tests include independently expected outcomes, bounds, retrieval denial, parser regressions, a bounded mutation campaign and deliberate validation faults. Axum/Tokio, SQLx and other libraries are added and verified by their owning tasks; the planned resource model and service capabilities remain unimplemented.
+Verification will combine standards-derived expectations, real database tests and independent-client exercises, including failure and access-control cases. The build pins Rust 1.98.1 and the complete workspace lockfile, including validation dependencies, SQLx 0.9.0 and Tokio 1.53.1. Schema tests include independently expected outcomes, bounds, retrieval denial, parser regressions, a bounded mutation campaign and deliberate validation faults. Axum and other libraries will be added by their owning tasks; the full resource model and service capabilities remain unimplemented.
 
 ## Project documents
 

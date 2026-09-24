@@ -20,4 +20,6 @@ num-bigint = { version = "=0.4.8", default-features = false }
 num-rational = { version = "=0.4.2", default-features = false, features = ["num-bigint"] }
 num-traits = { version = "=0.2.19", default-features = false }
 serde_json = { version = "=1.0.151", features = ["arbitrary_precision", "raw_value"] }
+sqlx = { version = "=0.9.0", default-features = false, features = ["postgres", "runtime-tokio", "migrate", "tls-rustls-ring-webpki"] }
+tokio = { version = "=1.53.1", default-features = false, features = ["rt", "time", "net", "sync"] }
 uuid = { version = "=1.26.1", default-features = false }

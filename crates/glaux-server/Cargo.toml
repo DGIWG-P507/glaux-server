@@ -11,3 +11,5 @@ publish.workspace = true
 [dependencies]
 glaux-domain.workspace = true
 glaux-standards.workspace = true
+sqlx.workspace = true
+tokio.workspace = true

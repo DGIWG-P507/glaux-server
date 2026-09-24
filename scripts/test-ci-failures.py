@@ -25,7 +25,9 @@ def replace(path, old, new):
 
 
 def assertion(root):
-    replace(root / "crates/glaux-server/src/main.rs", "ExitCode::from(2)", "ExitCode::from(0)")
+    replace(root / "crates/glaux-server/src/main.rs",
+            'return ExitCode::from(2);\n    }\n    let Some(options)',
+            'return ExitCode::from(0);\n    }\n    let Some(options)')
 
 
 def missing_image(root):
@@ -53,7 +55,9 @@ def filtered_rust(root):
 
 
 def ignored_rust(root):
-    replace(root / "crates/glaux-server/tests/bootstrap.rs", "#[test]", "#[test]\n#[ignore]")
+    replace(root / "crates/glaux-server/tests/bootstrap.rs",
+            "#[test]\nfn unfinished_server_does_not_report_success",
+            "#[test]\n#[ignore]\nfn unfinished_server_does_not_report_success")
 
 
 def skipped_database(root):

@@ -1,6 +1,7 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "database_commands_require_explicit_configuration",
     "projection::tests::minimal_requests_and_complete_responses_have_independent_contracts",
     "projection::tests::generated_response_members_remain_required",
     "projection::tests::writable_required_members_survive_request_projection",
