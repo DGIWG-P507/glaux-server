@@ -249,6 +249,146 @@ async fn immutable_rejection(connection: &mut PgConnection, statement: &'static 
     assert_eq!(snapshot(connection).await, before);
 }
 
+fn check_constraint_failure(error: sqlx::Error, expected: &str) {
+    let database_error = error.as_database_error().unwrap();
+    assert_eq!(database_error.code().as_deref(), Some("23514"));
+    assert_eq!(database_error.constraint(), Some(expected));
+}
+
+async fn revision_insert_constraint(
+    connection: &mut PgConnection,
+    semantic_leap: Option<bool>,
+    semantic_fraction: &str,
+    receipt_fraction: &str,
+    expected: Option<&str>,
+) {
+    let before = snapshot(connection).await;
+    let mut transaction = connection.begin().await.unwrap();
+    // Copy the known-valid revision, varying only the named constraint input.
+    // A fresh literal ID and existing System/artifact avoid unrelated failures.
+    let result = sqlx::query(
+        "INSERT INTO public.system_revision
+         SELECT '01890f20-7b5a-7cc3-98c4-dc0c0c0746f0',system_id,artifact_id,
+                semantic_civil_second,$1,$2::text::numeric,semantic_source,
+                receipt_civil_second,receipt_leap,$3::text::numeric,receipt_source
+         FROM public.system_revision
+         WHERE id='01890f20-7b5a-7cc3-98c4-dc0c0c074201'",
+    )
+    .bind(semantic_leap)
+    .bind(semantic_fraction)
+    .bind(receipt_fraction)
+    .execute(&mut *transaction)
+    .await;
+    transaction.rollback().await.unwrap();
+    if let Some(constraint) = expected {
+        check_constraint_failure(
+            result.expect_err("invalid revision INSERT must reject"),
+            constraint,
+        );
+    } else {
+        assert_eq!(
+            result.unwrap().rows_affected(),
+            1,
+            "valid SQL control did not insert"
+        );
+    }
+    assert_eq!(snapshot(connection).await, before);
+}
+
+async fn artifact_insert_constraint(
+    connection: &mut PgConnection,
+    media_type: &str,
+    digest: Vec<u8>,
+    expected: Option<&str>,
+) {
+    let before = snapshot(connection).await;
+    let mut transaction = connection.begin().await.unwrap();
+    let result = sqlx::query(
+        "INSERT INTO public.source_artifact(id,media_type,bytes,digest)
+         VALUES ('01890f20-7b5a-7cc3-98c4-dc0c0c0746f1',$1,$2,$3)",
+    )
+    .bind(media_type)
+    .bind(A)
+    .bind(digest)
+    .execute(&mut *transaction)
+    .await;
+    transaction.rollback().await.unwrap();
+    if let Some(constraint) = expected {
+        check_constraint_failure(
+            result.expect_err("invalid artifact INSERT must reject"),
+            constraint,
+        );
+    } else {
+        assert_eq!(
+            result.unwrap().rows_affected(),
+            1,
+            "valid SQL control did not insert"
+        );
+    }
+    assert_eq!(snapshot(connection).await, before);
+}
+
+async fn direct_insert_constraints(connection: &mut PgConnection) {
+    const SEMANTIC: &str = "0.0000011";
+    const RECEIVED: &str = "0.12345678901234567890";
+    revision_insert_constraint(connection, Some(false), SEMANTIC, RECEIVED, None).await;
+    revision_insert_constraint(
+        connection,
+        None,
+        SEMANTIC,
+        RECEIVED,
+        Some("semantic_time_presence"),
+    )
+    .await;
+    for fraction in [
+        "NaN",
+        "Infinity",
+        "-Infinity",
+        "-0.0000000001",
+        "1",
+        "1.0000000001",
+    ] {
+        revision_insert_constraint(
+            connection,
+            Some(false),
+            fraction,
+            RECEIVED,
+            Some("semantic_fraction_exact"),
+        )
+        .await;
+        revision_insert_constraint(
+            connection,
+            Some(false),
+            SEMANTIC,
+            fraction,
+            Some("receipt_fraction_exact"),
+        )
+        .await;
+    }
+    artifact_insert_constraint(connection, MEDIA, sha(SHA_A).to_vec(), None).await;
+    for digest in [vec![0; 32], vec![0; 31]] {
+        artifact_insert_constraint(
+            connection,
+            MEDIA,
+            digest,
+            Some("source_artifact_digest_matches"),
+        )
+        .await;
+    }
+    for media_type in ["", "application/json\n", "application/\u{0001}json"] {
+        artifact_insert_constraint(
+            connection,
+            media_type,
+            sha(SHA_A).to_vec(),
+            Some("source_artifact_media"),
+        )
+        .await;
+    }
+    println!(
+        "Revision INSERT constraints passed: 2 valid controls and 18 exact-constraint rejections"
+    );
+}
+
 async fn run(connection: &mut PgConnection) {
     let identity: (String, String, String) =
         sqlx::query_as("SELECT current_database(),current_user,host(inet_server_addr())")
@@ -499,6 +639,7 @@ async fn run(connection: &mut PgConnection) {
         Err(StorageError::InvalidInput)
     ));
     assert_eq!(snapshot(connection).await, before);
+    direct_insert_constraints(connection).await;
     passed("atomic-rejection");
 
     // Initial mutable implementation must fail here for this behavioral reason.
@@ -685,6 +826,9 @@ async fn run(connection: &mut PgConnection) {
     for invalid in [
         source("45f1", MEDIA, &vec![90; 1_048_577]),
         source("45f2", &"x".repeat(1025), A),
+        source("45f3", "", A),
+        source("45f4", "application/json\n", A),
+        source("45f5", "application/\u{0001}json", A),
     ] {
         assert!(matches!(
             ArtifactRepository::insert(connection, &invalid).await,

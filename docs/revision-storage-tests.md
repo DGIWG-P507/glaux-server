@@ -76,6 +76,18 @@ tables, including complete bytes/digest and both time representations, in a
 fixed order. Same-count mutations cannot satisfy this oracle. Missing-reference
 tests include an earlier write where the API promises a paired transaction.
 
+During implementation, reviewer-directed direct-SQL cases strengthen the
+`atomic-rejection` group without claiming they were in the initial executable
+proof. Two otherwise-valid INSERT controls establish that the fixtures really
+insert. Eighteen mutations must then fail with SQLSTATE `23514` and the exact
+owning constraint: one partially present semantic instant; six non-finite or
+out-of-range fractions each in the semantic and receipt columns; a mismatched
+32-byte digest and an incorrectly sized digest; and empty, LF-containing and
+control-character media types. Every transaction rolls back and compares full
+before/after snapshots, including valid controls. Invalid media forms are also
+rejected by the Rust insertion boundary, without mutation. None of these
+constraint checks substitutes for checked exact-time reconstruction.
+
 ## Execution and scope
 
 The proof runs only inside the existing owned, pinned, network-isolated
