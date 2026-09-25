@@ -653,7 +653,7 @@ async fn run(connection: &mut PgConnection) {
         "UPDATE public.system_revision SET receipt_source='1970-01-01T00:00:00Z'",
         "DELETE FROM public.system_revision",
         "DELETE FROM public.source_artifact",
-        "TRUNCATE public.system_revision",
+        "TRUNCATE public.system_revision CASCADE",
         "TRUNCATE public.source_artifact CASCADE",
     ] {
         immutable_rejection(connection, statement).await;
