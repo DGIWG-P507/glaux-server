@@ -121,6 +121,26 @@ async fn insert_audit(
     Ok(())
 }
 
+async fn insert_outgoing(
+    connection: &mut PgConnection,
+    input: &CreateSystem,
+) -> Result<(), StorageError> {
+    sqlx::query(
+        "INSERT INTO public.outgoing_work
+         (id, system_id, revision_id, artifact_id, audit_id, kind, outcome)
+         VALUES ($1::text::uuid, $2::text::uuid, $3::text::uuid,
+                 $4::text::uuid, $5::text::uuid, 'system.created', 'accepted')",
+    )
+    .bind(input.event_id.to_string())
+    .bind(input.system.id.to_string())
+    .bind(input.revision.id.to_string())
+    .bind(input.artifact.id.to_string())
+    .bind(input.audit_id.to_string())
+    .execute(connection)
+    .await?;
+    Ok(())
+}
+
 /// Own the complete transaction on an idle, SQLx-managed connection. Low-level
 /// repositories remain storage primitives, not substitutes for this boundary.
 /// No retry is attempted: transport loss during COMMIT can be indeterminate.
@@ -155,7 +175,7 @@ pub async fn create_system(
         )
         .await?;
         // Required outgoing work shares this transaction.
-        // Intentionally absent in the initial behavioral-red candidate.
+        insert_outgoing(&mut transaction, input).await?;
         Ok::<_, StorageError>(())
     }
     .await;
