@@ -83,8 +83,10 @@ Repository access checks schema compatibility, without installing or repairing
 it. Reapplication must preserve complete rows and source bytes.
 
 No full System mutation/current selection, concurrency preconditions,
-resource/revision/audit/outbox orchestration (#15/#16), public history route,
+public history route,
 SWE compilation, other family storage, restore or conformance claim is added.
+The separate [#15 application boundary](atomic-write.md) now combines initial
+System creation, revision, audit and outgoing work; #16 still owns preconditions.
 
 ## Verification
 

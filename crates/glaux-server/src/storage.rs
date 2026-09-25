@@ -96,6 +96,13 @@ pub fn packaged_migrations() -> Migrator {
             include_str!("../migrations/0005_immutable_history.sql").into_sql_str(),
             false,
         ),
+        Migration::new(
+            6,
+            "audit and outgoing work".into(),
+            MigrationType::Simple,
+            include_str!("../migrations/0006_audit_outgoing_work.sql").into_sql_str(),
+            false,
+        ),
     ]);
     migrator.dangerous_set_table_name("public._sqlx_migrations");
     migrator
@@ -146,6 +153,30 @@ pub async fn check_schema(connection: &mut PgConnection) -> Result<(), StorageEr
     Ok(())
 }
 
+/// Shared SQL only; the calling boundary owns commit/rollback.
+pub(crate) async fn insert_system(
+    connection: &mut PgConnection,
+    record: &SystemRecord,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("INSERT INTO public.resource_identity(id, family, uid) VALUES ($1::text::uuid, 'system', $2)")
+        .bind(record.id.to_string()).bind(record.uid.as_str()).execute(&mut *connection).await?;
+    sqlx::query("INSERT INTO public.system_identity(id, label) VALUES ($1::text::uuid, $2)")
+        .bind(record.id.to_string())
+        .bind(&record.label)
+        .execute(&mut *connection)
+        .await?;
+    for source in &record.sources {
+        sqlx::query("INSERT INTO public.source_identity(resource_id, authority, identifier) VALUES ($1::text::uuid, $2, $3)")
+            .bind(record.id.to_string()).bind(source.authority().as_str()).bind(source.identifier().as_str())
+            .execute(&mut *connection).await?;
+    }
+    if let Some(parent) = record.parent {
+        sqlx::query("INSERT INTO public.system_parent(child_id, parent_id) VALUES ($1::text::uuid, $2::text::uuid)")
+            .bind(record.id.to_string()).bind(parent.to_string()).execute(&mut *connection).await?;
+    }
+    Ok(())
+}
+
 pub struct SystemRepository;
 
 impl SystemRepository {
@@ -156,22 +187,7 @@ impl SystemRepository {
     ) -> Result<(), StorageError> {
         check_schema(connection).await?;
         let mut transaction = connection.begin().await?;
-        let result = async {
-            sqlx::query("INSERT INTO public.resource_identity(id, family, uid) VALUES ($1::text::uuid, 'system', $2)")
-                .bind(record.id.to_string()).bind(record.uid.as_str()).execute(&mut *transaction).await?;
-            sqlx::query("INSERT INTO public.system_identity(id, label) VALUES ($1::text::uuid, $2)")
-                .bind(record.id.to_string()).bind(&record.label).execute(&mut *transaction).await?;
-            for source in &record.sources {
-                sqlx::query("INSERT INTO public.source_identity(resource_id, authority, identifier) VALUES ($1::text::uuid, $2, $3)")
-                    .bind(record.id.to_string()).bind(source.authority().as_str()).bind(source.identifier().as_str())
-                    .execute(&mut *transaction).await?;
-            }
-            if let Some(parent) = record.parent {
-                sqlx::query("INSERT INTO public.system_parent(child_id, parent_id) VALUES ($1::text::uuid, $2::text::uuid)")
-                    .bind(record.id.to_string()).bind(parent.to_string()).execute(&mut *transaction).await?;
-            }
-            Ok::<(), sqlx::Error>(())
-        }.await;
+        let result = insert_system(&mut transaction, record).await;
         match result {
             Ok(()) => {
                 transaction.commit().await?;

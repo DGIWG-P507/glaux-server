@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, enforced CI, validation, exact values and System identity/revision storage — 24 September 2026 UTC.**
+**Initial build, enforced CI, validation, exact values and atomic System creation — 25 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
@@ -61,8 +61,14 @@ endpoints remain later work.
 document bytes, media type and digest separately from generated representations.
 System revisions preserve their artifact bindings and exact semantic/receipt
 instants; later revisions do not rewrite earlier records. This does not yet
-select current state, interpret full valid-time intervals or implement the
-resource/revision/audit/outbox transaction.
+select current state or interpret full valid-time intervals.
+
+[Initial atomic System creation](docs/atomic-write.md) saves the System, its
+original document and revision, the audit record and outgoing work in one
+database transaction. Failure cannot leave a partially accepted creation.
+Minimal denied-attempt metadata can be recorded separately without creating
+resources or outgoing work. This trusted internal boundary is not yet an HTTP
+permission check, dispatcher or public API.
 
 ## Planned capabilities
 
