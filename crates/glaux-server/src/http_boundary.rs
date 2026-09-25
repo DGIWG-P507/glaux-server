@@ -1,8 +1,8 @@
 //! Task 1.4.2 test-first interface; implementation follows the behavioral red.
+use axum::Router;
 use axum::extract::Request;
 use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
-use axum::Router;
 use serde_json::Value;
 
 #[derive(Clone, Copy, Debug)]
@@ -46,7 +46,10 @@ impl IntoResponse for Problem {
 }
 
 impl HttpBoundary {
-    pub fn new(_public_api_root: Option<&str>, _limits: Limits) -> Result<Self, BoundaryConfigError> {
+    pub fn new(
+        _public_api_root: Option<&str>,
+        _limits: Limits,
+    ) -> Result<Self, BoundaryConfigError> {
         Ok(Self)
     }
 
