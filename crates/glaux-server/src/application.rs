@@ -88,6 +88,38 @@ pub struct WriteReceipt {
     pub event_id: EventId,
 }
 
+/// Trusted configuration, not request-provided retention. No default horizon.
+pub struct RetryKey {
+    pub key: String,
+    pub retention_seconds: u32,
+}
+
+/// Test-first API skeleton: receipt persistence is not implemented yet.
+pub async fn create_system_with_retry<F>(
+    connection: &mut PgConnection,
+    input: &CreateSystem,
+    retry: Option<&RetryKey>,
+    mut authorize: F,
+) -> Result<WriteReceipt, StorageError>
+where
+    F: FnMut(&WriteReceipt) -> bool,
+{
+    if retry.is_some_and(|retry| !valid_metadata(&retry.key) || retry.retention_seconds == 0) {
+        return Err(StorageError::InvalidInput);
+    }
+    let candidate = WriteReceipt {
+        system_id: input.system.id,
+        revision_id: input.revision.id,
+        artifact_id: input.artifact.id,
+        audit_id: input.audit_id,
+        event_id: input.event_id,
+    };
+    if !authorize(&candidate) {
+        return Err(StorageError::Denied);
+    }
+    create_system(connection, input).await
+}
+
 pub struct DeniedSystemCreate {
     pub audit_id: AuditId,
     /// Safe requested identifier only, not a lookup or disclosure of existence.

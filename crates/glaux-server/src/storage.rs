@@ -17,6 +17,7 @@ pub struct SystemRecord {
 #[derive(Debug)]
 pub enum StorageError {
     Conflict,
+    Denied,
     PreconditionFailed,
     NotFound,
     UninitializedRevision,
@@ -34,6 +35,7 @@ impl fmt::Display for StorageError {
         // Database details may contain protected values: do not emit them here.
         f.write_str(match self {
             Self::Conflict => "identity or association conflict",
+            Self::Denied => "operation or outcome disclosure denied",
             Self::PreconditionFailed => "supplied revision condition failed",
             Self::NotFound => "resource not found",
             Self::UninitializedRevision => "resource has no authoritative write revision",
@@ -114,6 +116,13 @@ pub fn packaged_migrations() -> Migrator {
             "conditional System writes".into(),
             MigrationType::Simple,
             include_str!("../migrations/0007_conditional_system_writes.sql").into_sql_str(),
+            false,
+        ),
+        Migration::new(
+            8,
+            "scoped System creation retries".into(),
+            MigrationType::Simple,
+            include_str!("../migrations/0008_system_create_retry.sql").into_sql_str(),
             false,
         ),
     ]);

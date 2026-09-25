@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, enforced CI, validation, exact values and conditional System writes — 25 September 2026 UTC.**
+**Initial build, enforced CI, validation, exact values and retry-safe System writes — 25 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
@@ -77,6 +77,12 @@ changes. A successful initial label update commits its new document, revision
 and related records together. Writes without a revision condition remain
 allowed; locking alone cannot detect a stale client's unconditional overwrite.
 This is an internal foundation, not yet an HTTP update endpoint.
+
+[Optional creation retries](docs/write-retries.md) recover the original committed
+System and its evidence after a repeated request or lost response. Keys are scoped
+to verified caller/source and target; changed content conflicts, replay disclosure
+is reauthorized, and expiry ends the duplicate-prevention guarantee. This remains
+an internal application capability, not yet a public HTTP extension.
 
 ## Planned capabilities
 

@@ -103,7 +103,8 @@ No local installation or user database is required. Setup, build, timeout and
 cleanup errors remain failures, not proof of behavioral detection.
 Raw manually issued transaction SQL is not a supported caller contract.
 Low-level storage repositories remain primitives; future accepted-write handlers
-must use the application boundary rather than bypass it. Retry identity, other
+must use the application boundary rather than bypass it. Other
 resource families, HTTP policy, public deletion, temporal selection, dispatch
 and backup/retention remain later tasks. The initial conditional label update
 and accepted-write head now exist under [task #16](conditional-writes.md).
+Optional scoped creation retry identity now exists under [task #17](write-retries.md).
