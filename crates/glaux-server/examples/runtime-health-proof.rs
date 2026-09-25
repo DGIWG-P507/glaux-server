@@ -27,9 +27,15 @@ const CANARIES: [&str; 5] = [
 
 fn redacted(output: &str) {
     for canary in CANARIES {
-        assert!(!output.contains(canary), "diagnostic exposed synthetic secret");
+        assert!(
+            !output.contains(canary),
+            "diagnostic exposed synthetic secret"
+        );
     }
-    assert!(!output.contains("postgres://"), "diagnostic exposed connection URL");
+    assert!(
+        !output.contains("postgres://"),
+        "diagnostic exposed connection URL"
+    );
 }
 
 struct Fixture {
@@ -39,9 +45,13 @@ struct Fixture {
 
 impl Fixture {
     fn new() -> Self {
-        let directory = std::env::temp_dir().join(format!("glaux-health-proof-{}", std::process::id()));
+        let directory =
+            std::env::temp_dir().join(format!("glaux-health-proof-{}", std::process::id()));
         fs::create_dir(&directory).expect("owned fixture directory must be new");
-        Self { directory, serial: 0 }
+        Self {
+            directory,
+            serial: 0,
+        }
     }
 
     fn file(&mut self, content: &[u8]) -> PathBuf {
@@ -75,7 +85,10 @@ impl Process {
         let stdout = fixture.file(b"");
         let stderr = fixture.file(b"");
         let mut command = Command::new(BINARY);
-        command.args(arguments).env_remove(ENV).env_remove("GLAUX_DATABASE_URL");
+        command
+            .args(arguments)
+            .env_remove(ENV)
+            .env_remove("GLAUX_DATABASE_URL");
         if let Some(secret) = secret {
             command.env(ENV, secret).env("GLAUX_DATABASE_URL", secret);
         }
@@ -85,7 +98,12 @@ impl Process {
             .stderr(File::create(&stderr).unwrap())
             .spawn()
             .expect("actual server CLI must execute");
-        Self { child, stdout, stderr, output_pump: None }
+        Self {
+            child,
+            stdout,
+            stderr,
+            output_pump: None,
+        }
     }
 
     fn wait(&mut self) -> ExitStatus {
@@ -98,7 +116,10 @@ impl Process {
                 redacted(&self.output());
                 return status;
             }
-            assert!(Instant::now() < deadline, "bounded CLI exit deadline exceeded");
+            assert!(
+                Instant::now() < deadline,
+                "bounded CLI exit deadline exceeded"
+            );
             // Diagnostic polling only: process exit, not elapsed time, establishes completion.
             std::thread::sleep(Duration::from_millis(10));
         }
@@ -111,7 +132,12 @@ impl Process {
 
 impl Drop for Process {
     fn drop(&mut self) {
-        if self.child.try_wait().expect("owned child inspection failed").is_none() {
+        if self
+            .child
+            .try_wait()
+            .expect("owned child inspection failed")
+            .is_none()
+        {
             self.child.kill().expect("owned child cleanup failed");
             self.child.wait().expect("owned child reaping failed");
         }
@@ -128,13 +154,22 @@ fn config(listener: &str, authentication: &str, database: &str, timeout: u32) ->
 }
 
 fn ordinary() -> String {
-    config(ADDRESS, "disabled", "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}", 500)
+    config(
+        ADDRESS,
+        "disabled",
+        "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}",
+        500,
+    )
 }
 
 fn check(fixture: &mut Fixture, input: &[u8], secret: Option<&str>, accepted: bool) {
     let path = fixture.file(input);
     let mut process = Process::spawn(fixture, &["check-config", path.to_str().unwrap()], secret);
-    assert_eq!(process.wait().code(), Some(if accepted { 0 } else { 2 }), "configuration acceptance differs from independent matrix");
+    assert_eq!(
+        process.wait().code(),
+        Some(if accepted { 0 } else { 2 }),
+        "configuration acceptance differs from independent matrix"
+    );
     let output = process.output();
     redacted(&output);
     if accepted {
@@ -146,8 +181,30 @@ fn check(fixture: &mut Fixture, input: &[u8], secret: Option<&str>, accepted: bo
 
 fn configuration(fixture: &mut Fixture) {
     check(fixture, ordinary().as_bytes(), Some(APP), true);
-    check(fixture, config("[::1]:18818", "development", "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}", 100).as_bytes(), Some(APP), true);
-    check(fixture, config("127.0.0.1:18818", "development", "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}", 10_000).as_bytes(), Some(APP), true);
+    check(
+        fixture,
+        config(
+            "[::1]:18818",
+            "development",
+            "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}",
+            100,
+        )
+        .as_bytes(),
+        Some(APP),
+        true,
+    );
+    check(
+        fixture,
+        config(
+            "127.0.0.1:18818",
+            "development",
+            "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}",
+            10_000,
+        )
+        .as_bytes(),
+        Some(APP),
+        true,
+    );
     // Syntactically valid but unusable credentials establish that check-config performs no DB I/O.
     let absent_db = APP.replace("glaux_harness_test", "SyntheticHealthDatabaseCanary");
     check(fixture, ordinary().as_bytes(), Some(&absent_db), true);
@@ -163,10 +220,19 @@ fn configuration(fixture: &mut Fixture) {
         base.replace("500", "-1"),
         base.replace("500", "500.5"),
         base.replace(",\"health_timeout_ms\":500", ""),
-        base.replace("\"url_env\":\"GLAUX_TEST_DATABASE_URL\"", "\"url\":\"SyntheticHealthPayloadCanary\""),
-        base.replace("\"url_env\":\"GLAUX_TEST_DATABASE_URL\"", "\"url_env\":\"GLAUX_TEST_DATABASE_URL\",\"extra\":\"SyntheticHealthPayloadCanary\""),
+        base.replace(
+            "\"url_env\":\"GLAUX_TEST_DATABASE_URL\"",
+            "\"url\":\"SyntheticHealthPayloadCanary\"",
+        ),
+        base.replace(
+            "\"url_env\":\"GLAUX_TEST_DATABASE_URL\"",
+            "\"url_env\":\"GLAUX_TEST_DATABASE_URL\",\"extra\":\"SyntheticHealthPayloadCanary\"",
+        ),
         base.replace("\"url_env\":\"GLAUX_TEST_DATABASE_URL\"", ""),
-        base.replace("\"url_env\":\"GLAUX_TEST_DATABASE_URL\"", "\"url_env\":\"GLAUX_TEST_DATABASE_URL\",\"url_file\":\"SyntheticHealthPathCanary\""),
+        base.replace(
+            "\"url_env\":\"GLAUX_TEST_DATABASE_URL\"",
+            "\"url_env\":\"GLAUX_TEST_DATABASE_URL\",\"url_file\":\"SyntheticHealthPathCanary\"",
+        ),
         base.replace("127.0.0.1:18818", "localhost:18818"),
         "{\"SyntheticHealthPayloadCanary\":".to_owned(),
         "null".to_owned(),
@@ -175,8 +241,24 @@ fn configuration(fixture: &mut Fixture) {
     for input in &cases {
         check(fixture, input.as_bytes(), Some(APP), false);
     }
-    for listener in ["0.0.0.0:18818", "[::]:18818", "192.0.2.1:18818", "[::ffff:192.0.2.1]:18818"] {
-        check(fixture, config(listener, "development", "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}", 500).as_bytes(), Some(APP), false);
+    for listener in [
+        "0.0.0.0:18818",
+        "[::]:18818",
+        "192.0.2.1:18818",
+        "[::ffff:192.0.2.1]:18818",
+    ] {
+        check(
+            fixture,
+            config(
+                listener,
+                "development",
+                "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}",
+                500,
+            )
+            .as_bytes(),
+            Some(APP),
+            false,
+        );
     }
     check(fixture, &[b' '; 65_537], Some(APP), false);
     check(fixture, &[0xff, 0xfe], Some(APP), false);
@@ -184,20 +266,53 @@ fn configuration(fixture: &mut Fixture) {
 
     check(fixture, base.as_bytes(), None, false);
     check(fixture, base.as_bytes(), Some(""), false);
-    check(fixture, base.as_bytes(), Some("SyntheticHealthPasswordCanary"), false);
+    check(
+        fixture,
+        base.as_bytes(),
+        Some("SyntheticHealthPasswordCanary"),
+        false,
+    );
     check(fixture, base.as_bytes(), Some(&"x".repeat(16_385)), false);
     let secret = fixture.file(APP.as_bytes());
-    let from_file = config(ADDRESS, "disabled", &format!("{{\"url_file\":\"{}\"}}", secret.display()), 500);
+    let from_file = config(
+        ADDRESS,
+        "disabled",
+        &format!("{{\"url_file\":\"{}\"}}", secret.display()),
+        500,
+    );
     check(fixture, from_file.as_bytes(), None, true);
-    let missing_file = config(ADDRESS, "disabled", "{\"url_file\":\"/tmp/SyntheticHealthPathCanary\"}", 500);
+    let missing_file = config(
+        ADDRESS,
+        "disabled",
+        "{\"url_file\":\"/tmp/SyntheticHealthPathCanary\"}",
+        500,
+    );
     check(fixture, missing_file.as_bytes(), None, false);
-    let missing_env = config(ADDRESS, "disabled", "{\"url_env\":\"SyntheticHealthMissingCanary\"}", 500);
+    let missing_env = config(
+        ADDRESS,
+        "disabled",
+        "{\"url_env\":\"SyntheticHealthMissingCanary\"}",
+        500,
+    );
     check(fixture, missing_env.as_bytes(), None, false);
     let large_file = fixture.file(&[b'x'; 16_385]);
-    let large_reference = config(ADDRESS, "disabled", &format!("{{\"url_file\":\"{}\"}}", large_file.display()), 500);
+    let large_reference = config(
+        ADDRESS,
+        "disabled",
+        &format!("{{\"url_file\":\"{}\"}}", large_file.display()),
+        500,
+    );
     check(fixture, large_reference.as_bytes(), None, false);
-    let mut process = Process::spawn(fixture, &["check-config", "/tmp/SyntheticHealthPathCanary"], Some(APP));
-    assert_eq!(process.wait().code(), Some(2), "missing configuration not safely rejected");
+    let mut process = Process::spawn(
+        fixture,
+        &["check-config", "/tmp/SyntheticHealthPathCanary"],
+        Some(APP),
+    );
+    assert_eq!(
+        process.wait().code(),
+        Some(2),
+        "missing configuration not safely rejected"
+    );
     redacted(&process.output());
     println!("Runtime health group passed: secret-references-and-safe-diagnostics");
 }
@@ -211,21 +326,48 @@ struct WireResponse {
 
 fn decode(response: &str) -> WireResponse {
     redacted(response);
-    let (head, body) = response.split_once("\r\n\r\n").expect("complete HTTP header required");
+    let (head, body) = response
+        .split_once("\r\n\r\n")
+        .expect("complete HTTP header required");
     let mut lines = head.split("\r\n");
-    let status = lines.next().unwrap().split_whitespace().nth(1).unwrap().parse().unwrap();
-    let headers = lines.map(|line| {
-        let (name, value) = line.split_once(':').unwrap();
-        (name.to_ascii_lowercase(), value.trim().to_owned())
-    }).collect();
-    WireResponse { status, headers, body: body.to_owned() }
+    let status = lines
+        .next()
+        .unwrap()
+        .split_whitespace()
+        .nth(1)
+        .unwrap()
+        .parse()
+        .unwrap();
+    let headers = lines
+        .map(|line| {
+            let (name, value) = line.split_once(':').unwrap();
+            (name.to_ascii_lowercase(), value.trim().to_owned())
+        })
+        .collect();
+    WireResponse {
+        status,
+        headers,
+        body: body.to_owned(),
+    }
 }
 
 fn matches_health(response: &WireResponse, status: u16, body: &str) -> bool {
     response.status == status
         && response.body == body
-        && response.headers.iter().filter(|(name, _)| name == "cache-control").map(|(_, value)| value.as_str()).collect::<Vec<_>>() == ["no-store"]
-        && response.headers.iter().filter(|(name, _)| name == "content-length").map(|(_, value)| value.as_str()).collect::<Vec<_>>() == [body.len().to_string().as_str()]
+        && response
+            .headers
+            .iter()
+            .filter(|(name, _)| name == "cache-control")
+            .map(|(_, value)| value.as_str())
+            .collect::<Vec<_>>()
+            == ["no-store"]
+        && response
+            .headers
+            .iter()
+            .filter(|(name, _)| name == "content-length")
+            .map(|(_, value)| value.as_str())
+            .collect::<Vec<_>>()
+            == [body.len().to_string().as_str()]
 }
 
 fn oracle_controls() {
@@ -239,7 +381,10 @@ fn oracle_controls() {
         valid.replace("cache-control: no-store\r\n", ""),
         valid.replace("ready\n", "ready\nextra"),
     ] {
-        assert!(!matches_health(&decode(&wrong), 200, "ready\n"), "independent HTTP oracle accepted known wrong bytes");
+        assert!(
+            !matches_health(&decode(&wrong), 200, "ready\n"),
+            "independent HTTP oracle accepted known wrong bytes"
+        );
     }
     println!("Runtime health group passed: independent-wire-oracle-controls");
 }
@@ -247,18 +392,32 @@ fn oracle_controls() {
 fn request(path: &str) -> WireResponse {
     let address: SocketAddr = ADDRESS.parse().unwrap();
     let mut stream = TcpStream::connect_timeout(&address, Duration::from_secs(2)).unwrap();
-    stream.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
-    stream.set_write_timeout(Some(Duration::from_secs(3))).unwrap();
-    write!(stream, "GET {path} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n").unwrap();
+    stream
+        .set_read_timeout(Some(Duration::from_secs(3)))
+        .unwrap();
+    stream
+        .set_write_timeout(Some(Duration::from_secs(3)))
+        .unwrap();
+    write!(
+        stream,
+        "GET {path} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+    )
+    .unwrap();
     let mut response = String::new();
     stream.take(8193).read_to_string(&mut response).unwrap();
-    assert!(response.len() <= 8192, "health response exceeded independent bound");
+    assert!(
+        response.len() <= 8192,
+        "health response exceeded independent bound"
+    );
     decode(&response)
 }
 
 fn health(path: &str, status: u16, body: &str, message: &str) {
     let response = request(path);
-    assert!(matches_health(&response, status, body), "{message}: {response:?}");
+    assert!(
+        matches_health(&response, status, body),
+        "{message}: {response:?}"
+    );
 }
 
 fn start(fixture: &mut Fixture, path: &Path) -> Process {
@@ -272,7 +431,8 @@ fn start(fixture: &mut Fixture, path: &Path) -> Process {
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(File::create(&stderr).unwrap())
-        .spawn().unwrap();
+        .spawn()
+        .unwrap();
     let reader = child.stdout.take().unwrap();
     let (sender, receiver) = mpsc::channel();
     let capture = stdout.clone();
@@ -284,9 +444,22 @@ fn start(fixture: &mut Fixture, path: &Path) -> Process {
             let _ = sender.send(line);
         }
     });
-    let mut process = Process { child, stdout, stderr, output_pump: Some(handle) };
-    assert_eq!(receiver.recv_timeout(Duration::from_secs(8)).expect("post-bind listener signal missing"), "Health listener ready.");
-    assert!(process.child.try_wait().unwrap().is_none(), "listener exited after startup signal");
+    let mut process = Process {
+        child,
+        stdout,
+        stderr,
+        output_pump: Some(handle),
+    };
+    assert_eq!(
+        receiver
+            .recv_timeout(Duration::from_secs(8))
+            .expect("post-bind listener signal missing"),
+        "Health listener ready."
+    );
+    assert!(
+        process.child.try_wait().unwrap().is_none(),
+        "listener exited after startup signal"
+    );
     process
 }
 
@@ -296,18 +469,24 @@ async fn execute(connection: &mut PgConnection, sql: &'static str) {
 
 async fn migrations(connection: &mut PgConnection) -> Vec<(i64, Vec<u8>, bool)> {
     sqlx::query_as("SELECT version,checksum,success FROM public._sqlx_migrations ORDER BY version")
-        .fetch_all(connection).await.unwrap()
+        .fetch_all(connection)
+        .await
+        .unwrap()
 }
 
 async fn sentinel(connection: &mut PgConnection) {
     let found: (String, String, String) = sqlx::query_as(
         "SELECT r.id::text,r.uid,s.label FROM public.resource_identity r JOIN public.system_identity s USING(id) WHERE r.uid='urn:glaux:test:health-sentinel'",
     ).fetch_one(connection).await.unwrap();
-    assert_eq!(found, (
-        "01890f20-7b5a-7cc3-98c4-dc0c0c080901".to_owned(),
-        "urn:glaux:test:health-sentinel".to_owned(),
-        "Sentinel bytes remain unchanged".to_owned(),
-    ), "startup/health changed retained System");
+    assert_eq!(
+        found,
+        (
+            "01890f20-7b5a-7cc3-98c4-dc0c0c080901".to_owned(),
+            "urn:glaux:test:health-sentinel".to_owned(),
+            "Sentinel bytes remain unchanged".to_owned(),
+        ),
+        "startup/health changed retained System"
+    );
 }
 
 async fn wait_for_probe_lock() {
@@ -320,7 +499,10 @@ async fn wait_for_probe_lock() {
         if blocked {
             break;
         }
-        assert!(Instant::now() < deadline, "database never observed health probe blocked on our schema lock");
+        assert!(
+            Instant::now() < deadline,
+            "database never observed health probe blocked on our schema lock"
+        );
         // Diagnostic polling: the database's actual lock wait establishes the ordering.
         tokio::time::sleep(Duration::from_millis(5)).await;
     }
@@ -328,42 +510,88 @@ async fn wait_for_probe_lock() {
 
 async fn blocked_probe(connection: &mut PgConnection) {
     execute(connection, "BEGIN").await;
-    execute(connection, "LOCK TABLE public._sqlx_migrations IN ACCESS EXCLUSIVE MODE").await;
+    execute(
+        connection,
+        "LOCK TABLE public._sqlx_migrations IN ACCESS EXCLUSIVE MODE",
+    )
+    .await;
     let probe = std::thread::spawn(|| request("/health/ready"));
     wait_for_probe_lock().await;
-    health("/health/live", 200, "alive\n", "blocked readiness probe prevented liveness response");
+    health(
+        "/health/live",
+        200,
+        "alive\n",
+        "blocked readiness probe prevented liveness response",
+    );
     let response = probe.join().expect("bounded readiness client failed");
-    assert!(matches_health(&response, 503, "not ready\n"), "blocked storage probe did not fail readiness within its bound: {response:?}");
+    assert!(
+        matches_health(&response, 503, "not ready\n"),
+        "blocked storage probe did not fail readiness within its bound: {response:?}"
+    );
     execute(connection, "ROLLBACK").await;
-    health("/health/ready", 200, "ready\n", "released schema lock did not restore readiness");
+    health(
+        "/health/ready",
+        200,
+        "ready\n",
+        "released schema lock did not restore readiness",
+    );
 }
 
 fn terminate(server: &Process) {
     // The pinned image provides /bin/sh; do not assume a separate kill program.
     // Only the PID of our owned child is passed as a positional argument.
     let signalled = Command::new("/bin/sh")
-        .args(["-c", "kill -TERM \"$1\"", "owned-health-child", &server.child.id().to_string()])
-        .status().unwrap();
+        .args([
+            "-c",
+            "kill -TERM \"$1\"",
+            "owned-health-child",
+            &server.child.id().to_string(),
+        ])
+        .status()
+        .unwrap();
     assert!(signalled.success(), "owned server shutdown signal failed");
 }
 
 async fn forced_shutdown(fixture: &mut Fixture, connection: &mut PgConnection) {
-    let document = config(ADDRESS, "disabled", "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}", 10_000);
+    let document = config(
+        ADDRESS,
+        "disabled",
+        "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}",
+        10_000,
+    );
     let path = fixture.file(document.as_bytes());
     let mut server = start(fixture, &path);
     execute(connection, "BEGIN").await;
-    execute(connection, "LOCK TABLE public._sqlx_migrations IN ACCESS EXCLUSIVE MODE").await;
+    execute(
+        connection,
+        "LOCK TABLE public._sqlx_migrations IN ACCESS EXCLUSIVE MODE",
+    )
+    .await;
     let address: SocketAddr = ADDRESS.parse().unwrap();
     let mut request = TcpStream::connect_timeout(&address, Duration::from_secs(2)).unwrap();
-    request.set_write_timeout(Some(Duration::from_secs(2))).unwrap();
-    request.write_all(b"GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n").unwrap();
+    request
+        .set_write_timeout(Some(Duration::from_secs(2)))
+        .unwrap();
+    request
+        .write_all(b"GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n")
+        .unwrap();
     wait_for_probe_lock().await;
     let before = Instant::now();
     terminate(&server);
-    assert_eq!(server.wait().code(), Some(1), "forced bounded shutdown did not report unfinished drain");
-    assert!(before.elapsed() < Duration::from_secs(7), "shutdown exceeded the documented five-second bound plus runner allowance");
+    assert_eq!(
+        server.wait().code(),
+        Some(1),
+        "forced bounded shutdown did not report unfinished drain"
+    );
+    assert!(
+        before.elapsed() < Duration::from_secs(7),
+        "shutdown exceeded the documented five-second bound plus runner allowance"
+    );
     redacted(&server.output());
-    assert!(TcpStream::connect_timeout(&address, Duration::from_millis(250)).is_err(), "listener survived forced shutdown");
+    assert!(
+        TcpStream::connect_timeout(&address, Duration::from_millis(250)).is_err(),
+        "listener survived forced shutdown"
+    );
     execute(connection, "ROLLBACK").await;
     drop(request);
 }
@@ -373,48 +601,107 @@ async fn proof() {
     configuration(&mut fixture);
     oracle_controls();
     let mut connection = PgConnection::connect(ADMIN).await.unwrap();
-    let target: (String, String, String) = sqlx::query_as("SELECT current_database(),current_user::text,host(inet_server_addr())")
-        .fetch_one(&mut connection).await.unwrap();
-    assert_eq!(target, ("glaux_harness_test".to_owned(), "postgres".to_owned(), "127.0.0.1".to_owned()));
+    let target: (String, String, String) =
+        sqlx::query_as("SELECT current_database(),current_user::text,host(inet_server_addr())")
+            .fetch_one(&mut connection)
+            .await
+            .unwrap();
+    assert_eq!(
+        target,
+        (
+            "glaux_harness_test".to_owned(),
+            "postgres".to_owned(),
+            "127.0.0.1".to_owned()
+        )
+    );
     execute(&mut connection, "SET statement_timeout=5000").await;
 
     execute(&mut connection, "CREATE ROLE glaux_health_app LOGIN").await;
     let path = fixture.file(ordinary().as_bytes());
     let mut missing = Process::spawn(&mut fixture, &["serve", path.to_str().unwrap()], Some(APP));
-    assert_eq!(missing.wait().code(), Some(1), "unmigrated database not safely rejected at startup");
+    assert_eq!(
+        missing.wait().code(),
+        Some(1),
+        "unmigrated database not safely rejected at startup"
+    );
     assert!(!missing.output().contains("Health listener ready."));
-    let absent: bool = sqlx::query_scalar("SELECT to_regclass('public._sqlx_migrations') IS NULL").fetch_one(&mut connection).await.unwrap();
-    assert!(absent, "startup automatically migrated uninitialized database");
+    let absent: bool = sqlx::query_scalar("SELECT to_regclass('public._sqlx_migrations') IS NULL")
+        .fetch_one(&mut connection)
+        .await
+        .unwrap();
+    assert!(
+        absent,
+        "startup automatically migrated uninitialized database"
+    );
     // Only the explicit administrative command is permitted to install schema.
-    let administrative = "postgres://postgres@localhost/glaux_harness_test?host=/var/run/postgresql&sslmode=disable";
+    let administrative =
+        "postgres://postgres@localhost/glaux_harness_test?host=/var/run/postgresql&sslmode=disable";
     let mut migrate = Process::spawn(&mut fixture, &["migrate"], Some(administrative));
-    assert!(migrate.wait().success(), "explicit migration command failed");
-    execute(&mut connection, "GRANT USAGE ON SCHEMA public TO glaux_health_app").await;
-    execute(&mut connection, "GRANT SELECT ON public._sqlx_migrations TO glaux_health_app").await;
+    assert!(
+        migrate.wait().success(),
+        "explicit migration command failed"
+    );
+    execute(
+        &mut connection,
+        "GRANT USAGE ON SCHEMA public TO glaux_health_app",
+    )
+    .await;
+    execute(
+        &mut connection,
+        "GRANT SELECT ON public._sqlx_migrations TO glaux_health_app",
+    )
+    .await;
     let record = SystemRecord {
-        id: "01890f20-7b5a-7cc3-98c4-dc0c0c080901".parse::<LocalId>().unwrap(),
+        id: "01890f20-7b5a-7cc3-98c4-dc0c0c080901"
+            .parse::<LocalId>()
+            .unwrap(),
         uid: "urn:glaux:test:health-sentinel".parse().unwrap(),
         label: "Sentinel bytes remain unchanged".to_owned(),
-        sources: vec![], parent: None,
+        sources: vec![],
+        parent: None,
     };
-    SystemRepository::create(&mut connection, &record).await.unwrap();
+    SystemRepository::create(&mut connection, &record)
+        .await
+        .unwrap();
     let expected_migrations = migrations(&mut connection).await;
     assert_eq!(expected_migrations.len(), 8);
 
     // A client-supplied disable flag cannot bypass verified TLS on a TCP connection.
     let network = "postgres://glaux_health_app:SyntheticHealthPasswordCanary@127.0.0.1:5432/glaux_harness_test?sslmode=disable";
-    let mut insecure = Process::spawn(&mut fixture, &["serve", path.to_str().unwrap()], Some(network));
-    assert_eq!(insecure.wait().code(), Some(1), "unverified network database route not safely rejected");
+    let mut insecure = Process::spawn(
+        &mut fixture,
+        &["serve", path.to_str().unwrap()],
+        Some(network),
+    );
+    assert_eq!(
+        insecure.wait().code(),
+        Some(1),
+        "unverified network database route not safely rejected"
+    );
     assert!(!insecure.output().contains("Health listener ready."));
     sentinel(&mut connection).await;
     assert_eq!(migrations(&mut connection).await, expected_migrations);
     println!("Runtime health group passed: explicit-schema-startup-and-verified-network-route");
 
     let mut server = start(&mut fixture, &path);
-    health("/health/live", 200, "alive\n", "liveness process response differs");
-    health("/health/ready", 200, "ready\n", "compatible database not ready");
+    health(
+        "/health/live",
+        200,
+        "alive\n",
+        "liveness process response differs",
+    );
+    health(
+        "/health/ready",
+        200,
+        "ready\n",
+        "compatible database not ready",
+    );
     for route in ["/", "/systems", "/conformance", "/metrics"] {
-        assert_eq!(request(route).status, 404, "undeclared capability route exposed");
+        assert_eq!(
+            request(route).status,
+            404,
+            "undeclared capability route exposed"
+        );
     }
     sentinel(&mut connection).await;
     assert_eq!(migrations(&mut connection).await, expected_migrations);
@@ -423,37 +710,105 @@ async fn proof() {
     execute(&mut connection, "ALTER ROLE glaux_health_app NOLOGIN").await;
     let terminated: Vec<bool> = sqlx::query_scalar("SELECT pg_terminate_backend(pid,1000) FROM pg_stat_activity WHERE usename='glaux_health_app'")
         .fetch_all(&mut connection).await.unwrap();
-    assert!(terminated.iter().all(|done| *done), "dedicated health connections did not terminate");
-    health("/health/live", 200, "alive\n", "storage outage incorrectly changed liveness");
-    health("/health/ready", 503, "not ready\n", "unavailable storage incorrectly reported ready");
+    assert!(
+        terminated.iter().all(|done| *done),
+        "dedicated health connections did not terminate"
+    );
+    health(
+        "/health/live",
+        200,
+        "alive\n",
+        "storage outage incorrectly changed liveness",
+    );
+    health(
+        "/health/ready",
+        503,
+        "not ready\n",
+        "unavailable storage incorrectly reported ready",
+    );
     execute(&mut connection, "ALTER ROLE glaux_health_app LOGIN").await;
-    health("/health/ready", 200, "ready\n", "restored storage did not recover readiness");
+    health(
+        "/health/ready",
+        200,
+        "ready\n",
+        "restored storage did not recover readiness",
+    );
     blocked_probe(&mut connection).await;
     sentinel(&mut connection).await;
     assert_eq!(migrations(&mut connection).await, expected_migrations);
     println!("Runtime health group passed: isolated-storage-outage-and-recovery");
 
-    execute(&mut connection, "UPDATE public._sqlx_migrations SET checksum=decode('00','hex') WHERE version=8").await;
-    health("/health/live", 200, "alive\n", "schema drift incorrectly changed liveness");
-    health("/health/ready", 503, "not ready\n", "incompatible schema incorrectly reported ready");
-    let checksum: Vec<u8> = sqlx::query_scalar("SELECT checksum FROM public._sqlx_migrations WHERE version=8").fetch_one(&mut connection).await.unwrap();
-    assert_eq!(checksum, [0], "health silently repaired incompatible schema");
-    let incompatible_config = config("127.0.0.1:18819", "disabled", "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}", 500);
+    execute(
+        &mut connection,
+        "UPDATE public._sqlx_migrations SET checksum=decode('00','hex') WHERE version=8",
+    )
+    .await;
+    health(
+        "/health/live",
+        200,
+        "alive\n",
+        "schema drift incorrectly changed liveness",
+    );
+    health(
+        "/health/ready",
+        503,
+        "not ready\n",
+        "incompatible schema incorrectly reported ready",
+    );
+    let checksum: Vec<u8> =
+        sqlx::query_scalar("SELECT checksum FROM public._sqlx_migrations WHERE version=8")
+            .fetch_one(&mut connection)
+            .await
+            .unwrap();
+    assert_eq!(
+        checksum,
+        [0],
+        "health silently repaired incompatible schema"
+    );
+    let incompatible_config = config(
+        "127.0.0.1:18819",
+        "disabled",
+        "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}",
+        500,
+    );
     let incompatible_path = fixture.file(incompatible_config.as_bytes());
-    let mut incompatible = Process::spawn(&mut fixture, &["serve", incompatible_path.to_str().unwrap()], Some(APP));
-    assert_eq!(incompatible.wait().code(), Some(1), "incompatible schema not safely rejected at startup");
+    let mut incompatible = Process::spawn(
+        &mut fixture,
+        &["serve", incompatible_path.to_str().unwrap()],
+        Some(APP),
+    );
+    assert_eq!(
+        incompatible.wait().code(),
+        Some(1),
+        "incompatible schema not safely rejected at startup"
+    );
     assert!(!incompatible.output().contains("Health listener ready."));
-    sqlx::query("UPDATE public._sqlx_migrations SET checksum=$1 WHERE version=8").bind(&expected_migrations[7].1).execute(&mut connection).await.unwrap();
-    health("/health/ready", 200, "ready\n", "restored schema did not recover readiness");
+    sqlx::query("UPDATE public._sqlx_migrations SET checksum=$1 WHERE version=8")
+        .bind(&expected_migrations[7].1)
+        .execute(&mut connection)
+        .await
+        .unwrap();
+    health(
+        "/health/ready",
+        200,
+        "ready\n",
+        "restored schema did not recover readiness",
+    );
     sentinel(&mut connection).await;
     assert_eq!(migrations(&mut connection).await, expected_migrations);
     println!("Runtime health group passed: schema-drift-rejection-without-repair");
 
     terminate(&server);
-    assert!(server.wait().success(), "graceful health listener shutdown failed");
+    assert!(
+        server.wait().success(),
+        "graceful health listener shutdown failed"
+    );
     redacted(&server.output());
     let address: SocketAddr = ADDRESS.parse().unwrap();
-    assert!(TcpStream::connect_timeout(&address, Duration::from_millis(250)).is_err(), "listener survived shutdown");
+    assert!(
+        TcpStream::connect_timeout(&address, Duration::from_millis(250)).is_err(),
+        "listener survived shutdown"
+    );
     forced_shutdown(&mut fixture, &mut connection).await;
     sentinel(&mut connection).await;
     assert_eq!(migrations(&mut connection).await, expected_migrations);
@@ -462,8 +817,18 @@ async fn proof() {
 }
 
 fn main() {
-    assert_eq!(std::env::args().count(), 1, "No target or selection override is accepted");
-    tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
-        tokio::time::timeout(Duration::from_secs(90), proof()).await.expect("bounded runtime health proof timed out");
-    });
+    assert_eq!(
+        std::env::args().count(),
+        1,
+        "No target or selection override is accepted"
+    );
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            tokio::time::timeout(Duration::from_secs(90), proof())
+                .await
+                .expect("bounded runtime health proof timed out");
+        });
 }
