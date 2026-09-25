@@ -19,7 +19,8 @@ GROUPS = (
     "restricted-serving-role",
 )
 BOUNDARIES = ("receipt", "commit")
-RACES = ("first-1-identical", "first-2-identical", "first-1-conflicting", "first-2-conflicting")
+RACES = ("first-1-identical", "first-2-identical", "first-1-conflicting", "first-2-conflicting",
+         "different-actor", "different-source")
 FINAL = "Required retry write proof passed: 8 groups."
 
 
@@ -68,7 +69,7 @@ def main():
     output = run_binary(build_proof(ROOT, ROOT / "target"))
     print(output, flush=True)
     validate_output(output)
-    print("Retry write: 8 groups, 2 rollback boundaries, 4 races and 72 generated transitions passed; 0 failed; 0 skipped", flush=True)
+    print("Retry write: 8 groups, 2 rollback boundaries, 6 races and 72 generated transitions passed; 0 failed; 0 skipped", flush=True)
     print("Retry write database: all required checks passed.", flush=True)
 
 

@@ -261,6 +261,19 @@ async fn content(connection: &mut PgConnection) {
         .await
         .unwrap();
     let before = snapshot(connection).await;
+    let mut duplicate_alias = input(2, 1);
+    duplicate_alias.system.sources.push(SourceIdentity::new(
+        "urn:glaux:retry:a".parse().unwrap(),
+        "a-1".parse().unwrap(),
+    ));
+    assert!(
+        matches!(
+            create_system_with_retry(connection, &duplicate_alias, Some(&key()), |_| true).await,
+            Err(StorageError::InvalidInput)
+        ),
+        "live replay silently deduplicated invalid aliases"
+    );
+    assert_eq!(snapshot(connection).await, before);
     for case in 0..9 {
         let mut changed = input(2, 1);
         match case {
@@ -391,7 +404,12 @@ async fn scopes(connection: &mut PgConnection) {
     assert_eq!(target, parent.id.to_string());
     let before = snapshot(connection).await;
     assert!(matches!(
-        create_system_with_retry(connection, &input(6, 6), Some(&key()), |_| false).await,
+        create_system_with_retry(connection, &input(6, 6), Some(&RetryKey {
+            key: "fresh-denied".to_owned(), ..key()
+        }), |candidate| {
+            assert_eq!(*candidate, expected(6));
+            false
+        }).await,
         Err(StorageError::Denied)
     ));
     assert_eq!(snapshot(connection).await, before);
@@ -570,10 +588,17 @@ async fn rollback_and_constraints(connection: &mut PgConnection) {
     create_system_with_retry(connection, &input(1, 1), Some(&key()), |_| true)
         .await
         .unwrap();
+    let other_key = RetryKey {
+        key: "independent-other".to_owned(),
+        ..key()
+    };
+    create_system_with_retry(connection, &input(2, 2), Some(&other_key), |_| true)
+        .await
+        .unwrap();
     let before = snapshot(connection).await;
     for (sql, code) in [
         (
-            "UPDATE public.system_create_retry SET event_id='01890f20-7b5a-7cc3-98c4-dc0c0c09138a'",
+            "UPDATE public.system_create_retry SET event_id='01890f20-7b5a-7cc3-98c4-dc0c0c09138a' WHERE key='opaque-retry-key'",
             "23503",
         ),
         (
@@ -700,6 +725,91 @@ async fn concurrent(connection: &mut PgConnection, first: u16, conflicting: bool
             "identical"
         }
     );
+}
+
+async fn concurrent_scope(connection: &mut PgConnection, change_actor: bool) {
+    reset(connection).await;
+    execute(connection,"CREATE TRIGGER retry_wait AFTER INSERT ON public.outgoing_work FOR EACH ROW EXECUTE FUNCTION public.retry_barrier()").await;
+    let before = snapshot(connection).await;
+    execute(connection, "SELECT pg_advisory_lock(170017)").await;
+    let mut first = PgConnection::connect(DSN).await.unwrap();
+    let mut second = PgConnection::connect(DSN).await.unwrap();
+    for writer in [&mut first, &mut second] {
+        execute(writer, "SET statement_timeout=15000").await;
+    }
+    let first_pid: i32 = sqlx::query_scalar("SELECT pg_backend_pid()")
+        .fetch_one(&mut first)
+        .await
+        .unwrap();
+    let second_pid: i32 = sqlx::query_scalar("SELECT pg_backend_pid()")
+        .fetch_one(&mut second)
+        .await
+        .unwrap();
+    let first_task = tokio::spawn(async move {
+        create_system_with_retry(&mut first, &input(1, 1), Some(&key()), |_| true).await
+    });
+    wait_for_lock(connection, first_pid, None).await;
+    let second_task = tokio::spawn(async move {
+        let mut request = input(2, 2);
+        if change_actor {
+            request.audit.actor = Some("other-actor".to_owned());
+        } else {
+            request.audit.source = Some("other-source".to_owned());
+        }
+        create_system_with_retry(&mut second, &request, Some(&key()), |_| true).await
+    });
+    // Both scopes must reach the controlled outgoing barrier independently.
+    // A global key lock or foreign-scope replay cannot satisfy this observation.
+    wait_for_lock(connection, second_pid, None).await;
+    assert!(!first_task.is_finished() && !second_task.is_finished());
+    assert_eq!(snapshot(connection).await, before);
+    let unlocked: bool = sqlx::query_scalar("SELECT pg_advisory_unlock(170017)")
+        .fetch_one(&mut *connection)
+        .await
+        .unwrap();
+    assert!(unlocked);
+    assert_eq!(
+        tokio::time::timeout(Duration::from_secs(5), first_task)
+            .await.unwrap().unwrap().unwrap(),
+        expected(1)
+    );
+    assert_eq!(
+        tokio::time::timeout(Duration::from_secs(5), second_task)
+            .await.unwrap().unwrap().unwrap(),
+        expected(2)
+    );
+    let actual: Vec<(String, String, String, String, String, String, String)> = sqlx::query_as(
+        "SELECT t.actor,t.source,t.system_id::text,t.revision_id::text,t.artifact_id::text,t.audit_id::text,t.event_id::text
+         FROM public.system_create_retry t JOIN public.outgoing_work w ON w.id=t.event_id
+         JOIN public.server_audit a ON a.id=t.audit_id
+         WHERE a.actor=t.actor AND a.source=t.source AND a.target_id=t.system_id
+         AND a.revision_id=t.revision_id AND a.operation='system.create' AND a.outcome='accepted'
+         AND w.system_id=t.system_id AND w.revision_id=t.revision_id AND w.artifact_id=t.artifact_id
+         AND w.audit_id=t.audit_id AND w.kind='system.created' ORDER BY t.system_id")
+        .fetch_all(&mut *connection).await.unwrap();
+    let expected_rows = vec![
+        ("retry-actor".to_owned(), "retry-source".to_owned(), id(1001).to_string(),
+         id(3001).to_string(), id(2001).to_string(), id(4001).to_string(), id(5001).to_string()),
+        (if change_actor { "other-actor" } else { "retry-actor" }.to_owned(),
+         if change_actor { "retry-source" } else { "other-source" }.to_owned(),
+         id(1002).to_string(), id(3002).to_string(), id(2002).to_string(),
+         id(4002).to_string(), id(5002).to_string()),
+    ];
+    assert_eq!(actual, expected_rows, "concurrent contexts borrowed or mixed another outcome");
+    for (table, offset) in [
+        ("resource_identity", 1000), ("source_artifact", 2000), ("system_revision", 3000),
+        ("server_audit", 4000), ("outgoing_work", 5000),
+    ] {
+        let ids: Vec<String> = sqlx::query_scalar(AssertSqlSafe(format!(
+            "SELECT id::text FROM public.{table} ORDER BY id"
+        )))
+        .fetch_all(&mut *connection)
+        .await
+        .unwrap();
+        assert_eq!(ids, vec![id(offset + 1).to_string(), id(offset + 2).to_string()]);
+    }
+    execute(connection, "DROP TRIGGER retry_wait ON public.outgoing_work").await;
+    println!("Retry race passed: different-{}", if change_actor { "actor" } else { "source" });
 }
 
 fn sequence(seed: u32) -> Vec<u32> {
@@ -876,6 +986,8 @@ async fn proof() {
     for (first, conflicting) in [(1, false), (2, false), (1, true), (2, true)] {
         concurrent(&mut connection, first, conflicting).await;
     }
+    concurrent_scope(&mut connection, true).await;
+    concurrent_scope(&mut connection, false).await;
     passed("both-orders-identical-and-conflicting-concurrency");
     model(&mut connection).await;
     serving(&mut connection).await;

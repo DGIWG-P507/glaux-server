@@ -10,7 +10,7 @@ use crate::revisions::{
 use crate::storage::{StorageError, SystemRecord, check_schema, insert_system};
 use glaux_domain::identity::{GenerationError, IdentityError, LocalId};
 use glaux_domain::temporal::ExactInstant;
-use sqlx::{Connection, PgConnection};
+use sqlx::{Connection, PgConnection, Row};
 use std::{fmt, str::FromStr};
 
 macro_rules! transaction_id {
@@ -94,30 +94,148 @@ pub struct RetryKey {
     pub retention_seconds: u32,
 }
 
-/// Test-first API skeleton: receipt persistence is not implemented yet.
+/// Optional terminal-creation retry. Callers reauthenticate before every call.
+/// The local trusted callback authorizes the selected original outcome on replay,
+/// or the candidate on admission. It must not perform external I/O or disclose
+/// its argument to an untrusted caller. HTTP policy wiring remains separate.
 pub async fn create_system_with_retry<F>(
     connection: &mut PgConnection,
     input: &CreateSystem,
     retry: Option<&RetryKey>,
-    mut authorize: F,
+    authorize: F,
 ) -> Result<WriteReceipt, StorageError>
 where
     F: FnMut(&WriteReceipt) -> bool,
 {
-    if retry.is_some_and(|retry| !valid_metadata(&retry.key) || retry.retention_seconds == 0) {
+    create_system_inner(connection, input, retry, authorize).await
+}
+
+// Versioned, unambiguous length framing; no serializers or concatenated fields.
+// Alias order is not persisted. Duplicate aliases remain invalid, not deduped.
+// Semantic time uses its exact source lexeme; this conservative initial contract
+// does not promise JSON, URI, media-type or time-spelling equivalence.
+fn retry_content(input: &CreateSystem) -> Result<Vec<u8>, StorageError> {
+    fn field(output: &mut Vec<u8>, value: &[u8]) {
+        output.extend_from_slice(&(value.len() as u64).to_be_bytes());
+        output.extend_from_slice(value);
+    }
+    let mut aliases: Vec<_> = input.system.sources.iter()
+        .map(|source| (source.authority().as_str(), source.identifier().as_str()))
+        .collect();
+    aliases.sort_unstable();
+    if aliases.windows(2).any(|pair| pair[0] == pair[1]) {
         return Err(StorageError::InvalidInput);
     }
-    let candidate = WriteReceipt {
-        system_id: input.system.id,
-        revision_id: input.revision.id,
-        artifact_id: input.artifact.id,
-        audit_id: input.audit_id,
-        event_id: input.event_id,
-    };
-    if !authorize(&candidate) {
-        return Err(StorageError::Denied);
+    let mut content = b"glaux.system-create-intent.v1".to_vec();
+    field(&mut content, input.system.uid.as_str().as_bytes());
+    field(&mut content, input.system.label.as_bytes());
+    field(&mut content, input.system.parent.map(|id| id.to_string()).unwrap_or_default().as_bytes());
+    content.extend_from_slice(&(aliases.len() as u64).to_be_bytes());
+    for (authority, identifier) in aliases {
+        field(&mut content, authority.as_bytes());
+        field(&mut content, identifier.as_bytes());
     }
-    create_system(connection, input).await
+    field(&mut content, input.revision.semantic_time.as_ref()
+        .map(|time| time.source_lexeme()).unwrap_or("").as_bytes());
+    field(&mut content, input.artifact.media_type.as_bytes());
+    field(&mut content, &input.artifact.bytes);
+    Ok(content)
+}
+
+struct PreparedRetry<'a> {
+    actor: &'a str,
+    source: Option<&'a str>,
+    target: String,
+    key: &'a RetryKey,
+    digest: Vec<u8>,
+}
+
+impl PreparedRetry<'_> {
+    async fn replay<F>(
+        &self,
+        connection: &mut PgConnection,
+        authorize: &mut F,
+    ) -> Result<Option<WriteReceipt>, StorageError>
+    where
+        F: FnMut(&WriteReceipt) -> bool,
+    {
+        // Acquire before any resource/parent lock. Hash collisions only serialize;
+        // exact fields below, not the hash, decide identity. Transaction release
+        // handles success, error and disconnect; no persistent placeholder claim.
+        sqlx::query(
+            "SELECT pg_advisory_xact_lock(hashtextextended(
+             'glaux.system-create-retry.v1' ||
+             jsonb_build_array($1::text,$2::text,'system.create',$3::text,$4::text)::text, 0))",
+        )
+        .bind(self.actor).bind(self.source).bind(&self.target).bind(&self.key.key)
+        .execute(&mut *connection).await?;
+        // A separate READ COMMITTED statement sees a predecessor after waiting.
+        // Database wall clock is evaluated here, not before acquiring the lock.
+        let row = sqlx::query(
+            "SELECT digest, system_id::text, revision_id::text, artifact_id::text,
+                    audit_id::text, event_id::text
+             FROM public.system_create_retry
+             WHERE actor=$1 AND source IS NOT DISTINCT FROM $2
+               AND operation='system.create' AND target=$3 AND key=$4
+               AND expires_at > clock_timestamp()",
+        )
+        .bind(self.actor).bind(self.source).bind(&self.target).bind(&self.key.key)
+        .fetch_optional(&mut *connection).await?;
+        let Some(row) = row else { return Ok(None); };
+        let receipt = WriteReceipt {
+            system_id: row.try_get::<String,_>("system_id")?.parse().map_err(|_| StorageError::InvalidStoredValue)?,
+            revision_id: row.try_get::<String,_>("revision_id")?.parse().map_err(|_| StorageError::InvalidStoredValue)?,
+            artifact_id: row.try_get::<String,_>("artifact_id")?.parse().map_err(|_| StorageError::InvalidStoredValue)?,
+            audit_id: row.try_get::<String,_>("audit_id")?.parse().map_err(|_| StorageError::InvalidStoredValue)?,
+            event_id: row.try_get::<String,_>("event_id")?.parse().map_err(|_| StorageError::InvalidStoredValue)?,
+        };
+        // Revoke disclosure before distinguishing equal from conflicting intent.
+        if !authorize(&receipt) {
+            return Err(StorageError::Denied);
+        }
+        let stored_digest: Vec<u8> = row.try_get("digest")?;
+        let digest = &self.digest;
+        if stored_digest != *digest {
+            return Err(StorageError::Conflict);
+        }
+        Ok(Some(receipt))
+    }
+
+    async fn store(
+        &self,
+        connection: &mut PgConnection,
+        receipt: &WriteReceipt,
+    ) -> Result<(), StorageError> {
+        // No automatic purge: only this expired scoped receipt may be replaced.
+        // Original resources, revisions, audit and outgoing evidence remain.
+        // The retention clock sample is taken once at receipt recording.
+        let recorded: Option<bool> = sqlx::query_scalar(
+            "WITH sampled AS MATERIALIZED (SELECT clock_timestamp() AS now)
+             INSERT INTO public.system_create_retry
+             (actor,source,operation,target,key,digest,system_id,revision_id,
+              artifact_id,audit_id,event_id,retained_at,expires_at)
+             SELECT $1,$2,'system.create',$3,$4,$5,$6::text::uuid,$7::text::uuid,
+                    $8::text::uuid,$9::text::uuid,$10::text::uuid,now,
+                    now + make_interval(secs => $11::double precision) FROM sampled
+             ON CONFLICT ON CONSTRAINT system_create_retry_scope DO UPDATE
+             SET digest=EXCLUDED.digest,system_id=EXCLUDED.system_id,
+                 revision_id=EXCLUDED.revision_id,artifact_id=EXCLUDED.artifact_id,
+                 audit_id=EXCLUDED.audit_id,event_id=EXCLUDED.event_id,
+                 retained_at=EXCLUDED.retained_at,expires_at=EXCLUDED.expires_at
+             WHERE system_create_retry.expires_at <= EXCLUDED.retained_at
+             RETURNING true",
+        )
+        .bind(self.actor).bind(self.source).bind(&self.target).bind(&self.key.key)
+        .bind(&self.digest).bind(receipt.system_id.to_string())
+        .bind(receipt.revision_id.to_string()).bind(receipt.artifact_id.to_string())
+        .bind(receipt.audit_id.to_string()).bind(receipt.event_id.to_string())
+        .bind(f64::from(self.key.retention_seconds))
+        .fetch_optional(connection).await?;
+        if recorded != Some(true) {
+            return Err(StorageError::Conflict);
+        }
+        Ok(())
+    }
 }
 
 pub struct DeniedSystemCreate {
@@ -217,6 +335,18 @@ pub async fn create_system(
     connection: &mut PgConnection,
     input: &CreateSystem,
 ) -> Result<WriteReceipt, StorageError> {
+    create_system_inner(connection, input, None, |_| true).await
+}
+
+async fn create_system_inner<F>(
+    connection: &mut PgConnection,
+    input: &CreateSystem,
+    retry: Option<&RetryKey>,
+    mut authorize: F,
+) -> Result<WriteReceipt, StorageError>
+where
+    F: FnMut(&WriteReceipt) -> bool,
+{
     if connection.is_in_transaction()
         || input.system.id != input.revision.system_id
         || input.artifact.id != input.revision.artifact_id
@@ -225,12 +355,41 @@ pub async fn create_system(
         || input.audit.actor.is_none()
         || input.system.label.len() > 4096
         || input.system.sources.len() > 64
+        || retry.is_some_and(|retry| !valid_metadata(&retry.key) || retry.retention_seconds == 0)
     {
         return Err(StorageError::InvalidInput);
     }
     check_schema(connection).await?;
-    let mut transaction = connection.begin_with("BEGIN").await?;
+    let content = retry.map(|_| retry_content(input)).transpose()?;
+    let prepared = if let (Some(key), Some(content)) = (retry, content) {
+        Some(PreparedRetry {
+            actor: input.audit.actor.as_deref().ok_or(StorageError::InvalidInput)?,
+            source: input.audit.source.as_deref(),
+            target: input.system.parent.map(|id| id.to_string()).unwrap_or_default(),
+            key,
+            digest: sqlx::query_scalar("SELECT sha256($1::bytea)")
+                .bind(content).fetch_one(&mut *connection).await?,
+        })
+    } else {
+        None
+    };
+    let receipt = WriteReceipt {
+        system_id: input.system.id,
+        revision_id: input.revision.id,
+        artifact_id: input.artifact.id,
+        audit_id: input.audit_id,
+        event_id: input.event_id,
+    };
+    let mut transaction = connection.begin_with("BEGIN ISOLATION LEVEL READ COMMITTED").await?;
     let result = async {
+        if let Some(prepared) = &prepared
+            && let Some(recorded) = prepared.replay(&mut transaction, &mut authorize).await?
+        {
+            return Ok(recorded);
+        }
+        if !authorize(&receipt) {
+            return Err(StorageError::Denied);
+        }
         insert_system(&mut transaction, &input.system).await?;
         insert_artifact(&mut transaction, &input.artifact).await?;
         insert_revision(&mut transaction, &input.revision).await?;
@@ -255,19 +414,16 @@ pub async fn create_system(
         .bind(input.artifact.id.to_string())
         .execute(&mut *transaction)
         .await?;
-        Ok::<_, StorageError>(())
+        if let Some(prepared) = &prepared {
+            prepared.store(&mut transaction, &receipt).await?;
+        }
+        Ok::<_, StorageError>(receipt)
     }
     .await;
     match result {
-        Ok(()) => {
+        Ok(receipt) => {
             transaction.commit().await?;
-            Ok(WriteReceipt {
-                system_id: input.system.id,
-                revision_id: input.revision.id,
-                artifact_id: input.artifact.id,
-                audit_id: input.audit_id,
-                event_id: input.event_id,
-            })
+            Ok(receipt)
         }
         Err(error) => {
             transaction.rollback().await?;
