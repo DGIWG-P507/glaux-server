@@ -181,6 +181,26 @@ fn check(fixture: &mut Fixture, input: &[u8], secret: Option<&str>, accepted: bo
 
 fn configuration(fixture: &mut Fixture) {
     check(fixture, ordinary().as_bytes(), Some(APP), true);
+    let base_http = ordinary();
+    for (http, accepted) in [
+        (r#"{"public_api_root":"https://example.test/prefix"}"#, true),
+        (r#"{"public_api_root":"https://user@example.test"}"#, false),
+        (
+            r#"{"public_api_root":"https://example.test/../escape"}"#,
+            false,
+        ),
+        (
+            r#"{"limits":{"body_bytes":0,"header_bytes":2048,"uri_bytes":1024,"timeout_ms":500}}"#,
+            false,
+        ),
+        (
+            r#"{"limits":{"body_bytes":256,"header_bytes":2048,"uri_bytes":1024,"timeout_ms":500,"unknown":true}}"#,
+            false,
+        ),
+    ] {
+        let input = format!("{},\"http\":{http}}}", &base_http[..base_http.len() - 1]);
+        check(fixture, input.as_bytes(), Some(APP), accepted);
+    }
     check(
         fixture,
         config(
@@ -617,7 +637,12 @@ async fn proof() {
     execute(&mut connection, "SET statement_timeout=5000").await;
 
     execute(&mut connection, "CREATE ROLE glaux_health_app LOGIN").await;
-    let path = fixture.file(ordinary().as_bytes());
+    let base_http = ordinary();
+    let http_document = format!(
+        "{},\"http\":{{\"public_api_root\":\"https://example.test/prefix\",\"limits\":{{\"body_bytes\":65536,\"header_bytes\":16384,\"uri_bytes\":128,\"timeout_ms\":15000}}}}}}",
+        &base_http[..base_http.len() - 1],
+    );
+    let path = fixture.file(http_document.as_bytes());
     let mut missing = Process::spawn(&mut fixture, &["serve", path.to_str().unwrap()], Some(APP));
     assert_eq!(
         missing.wait().code(),
@@ -697,12 +722,29 @@ async fn proof() {
         "compatible database not ready",
     );
     for route in ["/", "/systems", "/conformance", "/metrics"] {
+        let response = request(route);
+        assert_eq!(response.status, 404, "undeclared capability route exposed");
+        let problem: serde_json::Value = serde_json::from_str(&response.body).unwrap();
         assert_eq!(
-            request(route).status,
-            404,
-            "undeclared capability route exposed"
+            problem.get("status").and_then(serde_json::Value::as_u64),
+            Some(404)
+        );
+        assert_eq!(
+            problem.get("type").and_then(serde_json::Value::as_str),
+            Some("urn:glaux:problem:not-found")
+        );
+        assert!(
+            response
+                .headers
+                .iter()
+                .any(|(name, value)| name == "content-type" && value == "application/problem+json")
         );
     }
+    assert_eq!(
+        request(&format!("/{}", "a".repeat(128))).status,
+        414,
+        "configured HTTP URI limit not applied to actual binary"
+    );
     sentinel(&mut connection).await;
     assert_eq!(migrations(&mut connection).await, expected_migrations);
     println!("Runtime health group passed: actual-listener-minimal-health-only");

@@ -1,4 +1,5 @@
 //! Bounded, explicit startup configuration. Never format input or resolved secrets.
+use crate::http_boundary::{HttpBoundary, Limits};
 use serde::Deserialize;
 use sqlx::ConnectOptions;
 use sqlx::postgres::{PgConnectOptions, PgSslMode};
@@ -32,6 +33,15 @@ struct Document {
     authentication: Authentication,
     database: SecretReference,
     health_timeout_ms: u64,
+    http: Option<HttpDocument>,
+}
+
+#[derive(Default, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct HttpDocument {
+    public_api_root: Option<String>,
+    #[serde(default)]
+    limits: Limits,
 }
 
 /// Validated configuration, intentionally not Debug/Serialize and not constructible
@@ -41,6 +51,7 @@ pub struct Configuration {
     authentication: Authentication,
     database: PgConnectOptions,
     timeout: Duration,
+    http: HttpBoundary,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -99,6 +110,9 @@ impl Configuration {
             return Err(ConfigError::Invalid);
         }
         let document: Document = serde_json::from_slice(bytes).map_err(|_| ConfigError::Invalid)?;
+        let http = document.http.unwrap_or_default();
+        let http = HttpBoundary::new(http.public_api_root.as_deref(), http.limits)
+            .map_err(|_| ConfigError::Invalid)?;
         if document.listener.port() == 0 || !(100..=10_000).contains(&document.health_timeout_ms) {
             return Err(ConfigError::Invalid);
         }
@@ -148,6 +162,7 @@ impl Configuration {
             authentication: document.authentication,
             database: options,
             timeout: Duration::from_millis(document.health_timeout_ms),
+            http,
         })
     }
 
@@ -156,6 +171,9 @@ impl Configuration {
     }
     pub fn authentication(&self) -> Authentication {
         self.authentication
+    }
+    pub fn http_boundary(&self) -> HttpBoundary {
+        self.http.clone()
     }
     pub(crate) fn database(&self) -> PgConnectOptions {
         self.database.clone()
@@ -243,5 +261,43 @@ mod tests {
         ));
         assert_eq!(config.listener(), "127.0.0.1:8080".parse().unwrap());
         assert_eq!(config.timeout(), Duration::from_millis(500));
+    }
+
+    #[test]
+    fn runtime_http_config_is_explicit_strict_and_bounded() {
+        let valid = document("127.0.0.1:8080", "disabled");
+        let with_http = |http: &str| format!("{},\"http\":{http}}}", &valid[..valid.len() - 1]);
+        let config = parse(&with_http(
+            r#"{"public_api_root":"https://example.test/prefix"}"#,
+        ))
+        .unwrap();
+        assert_eq!(
+            config
+                .http_boundary()
+                .link(&["systems", "id"], &[])
+                .unwrap(),
+            "https://example.test/prefix/systems/id"
+        );
+        assert!(
+            parse(&valid)
+                .unwrap()
+                .http_boundary()
+                .link(&["systems"], &[])
+                .is_err()
+        );
+        for http in [
+            r#"{"public_api_root":"//attacker.test"}"#,
+            r#"{"public_api_root":"https://example.test/prefix?secret=canary"}"#,
+            r#"{"public_api_root":"https://example.test","unknown":true}"#,
+            r#"{"limits":{"body_bytes":256}}"#,
+            r#"{"limits":{"body_bytes":0,"header_bytes":2048,"uri_bytes":1024,"timeout_ms":500}}"#,
+            r#"{"limits":{"body_bytes":256,"header_bytes":2048,"uri_bytes":1024,"timeout_ms":500,"unknown":true}}"#,
+        ] {
+            assert!(
+                parse(&with_http(http)).is_err(),
+                "invalid HTTP configuration accepted"
+            );
+        }
+        assert!(parse(&with_http(r#"{"limits":{"body_bytes":256,"header_bytes":2048,"uri_bytes":1024,"timeout_ms":500}}"#)).is_ok());
     }
 }

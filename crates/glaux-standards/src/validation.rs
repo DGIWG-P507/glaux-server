@@ -81,7 +81,8 @@ struct Frame {
 }
 
 /// Parse only after raw-byte and lexical-depth checks; reject duplicate keys.
-pub(crate) fn parse(input: &[u8]) -> Result<Value, Failure> {
+/// This shared syntax boundary does not perform structural or semantic validation.
+pub fn parse(input: &[u8]) -> Result<Value, Failure> {
     if input.len() > MAX_BYTES {
         return Err(Failure::Size);
     }
