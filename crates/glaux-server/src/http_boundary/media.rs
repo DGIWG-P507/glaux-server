@@ -115,10 +115,16 @@ fn combined(headers: &HeaderMap, name: HeaderName) -> Result<Option<Vec<u8>>, Pr
 }
 
 fn trim_ows(mut value: &[u8]) -> &[u8] {
-    while value.first().is_some_and(|byte| matches!(byte, b' ' | b'\t')) {
+    while value
+        .first()
+        .is_some_and(|byte| matches!(byte, b' ' | b'\t'))
+    {
         value = &value[1..];
     }
-    while value.last().is_some_and(|byte| matches!(byte, b' ' | b'\t')) {
+    while value
+        .last()
+        .is_some_and(|byte| matches!(byte, b' ' | b'\t'))
+    {
         value = &value[..value.len() - 1];
     }
     value
@@ -154,11 +160,7 @@ fn list(input: &[u8]) -> Result<Vec<&[u8]>, ()> {
     Ok(parts)
 }
 
-fn push_part<'a>(
-    input: &'a [u8],
-    parts: &mut Vec<&'a [u8]>,
-    empty: &mut usize,
-) -> Result<(), ()> {
+fn push_part<'a>(input: &'a [u8], parts: &mut Vec<&'a [u8]>, empty: &mut usize) -> Result<(), ()> {
     let input = trim_ows(input);
     if input.is_empty() {
         *empty += 1;
@@ -178,8 +180,20 @@ fn token_byte(byte: u8) -> bool {
     byte.is_ascii_alphanumeric()
         || matches!(
             byte,
-            b'!' | b'#' | b'$' | b'%' | b'&' | b'\'' | b'*' | b'+' | b'-' | b'.'
-                | b'^' | b'_' | b'`' | b'|' | b'~'
+            b'!' | b'#'
+                | b'$'
+                | b'%'
+                | b'&'
+                | b'\''
+                | b'*'
+                | b'+'
+                | b'-'
+                | b'.'
+                | b'^'
+                | b'_'
+                | b'`'
+                | b'|'
+                | b'~'
         )
 }
 
@@ -257,9 +271,7 @@ fn parse_media(input: &[u8], range: bool) -> Result<Media, ()> {
     let kind = cursor.token()?.to_ascii_lowercase();
     cursor.take(b'/')?;
     let subtype = cursor.token()?.to_ascii_lowercase();
-    if (kind == b"*" && subtype != b"*")
-        || (!range && (kind == b"*" || subtype == b"*"))
-    {
+    if (kind == b"*" && subtype != b"*") || (!range && (kind == b"*" || subtype == b"*")) {
         return Err(());
     }
     let mut parameters: Vec<(Vec<u8>, Vec<u8>)> = Vec::new();
@@ -383,8 +395,14 @@ mod tests {
     #[test]
     fn media_quality_uses_exact_grammar_and_specific_exclusions() {
         for (source, expected) in [
-            ("0", 0), ("0.", 0), ("0.001", 1), ("0.1", 100),
-            ("0.12", 120), ("0.999", 999), ("1", 1000), ("1.000", 1000),
+            ("0", 0),
+            ("0.", 0),
+            ("0.001", 1),
+            ("0.1", 100),
+            ("0.12", 120),
+            ("0.999", 999),
+            ("1", 1000),
+            ("1.000", 1000),
         ] {
             assert_eq!(parse_quality(source.as_bytes()), Ok(expected));
         }
@@ -393,13 +411,42 @@ mod tests {
         }
         let offered = ["application/json", "application/geo+json"];
         assert_eq!(negotiate(&HeaderMap::new(), &offered).unwrap(), 0);
-        assert_eq!(negotiate(&accept("application/json;q=0, */*;q=1"), &offered).unwrap(), 1);
-        assert_eq!(negotiate(&accept("application/json;q=0.1, application/*;q=0.9"), &offered).unwrap(), 1);
-        assert_eq!(negotiate(&accept("application/json;q=0, application/json;q=1"), &offered).unwrap(), 0);
-        assert_eq!(status(negotiate(&accept(""), &offered)), StatusCode::NOT_ACCEPTABLE);
-        assert_eq!(status(negotiate(&accept("*/*;q=0"), &offered)), StatusCode::NOT_ACCEPTABLE);
-        assert_eq!(status(negotiate(&HeaderMap::new(), &[])), StatusCode::INTERNAL_SERVER_ERROR);
-        assert_eq!(status(negotiate(&HeaderMap::new(), &["application/"])), StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(
+            negotiate(&accept("application/json;q=0, */*;q=1"), &offered).unwrap(),
+            1
+        );
+        assert_eq!(
+            negotiate(
+                &accept("application/json;q=0.1, application/*;q=0.9"),
+                &offered
+            )
+            .unwrap(),
+            1
+        );
+        assert_eq!(
+            negotiate(
+                &accept("application/json;q=0, application/json;q=1"),
+                &offered
+            )
+            .unwrap(),
+            0
+        );
+        assert_eq!(
+            status(negotiate(&accept(""), &offered)),
+            StatusCode::NOT_ACCEPTABLE
+        );
+        assert_eq!(
+            status(negotiate(&accept("*/*;q=0"), &offered)),
+            StatusCode::NOT_ACCEPTABLE
+        );
+        assert_eq!(
+            status(negotiate(&HeaderMap::new(), &[])),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+        assert_eq!(
+            status(negotiate(&HeaderMap::new(), &["application/"])),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
     }
 
     #[test]
@@ -409,22 +456,47 @@ mod tests {
             "application/json;profile=plain;charset=utf-8",
         ];
         for (source, expected) in [
-            ("APPLICATION/JSON;PROFILE=\"a;b,c\\\"d\";CHARSET=UTF-8;q=1", 0),
+            (
+                "APPLICATION/JSON;PROFILE=\"a;b,c\\\"d\";CHARSET=UTF-8;q=1",
+                0,
+            ),
             ("application/json;q=1;profile=plain;charset=UtF-8", 1),
             ("application/json;profile=\"plain\"", 1),
-            ("application/json;profile=\"a;b,c\\\"d\";q=0, application/json", 1),
+            (
+                "application/json;profile=\"a;b,c\\\"d\";q=0, application/json",
+                1,
+            ),
             ("application/json;q=0, application/json;profile=plain", 1),
             (",,application/json;;;profile=plain;,", 1),
         ] {
-            assert_eq!(negotiate(&accept(source), &offered).unwrap(), expected, "{source}");
+            assert_eq!(
+                negotiate(&accept(source), &offered).unwrap(),
+                expected,
+                "{source}"
+            );
         }
-        assert_eq!(status(negotiate(&accept("application/json;profile=Plain"), &offered)), StatusCode::NOT_ACCEPTABLE);
+        assert_eq!(
+            status(negotiate(
+                &accept("application/json;profile=Plain"),
+                &offered
+            )),
+            StatusCode::NOT_ACCEPTABLE
+        );
         for source in [
-            "application/json;profile=\"unterminated", "application/json;q=\"1\"",
-            "application/json;q=1;Q=0", "application/json;profile=plain;PROFILE=plain",
-            "application/json;q =1", "application/json;q= 1", "*/json", "application /json",
+            "application/json;profile=\"unterminated",
+            "application/json;q=\"1\"",
+            "application/json;q=1;Q=0",
+            "application/json;profile=plain;PROFILE=plain",
+            "application/json;q =1",
+            "application/json;q= 1",
+            "*/json",
+            "application /json",
         ] {
-            assert_eq!(status(negotiate(&accept(source), &offered)), StatusCode::BAD_REQUEST, "{source}");
+            assert_eq!(
+                status(negotiate(&accept(source), &offered)),
+                StatusCode::BAD_REQUEST,
+                "{source}"
+            );
         }
     }
 
@@ -432,42 +504,94 @@ mod tests {
     fn media_lists_and_parameters_enforce_parser_bounds() {
         let offered = ["application/json", "application/geo+json"];
         let mut headers = accept("application/json;q=0");
-        headers.append(header::ACCEPT, HeaderValue::from_static("application/geo+json"));
+        headers.append(
+            header::ACCEPT,
+            HeaderValue::from_static("application/geo+json"),
+        );
         assert_eq!(negotiate(&headers, &offered).unwrap(), 1);
         let maximum = vec!["application/json"; MAX_RANGES].join(",");
         assert_eq!(negotiate(&accept(&maximum), &offered).unwrap(), 0);
-        assert_eq!(status(negotiate(&accept(&format!("{maximum},application/json")), &offered)), StatusCode::BAD_REQUEST);
-        let parameters = (0..MAX_PARAMETERS).map(|index| format!(";p{index}=x")).collect::<String>();
+        assert_eq!(
+            status(negotiate(
+                &accept(&format!("{maximum},application/json")),
+                &offered
+            )),
+            StatusCode::BAD_REQUEST
+        );
+        let parameters = (0..MAX_PARAMETERS)
+            .map(|index| format!(";p{index}=x"))
+            .collect::<String>();
         assert!(parse_media(format!("application/json{parameters}").as_bytes(), true).is_ok());
-        assert!(parse_media(format!("application/json{parameters};overflow=x").as_bytes(), true).is_err());
+        assert!(
+            parse_media(
+                format!("application/json{parameters};overflow=x").as_bytes(),
+                true
+            )
+            .is_err()
+        );
         let oversized = format!("application/json;profile=\"{}\"", "x".repeat(MAX_BYTES));
-        assert_eq!(status(negotiate(&accept(&oversized), &offered)), StatusCode::BAD_REQUEST);
-        assert_eq!(status(negotiate(&accept(&",".repeat(MAX_EMPTY_ELEMENTS)), &offered)), StatusCode::BAD_REQUEST);
+        assert_eq!(
+            status(negotiate(&accept(&oversized), &offered)),
+            StatusCode::BAD_REQUEST
+        );
+        assert_eq!(
+            status(negotiate(
+                &accept(&",".repeat(MAX_EMPTY_ELEMENTS)),
+                &offered
+            )),
+            StatusCode::BAD_REQUEST
+        );
     }
 
     #[test]
     fn media_json_and_coding_do_not_silently_relabel_input() {
         let mut headers = HeaderMap::new();
-        assert_eq!(status(check_json_media(&headers)), StatusCode::UNSUPPORTED_MEDIA_TYPE);
-        for value in ["application/json", "APPLICATION/JSON;charset=utf-8", "application/json;profile=\"ignored\"", "application/json;;"] {
+        assert_eq!(
+            status(check_json_media(&headers)),
+            StatusCode::UNSUPPORTED_MEDIA_TYPE
+        );
+        for value in [
+            "application/json",
+            "APPLICATION/JSON;charset=utf-8",
+            "application/json;profile=\"ignored\"",
+            "application/json;;",
+        ] {
             headers.insert(header::CONTENT_TYPE, HeaderValue::from_str(value).unwrap());
             assert!(check_json_media(&headers).is_ok());
         }
-        headers.append(header::CONTENT_TYPE, HeaderValue::from_static("application/json"));
+        headers.append(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json"),
+        );
         assert_eq!(status(check_json_media(&headers)), StatusCode::BAD_REQUEST);
         headers.remove(header::CONTENT_TYPE);
-        headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("application/sml+json"));
-        assert_eq!(status(check_json_media(&headers)), StatusCode::UNSUPPORTED_MEDIA_TYPE);
+        headers.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("application/sml+json"),
+        );
+        assert_eq!(
+            status(check_json_media(&headers)),
+            StatusCode::UNSUPPORTED_MEDIA_TYPE
+        );
         assert!(check_coding(&headers).is_ok());
         for value in ["", "identity", "IDENTITY, ,identity,"] {
-            headers.insert(header::CONTENT_ENCODING, HeaderValue::from_str(value).unwrap());
+            headers.insert(
+                header::CONTENT_ENCODING,
+                HeaderValue::from_str(value).unwrap(),
+            );
             assert!(check_coding(&headers).is_ok());
         }
         headers.append(header::CONTENT_ENCODING, HeaderValue::from_static("gzip"));
         let unsupported = check_coding(&headers).unwrap_err().into_response();
         assert_eq!(unsupported.status(), StatusCode::UNSUPPORTED_MEDIA_TYPE);
-        assert_eq!(unsupported.headers().get(header::ACCEPT_ENCODING).unwrap(), "identity");
-        headers.insert(header::CONTENT_ENCODING, HeaderValue::from_static("identity;foo=bar"));
+        assert_eq!(
+            unsupported.headers().get(header::ACCEPT_ENCODING).unwrap(),
+            "identity"
+        );
+        headers.insert(
+            header::CONTENT_ENCODING,
+            HeaderValue::from_static("identity;foo=bar"),
+        );
         assert_eq!(status(check_coding(&headers)), StatusCode::BAD_REQUEST);
     }
 }

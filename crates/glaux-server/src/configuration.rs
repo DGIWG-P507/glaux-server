@@ -267,10 +267,24 @@ mod tests {
     fn runtime_http_config_is_explicit_strict_and_bounded() {
         let valid = document("127.0.0.1:8080", "disabled");
         let with_http = |http: &str| format!("{},\"http\":{http}}}", &valid[..valid.len() - 1]);
-        let config = parse(&with_http(r#"{"public_api_root":"https://example.test/prefix"}"#)).unwrap();
-        assert_eq!(config.http_boundary().link(&["systems", "id"], &[]).unwrap(),
-            "https://example.test/prefix/systems/id");
-        assert!(parse(&valid).unwrap().http_boundary().link(&["systems"], &[]).is_err());
+        let config = parse(&with_http(
+            r#"{"public_api_root":"https://example.test/prefix"}"#,
+        ))
+        .unwrap();
+        assert_eq!(
+            config
+                .http_boundary()
+                .link(&["systems", "id"], &[])
+                .unwrap(),
+            "https://example.test/prefix/systems/id"
+        );
+        assert!(
+            parse(&valid)
+                .unwrap()
+                .http_boundary()
+                .link(&["systems"], &[])
+                .is_err()
+        );
         for http in [
             r#"{"public_api_root":"//attacker.test"}"#,
             r#"{"public_api_root":"https://example.test/prefix?secret=canary"}"#,
@@ -279,7 +293,10 @@ mod tests {
             r#"{"limits":{"body_bytes":0,"header_bytes":2048,"uri_bytes":1024,"timeout_ms":500}}"#,
             r#"{"limits":{"body_bytes":256,"header_bytes":2048,"uri_bytes":1024,"timeout_ms":500,"unknown":true}}"#,
         ] {
-            assert!(parse(&with_http(http)).is_err(), "invalid HTTP configuration accepted");
+            assert!(
+                parse(&with_http(http)).is_err(),
+                "invalid HTTP configuration accepted"
+            );
         }
         assert!(parse(&with_http(r#"{"limits":{"body_bytes":256,"header_bytes":2048,"uri_bytes":1024,"timeout_ms":500}}"#)).is_ok());
     }

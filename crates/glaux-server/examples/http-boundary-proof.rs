@@ -41,7 +41,10 @@ async fn representation(headers: HeaderMap) -> Result<Response, Problem> {
 
 async fn parameterized(headers: HeaderMap) -> Result<Response, Problem> {
     let selected = negotiate(&headers, &PARAMETERIZED)?;
-    json_response(&json!({"fixture":"wire", "value":17}), PARAMETERIZED[selected])
+    json_response(
+        &json!({"fixture":"wire", "value":17}),
+        PARAMETERIZED[selected],
+    )
 }
 
 async fn input(
@@ -409,14 +412,35 @@ fn media(address: SocketAddr) {
         );
     }
     for (accept, expected) in [
-        ("application/json;profile=\"a;b\\\"c\";charset=UTF-8;q=0.8, application/json;profile=plain;q=0.2", PARAMETERIZED[0]),
-        ("application/json;profile=plain;charset=UtF-8;q=1", PARAMETERIZED[1]),
-        ("application/json;q=1;charset=UTF-8;profile=plain", PARAMETERIZED[1]),
-        ("application/json;profile=\"a;b\\\"c\";q=0, application/json;q=1", PARAMETERIZED[1]),
-        ("application/json;q=0, application/json;profile=\"a;b\\\"c\";q=1", PARAMETERIZED[0]),
+        (
+            "application/json;profile=\"a;b\\\"c\";charset=UTF-8;q=0.8, application/json;profile=plain;q=0.2",
+            PARAMETERIZED[0],
+        ),
+        (
+            "application/json;profile=plain;charset=UtF-8;q=1",
+            PARAMETERIZED[1],
+        ),
+        (
+            "application/json;q=1;charset=UTF-8;profile=plain",
+            PARAMETERIZED[1],
+        ),
+        (
+            "application/json;profile=\"a;b\\\"c\";q=0, application/json;q=1",
+            PARAMETERIZED[1],
+        ),
+        (
+            "application/json;q=0, application/json;profile=\"a;b\\\"c\";q=1",
+            PARAMETERIZED[0],
+        ),
     ] {
         selected(
-            &request(address, "GET", "/parameterized", &format!("Accept: {accept}\r\n"), ""),
+            &request(
+                address,
+                "GET",
+                "/parameterized",
+                &format!("Accept: {accept}\r\n"),
+                "",
+            ),
             expected,
         );
     }
@@ -476,10 +500,23 @@ fn media(address: SocketAddr) {
         }
     }
     problem(
-        &request(address, "POST", "/json", "Content-Type: application/json\r\nContent-Type: text/plain\r\n", value),
+        &request(
+            address,
+            "POST",
+            "/json",
+            "Content-Type: application/json\r\nContent-Type: text/plain\r\n",
+            value,
+        ),
         400,
     );
-    for malformed in ["", "{", "{\"x\":}", "{} trailing", "[1,]", "{\"x\":1,\"x\":2}"] {
+    for malformed in [
+        "",
+        "{",
+        "{\"x\":}",
+        "{} trailing",
+        "[1,]",
+        "{\"x\":1,\"x\":2}",
+    ] {
         problem(
             &request(
                 address,
@@ -492,11 +529,21 @@ fn media(address: SocketAddr) {
         );
     }
     let private_marker = r#"{"$serde_json::private::Number":"1"}"#;
-    let preserved = request(address, "POST", "/json", "Content-Type: application/json\r\n", private_marker);
+    let preserved = request(
+        address,
+        "POST",
+        "/json",
+        "Content-Type: application/json\r\n",
+        private_marker,
+    );
     assert_eq!(preserved.status, 200);
     // Even a generic arbitrary-precision Value decoder can coerce this object.
     // Inspect the independently specified raw bytes before ANY such decoder.
-    assert_eq!(preserved.body, private_marker.as_bytes(), "wire object was coerced into a number");
+    assert_eq!(
+        preserved.body,
+        private_marker.as_bytes(),
+        "wire object was coerced into a number"
+    );
     println!("HTTP boundary group passed: media-and-json-contracts");
 }
 
