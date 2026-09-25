@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, validation, retry-safe System writes and shared HTTP foundation — 25 September 2026 UTC.**
+**Initial build, validation, System writes, HTTP and caller-authentication foundations — 25 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
@@ -88,14 +88,21 @@ an internal application capability, not yet a public HTTP extension.
 `check-config`, explicit `serve`, and separate `/health/live` and `/health/ready`
 routes. Startup rejects unsafe configuration and incompatible storage without
 migrating or resetting it. Health diagnostics omit secrets; database loss makes
-readiness fail while the process can still report liveness. Authentication,
-discovery and CSAPI resource endpoints remain later tasks.
+readiness fail while the process can still report liveness. Discovery and CSAPI
+resource endpoints remain later tasks.
 
 The [shared HTTP boundary](docs/http-boundary.md) adds bounded requests, safe
 problem responses, media-preference selection and links built from an explicitly
 configured public root. Forged host/forwarding headers cannot redirect those
 links. Independent real-listener fixtures check wire fields and deliberately
 wrong behavior; their synthetic routes are not exposed by the server.
+
+[Caller authentication](docs/authentication.md) verifies signed access tokens
+against configured public keys, issuer, audience, time and scope. Explicit
+development identities are limited to loopback testing and cannot be selected by
+request headers. Independent signed-token and real-listener checks reject forged,
+expired and wrong-service credentials. Key refresh and resource permissions remain
+later work; the production listener still exposes only minimal public health.
 
 ## Planned capabilities
 

@@ -12,11 +12,13 @@ publish = false
 
 [workspace.dependencies]
 axum = { version = "=0.8.8", default-features = false, features = ["http1", "tokio"] }
+base64 = { version = "=0.22.1", default-features = false, features = ["std"] }
 fluent-uri = { version = "=0.4.1", default-features = false }
 getrandom = { version = "=0.4.3", default-features = false }
 glaux-domain = { path = "crates/glaux-domain" }
 glaux-standards = { path = "crates/glaux-standards" }
 jsonschema = { version = "=0.56.0", default-features = false }
+jsonwebtoken = { version = "=11.1.0", default-features = false, features = ["aws_lc_rs"] }
 num-bigint = { version = "=0.4.8", default-features = false }
 num-rational = { version = "=0.4.2", default-features = false, features = ["num-bigint"] }
 num-traits = { version = "=0.2.19", default-features = false }

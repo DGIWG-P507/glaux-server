@@ -1,9 +1,10 @@
 # Runtime configuration and health-only serving
 
-[Issue #18](https://github.com/DGIWG-P507/glaux-server/issues/18) implements
-Roadmap 1.4.1 and Guide §§4.10/4.12. This is the startup/health foundation,
-**not a CSAPI service, authentication adapter or production deployment**.
-Only the two health routes below exist. No conformance is advertised.
+[Issue #18](https://github.com/DGIWG-P507/glaux-server/issues/18) establishes
+Roadmap 1.4.1's startup/health foundation. [Issue #20](https://github.com/DGIWG-P507/glaux-server/issues/20)
+adds configured JWT verification and explicit development callers under Guide
+§4.10. The binary still exposes **only the two health routes below**, not CSAPI
+resource operations or a production deployment. No conformance is advertised.
 
 ## Commands and configuration
 
@@ -16,10 +17,11 @@ glaux-server check-config /protected/glaux.json
 glaux-server serve /protected/glaux.json
 ```
 
-`check-config` reads, validates and resolves secrets without opening a database
-connection or HTTP listener. Success prints only `Configuration valid; secrets
-redacted.` It does not prove database reachability, schema compatibility or
-successful future authentication. Invalid configuration exits 2.
+`check-config` reads, validates, constructs the selected authenticator and resolves
+secrets without opening a database connection or HTTP listener, fetching issuer
+keys, or issuing tokens. Success prints only `Configuration valid; secrets
+redacted.` It does not prove database reachability, schema compatibility, ownership
+of a signing key or successful future authentication. Invalid configuration exits 2.
 
 The file is strict JSON, at most 65,536 bytes, with these required fields:
 
@@ -34,13 +36,11 @@ The file is strict JSON, at most 65,536 bytes, with these required fields:
 
 - `listener` is a numeric IPv4/IPv6 socket address with nonzero port. There is
   no hostname resolution or implicit default listener.
-- `authentication` explicitly selects `disabled` or `development`. Neither
-  grants resource access: no resource routes or identity adapter exist yet.
-  `development` is accepted only on an IP address Rust classifies as loopback;
-  wildcard, public and IPv4-mapped IPv6 addresses are rejected. Later #20 owns
-  verified JWT/development caller contexts. Do not forward a development listener
-  through a public proxy or published container port; this check cannot determine
-  an external forwarding path.
+- `authentication` explicitly selects `disabled`, `jwt` or `development`.
+  The mode-specific sections below are mutually exclusive; missing, mismatched
+  or explicitly null sections fail. No mode grants resource permissions, and
+  `disabled` is not anonymous permission: a protected route using that adapter
+  fails unavailable.
 - `database` has exactly one nonempty `url_env` or `url_file` reference. An
   inline connection string is not a supported field. Referenced values must be
   UTF-8, nonempty and at most 16,384 bytes; outer whitespace is trimmed.
@@ -58,10 +58,70 @@ An optional `http` section adds an explicit public API root and bounded request
 settings; see the [HTTP contract and exact fields](http-boundary.md).
 Omission keeps safe default limits without guessing a public origin.
 
-Unknown fields, duplicate typed fields, missing required values, unsupported
+Unknown fields, duplicate members (including inside public keys), missing required values, unsupported
 authentication modes and wrong types fail without quoting the input. Future
-identity-provider, policy, adapter and resource-specific settings are not
+key-fetch/cache, policy, adapter and resource-specific settings are not
 silently accepted placeholders: their owning tasks will add validated fields.
+
+## Authentication selection
+
+With `authentication: "disabled"`, omit both `jwt` and `development`. There is no
+implicit fallback identity if credentials are absent or invalid.
+
+For an isolated example, explicitly name its fictional caller:
+
+```json
+{
+  "listener": "127.0.0.1:8080",
+  "authentication": "development",
+  "development": {
+    "subject": "example-caller",
+    "groups": ["example-group"],
+    "scopes": ["example-read"]
+  },
+  "database": { "url_env": "GLAUX_DATABASE_URL" },
+  "health_timeout_ms": 1000
+}
+```
+
+The `subject` is required; `groups` and `scopes` default to empty lists. These are
+test labels, not accounts created in an identity provider and not permissions
+on Systems or streams. The verified context is explicitly marked `Development`
+with issuer `urn:glaux:development`. Both listener configuration and the actual
+transport peer must be loopback; request headers cannot supply that peer. Wildcard,
+public and IPv4-mapped IPv6 listener addresses are rejected. A supplied Authorization
+header is rejected rather than ignored in favor of the development caller.
+Do not forward a development listener through a public proxy or published
+container port: a loopback check cannot discover an external forwarding path.
+
+For externally issued JWT access tokens, select `authentication: "jwt"`, omit
+`development`, and supply a `jwt` object with:
+
+- `issuer`: exact expected issuer identifier, not discovered from the request.
+- `audience`: exact service audience identifier.
+- `keys`: 1–16 explicitly trusted public RSA JWK objects, each with a unique
+  `kid`, `kty: "RSA"`, and canonical base64url `n` and `e` components. The selected
+  profile permits 2048–4096-bit RSA keys for RS256. No private key material is
+  accepted. Optional `alg`, `use` and `key_ops` must agree with RS256 signature
+  verification.
+- `required_scopes`: optional list of globally required scope names; defaults
+  to empty. These checks do not replace subsequent action/resource authorization.
+
+Use issuer-managed public key values, not invented example key material. The
+current adapter has no key URL, discovery, refresh or rotation configuration;
+those behaviors belong to #21. Unknown key IDs fail closed. Configuration bounds
+and token type/signature/claim checks are documented in [the authentication
+contract](authentication.md). Bearer material is not stored in configuration.
+
+`Configuration::authenticator()` returns the validated adapter for a route group
+to wrap with `Authenticator::protect`. The current health-only server does not
+attach authentication to its deliberately public minimal health routes or expose
+a synthetic protected example endpoint. It does supply actual socket peer
+information for future protected groups. Configuring an adapter is not a claim
+that resource access policy, identity administration or trusted proxy integration
+has been implemented.
+
+## Database secret and transport boundary
 
 Supply the PostgreSQL connection URL through the selected protected reference.
 Network connections always use certificate/hostname-verifying TLS even if the

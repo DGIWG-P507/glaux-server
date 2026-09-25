@@ -48,7 +48,7 @@ The startup expectation is independently authored in `tests/bootstrap.rs`: exit 
 
 The preceding [run 35664492990](https://github.com/DGIWG-P507/glaux-server/actions/runs/35664492990) stopped at formatting, so its build/tests were skipped. It is retained as a real initial failure, not counted as the intended red test. The log also prompted replacing deprecated implicit rustup installation with an explicit hosted install. Final passing/review/merge evidence belongs to PR #312, including any later corrections; a stale green run cannot cover a changed head.
 
-HTTP, full resource behavior, codecs, brokers and conformance checks remain unimplemented. #7 packages original schemas and fixtures; #8 adds [bounded offline structural validation](structural-validation.md), actual fixture verdicts and parser/fault checks; #12 adds the bounded [operation/direction projections](direction-validation.md), not endpoint admission or full semantics. #5 adds the [real PostgreSQL/PostGIS lifecycle harness](database-tests.md), using the image's own client and a minimal explicit extension migration. It does not prove the future Rust SQLx adapter, resource queries, full restore or application storage; those owners retain their checks.
+This setup snapshot describes the initial foundation, not current capability completion. #7 packages original schemas and fixtures; #8 adds [bounded offline structural validation](structural-validation.md); #12 adds bounded [operation/direction projections](direction-validation.md). #5's [real PostgreSQL/PostGIS lifecycle harness](database-tests.md) is separate from later SQLx/application proofs. The [current README](../README.md#current-status) links the subsequently implemented storage, HTTP and authentication foundations and their limits; full CSAPI resource behavior, codecs, brokers and conformance remain later work.
 
 ## Delivery sequence and boundaries
 
@@ -56,7 +56,7 @@ HTTP, full resource behavior, codecs, brokers and conformance checks remain unim
 
 [#6](https://github.com/DGIWG-P507/glaux-server/issues/6) owns the initial formatting/lint/build/unit/database suite, dependency/licence inventory, clean reproduction and false-green checks. [PR #314](https://github.com/DGIWG-P507/glaux-server/pull/314) records the actual main-rule application and failed/missing-check blocking probes, final execution and review. Automated checks do not mechanically enforce separate review. The eventual native/Compose reference instructions remain deliverables.
 
-Issues #4–#11 are complete. [#12 / task 1.2.6](https://github.com/DGIWG-P507/glaux-server/issues/12) adds [direction-aware validation](direction-validation.md) and initial System/stream/observation fixtures without endpoints; its issue/PR record actual checks, review and delivery. After its reviewed merge and closure, the next candidate is [#13 / task 1.3.1](https://github.com/DGIWG-P507/glaux-server/issues/13), initial canonical identity and typed-association storage, only on a separate `proceed`. No local installation, persistent cloud provisioning or production access is implicit.
+The [Roadmap](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-roadmap.md) and current action handoff identify the next authorized candidate; this setup snapshot does not maintain a second task queue. Issue/PR records identify actual checks, review and delivery. No local installation, persistent cloud provisioning or production access is implicit.
 
 ## Initial inspection record
 

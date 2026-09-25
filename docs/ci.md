@@ -49,6 +49,8 @@ python3 -u scripts/check-execution.py runtime-health
 python3 -u scripts/test-runtime-health-failures.py
 python3 -u scripts/check-execution.py http-boundary
 python3 -u scripts/test-http-boundary-failures.py
+python3 -u scripts/check-execution.py authentication
+python3 -u scripts/test-authentication-failures.py
 python3 -u scripts/test-ci-failures.py
 python3 -u scripts/test-validation-failures.py
 python3 -u scripts/test-projection-failures.py
@@ -90,13 +92,20 @@ proof for this packaging task, not a claim that schema validation ran.
 [check-execution.py](../scripts/check-execution.py) preserves command failure and
 requires actual successful execution evidence. It accepts exactly `rust`,
 `schema-fuzz`, `numeric-fuzz`, `time-fuzz`, `database`, `time-database`,
-`system-storage`, `revision-storage`, `atomic-write`, `conditional-write`, `retry-write`, `runtime-health` or `http-boundary`,
+`system-storage`, `revision-storage`, `atomic-write`, `conditional-write`, `retry-write`, `runtime-health`, `http-boundary` or `authentication`,
 not arbitrary selectors. Every named Rust test must execute successfully, and
 each fuzz campaign must emit its completed-invariant marker; the wrapper imposes
 a 180-second process timeout. Both the [lifecycle runner](../scripts/test_database.py)
 and [exact-time runner](../scripts/test_time_database.py) reject missing or
 skipped cases. No step uses continue-on-error to turn
 failure into success. Shell pipelines use pipefail.
+
+The [authentication proof](authentication-tests.md) requires all seven listener/
+adapter groups. Its fixture signer is the runner's existing OpenSSL CLI, not the
+server's JWT library. Private fixture keys are erased before the proof runs.
+The audience-bypass control compiles a disposable faulty copy and must fail the
+specific wrong-audience assertion after a passing baseline; the real source is
+restored and proved again. Compiler/setup failures cannot count as detection.
 
 After the unmodified Rust/database checks pass,
 [test-ci-failures.py](../scripts/test-ci-failures.py) copies tracked source into

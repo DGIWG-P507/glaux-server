@@ -64,7 +64,12 @@ The [runtime-health proof](docs/runtime-health-tests.md) starts the actual healt
 binary in that owned container and uses an independent HTTP client. It checks
 strict configuration, secret redaction, read-only startup, readiness loss/recovery
 and unchanged data. [Runtime commands](docs/runtime-configuration.md) do not
-implement CSAPI resource routes, JWT verification or policy enforcement yet.
+implement CSAPI resource routes or policy enforcement yet. The
+[authentication adapter](docs/authentication.md) now verifies the selected JWT
+profile and explicit loopback development identities; it does not protect health
+routes or claim later resource authorization. Its [independent listener proof](docs/authentication-tests.md)
+uses ephemeral hosted OpenSSL signing, exact wire assertions and an audience-bypass
+fault. Preserve these checks and the distinction between identity and permission.
 
 The [HTTP-boundary proof](docs/http-boundary-tests.md) independently inspects
 raw status/headers and general-purpose JSON through an isolated listener, with

@@ -153,6 +153,7 @@ def main():
             "rustfmt": command("rustfmt", "--version"),
             "clippy": command("cargo", "clippy", "--version"),
             "python": sys.version,
+            "openssl_fixture_signer": command("openssl", "version", "-a"),
             "docker": docker("version", "--format", "{{json .}}"),
         },
         "runner": {
