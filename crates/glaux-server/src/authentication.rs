@@ -50,12 +50,24 @@ pub struct CallerContext {
 }
 
 impl CallerContext {
-    pub fn issuer(&self) -> &str { &self.issuer }
-    pub fn subject(&self) -> &str { &self.subject }
-    pub fn client_id(&self) -> Option<&str> { self.client_id.as_deref() }
-    pub fn scopes(&self) -> &[String] { &self.scopes }
-    pub fn groups(&self) -> &[String] { &self.groups }
-    pub fn kind(&self) -> CallerKind { self.kind }
+    pub fn issuer(&self) -> &str {
+        &self.issuer
+    }
+    pub fn subject(&self) -> &str {
+        &self.subject
+    }
+    pub fn client_id(&self) -> Option<&str> {
+        self.client_id.as_deref()
+    }
+    pub fn scopes(&self) -> &[String] {
+        &self.scopes
+    }
+    pub fn groups(&self) -> &[String] {
+        &self.groups
+    }
+    pub fn kind(&self) -> CallerKind {
+        self.kind
+    }
 }
 
 pub trait Clock: Send + Sync {
@@ -91,14 +103,26 @@ impl IntoResponse for AuthError {
     fn into_response(self) -> Response {
         let (problem, challenge) = match self {
             Self::Missing => (Problem::unauthorized(), Some("Bearer")),
-            Self::InvalidRequest => (Problem::bad_request(), Some("Bearer error=\"invalid_request\"")),
-            Self::InvalidToken => (Problem::unauthorized(), Some("Bearer error=\"invalid_token\"")),
-            Self::InsufficientScope => (Problem::insufficient_scope(), Some("Bearer error=\"insufficient_scope\"")),
+            Self::InvalidRequest => (
+                Problem::bad_request(),
+                Some("Bearer error=\"invalid_request\""),
+            ),
+            Self::InvalidToken => (
+                Problem::unauthorized(),
+                Some("Bearer error=\"invalid_token\""),
+            ),
+            Self::InsufficientScope => (
+                Problem::insufficient_scope(),
+                Some("Bearer error=\"insufficient_scope\""),
+            ),
             Self::Unavailable => (Problem::unavailable(), None),
         };
         let mut response = problem.into_response();
         if let Some(challenge) = challenge {
-            response.headers_mut().insert(header::WWW_AUTHENTICATE, HeaderValue::from_static(challenge));
+            response.headers_mut().insert(
+                header::WWW_AUTHENTICATE,
+                HeaderValue::from_static(challenge),
+            );
         }
         response
     }
@@ -119,30 +143,53 @@ pub struct Authenticator {
 
 impl Authenticator {
     pub fn disabled() -> Self {
-        Self { mode: Mode::Disabled, clock: Arc::new(SystemClock) }
+        Self {
+            mode: Mode::Disabled,
+            clock: Arc::new(SystemClock),
+        }
     }
     pub fn jwt(_config: JwtConfig, clock: Arc<dyn Clock>) -> Result<Self, AuthConfigError> {
         // Test-first interface: intentionally cannot authenticate before implementation.
-        Ok(Self { mode: Mode::JwtStub, clock })
+        Ok(Self {
+            mode: Mode::JwtStub,
+            clock,
+        })
     }
-    pub fn development(config: DevelopmentConfig, listener: SocketAddr) -> Result<Self, AuthConfigError> {
+    pub fn development(
+        config: DevelopmentConfig,
+        listener: SocketAddr,
+    ) -> Result<Self, AuthConfigError> {
         fn text(value: &str, maximum: usize) -> bool {
             !value.is_empty() && value.len() <= maximum && !value.chars().any(char::is_control)
         }
-        if !listener.ip().is_loopback() || !text(&config.subject, 1024)
-            || config.groups.len() > 64 || config.scopes.len() > 64
+        if !listener.ip().is_loopback()
+            || !text(&config.subject, 1024)
+            || config.groups.len() > 64
+            || config.scopes.len() > 64
             || config.groups.iter().any(|v| !text(v, 256))
-            || config.scopes.iter().any(|v| v.is_empty() || v.len() > 128
-                || !v.bytes().all(|b| b == 0x21 || (0x23..=0x5b).contains(&b) || (0x5d..=0x7e).contains(&b)))
+            || config.scopes.iter().any(|v| {
+                v.is_empty()
+                    || v.len() > 128
+                    || !v.bytes().all(|b| {
+                        b == 0x21 || (0x23..=0x5b).contains(&b) || (0x5d..=0x7e).contains(&b)
+                    })
+            })
         {
             return Err(AuthConfigError);
         }
-        Ok(Self { mode: Mode::Development(config), clock: Arc::new(SystemClock) })
+        Ok(Self {
+            mode: Mode::Development(config),
+            clock: Arc::new(SystemClock),
+        })
     }
     pub fn protect(self, routes: Router) -> Router {
         routes.layer(middleware::from_fn_with_state(self, authenticate))
     }
-    pub fn authenticate(&self, headers: &HeaderMap, peer: Option<SocketAddr>) -> Result<CallerContext, AuthError> {
+    pub fn authenticate(
+        &self,
+        headers: &HeaderMap,
+        peer: Option<SocketAddr>,
+    ) -> Result<CallerContext, AuthError> {
         match &self.mode {
             Mode::Disabled => Err(AuthError::Unavailable),
             Mode::Development(config) => {
@@ -172,30 +219,50 @@ impl Authenticator {
 
 fn bearer(headers: &HeaderMap) -> Result<&str, AuthError> {
     let mut values = headers.get_all(header::AUTHORIZATION).iter();
-    let Some(value) = values.next() else { return Err(AuthError::Missing); };
-    if values.next().is_some() { return Err(AuthError::InvalidRequest); }
+    let Some(value) = values.next() else {
+        return Err(AuthError::Missing);
+    };
+    if values.next().is_some() {
+        return Err(AuthError::InvalidRequest);
+    }
     let value = value.to_str().map_err(|_| AuthError::InvalidRequest)?;
-    let Some((scheme, token)) = value.split_once(' ') else { return Err(AuthError::InvalidRequest); };
-    if !scheme.eq_ignore_ascii_case("Bearer") { return Err(AuthError::Missing); }
+    let Some((scheme, token)) = value.split_once(' ') else {
+        return Err(AuthError::InvalidRequest);
+    };
+    if !scheme.eq_ignore_ascii_case("Bearer") {
+        return Err(AuthError::Missing);
+    }
     let token = token.trim_start_matches(' ');
     if token.is_empty() || token.bytes().any(|b| b.is_ascii_whitespace() || b == b',') {
         return Err(AuthError::InvalidRequest);
     }
-    if token.len() > 16_384 { return Err(AuthError::InvalidToken); }
+    if token.len() > 16_384 {
+        return Err(AuthError::InvalidToken);
+    }
     Ok(token)
 }
 
-async fn authenticate(State(auth): State<Authenticator>, mut request: Request, next: Next) -> Response {
+async fn authenticate(
+    State(auth): State<Authenticator>,
+    mut request: Request,
+    next: Next,
+) -> Response {
     // Discard any previously attached context before evaluating this boundary.
     request.extensions_mut().remove::<CallerContext>();
-    let peer = request.extensions().get::<ConnectInfo<SocketAddr>>().map(|peer| peer.0);
+    let peer = request
+        .extensions()
+        .get::<ConnectInfo<SocketAddr>>()
+        .map(|peer| peer.0);
     match auth.authenticate(request.headers(), peer) {
         Ok(caller) => {
             request.extensions_mut().insert(caller);
             // Raw bearer material is no longer needed by the protected handler.
             request.headers_mut().remove(header::AUTHORIZATION);
             let mut response = next.run(request).await;
-            response.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static("private, no-store"));
+            response.headers_mut().insert(
+                header::CACHE_CONTROL,
+                HeaderValue::from_static("private, no-store"),
+            );
             response
         }
         Err(error) => error.into_response(),
