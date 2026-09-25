@@ -114,6 +114,11 @@ jobs:
       - name: Prove exact revision and source-artifact storage
         shell: bash
         run: python3 -u scripts/check-execution.py revision-storage | tee "$RUNNER_TEMP/glaux-ci-evidence/revision-storage.log"
+      - name: Prove atomic application writes and omission detection
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py atomic-write | tee "$RUNNER_TEMP/glaux-ci-evidence/atomic-write.log"
+          python3 -u scripts/test-atomic-write-failures.py
       - name: Verify required execution rejects disposable failures
         run: python3 -u scripts/test-ci-failures.py
       - name: Verify validation assertions detect disposable faults

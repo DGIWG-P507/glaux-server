@@ -68,7 +68,7 @@ pub struct SystemRevision {
     pub receipt_time: ExactInstant,
 }
 
-fn valid_artifact(media_type: &str, bytes: &[u8]) -> bool {
+pub(crate) fn valid_artifact(media_type: &str, bytes: &[u8]) -> bool {
     !media_type.is_empty()
         && media_type.len() <= MAX_MEDIA_TYPE_BYTES
         && !media_type.chars().any(char::is_control)
@@ -95,7 +95,7 @@ fn artifact_from_row(row: &PgRow) -> Result<SourceArtifact, StorageError> {
     })
 }
 
-async fn insert_artifact(
+pub(crate) async fn insert_artifact(
     connection: &mut PgConnection,
     artifact: &NewSourceArtifact,
 ) -> Result<SourceArtifact, StorageError> {
@@ -155,7 +155,7 @@ impl ArtifactRepository {
     }
 }
 
-async fn insert_revision(
+pub(crate) async fn insert_revision(
     connection: &mut PgConnection,
     revision: &SystemRevision,
 ) -> Result<(), StorageError> {

@@ -399,7 +399,10 @@ async fn denied(connection: &mut PgConnection) {
     let before = snapshot(connection).await;
     execute(connection,
         "CREATE TRIGGER fixture_denial_fail AFTER INSERT ON public.server_audit FOR EACH ROW EXECUTE FUNCTION public.fixture_write_failure()").await;
-    assert!(record_denied_system_create(connection, &denial()).await.is_err());
+    let error = record_denied_system_create(connection, &denial()).await.unwrap_err();
+    assert!(matches!(&error, StorageError::Database(inner)
+        if inner.as_database_error().and_then(|e| e.code()).as_deref() == Some("P0001")),
+        "wrong denial-store failure: {error}");
     execute(connection, "DROP TRIGGER fixture_denial_fail ON public.server_audit").await;
     assert_eq!(snapshot(connection).await, before, "failed denial audit changed state");
     record_denied_system_create(connection, &denial()).await.unwrap();
