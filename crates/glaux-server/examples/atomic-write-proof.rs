@@ -283,11 +283,11 @@ async fn accepted(connection: &mut PgConnection) {
 async fn insert_failures(connection: &mut PgConnection) {
     execute(connection,
         "CREATE FUNCTION public.fixture_write_failure() RETURNS trigger LANGUAGE plpgsql AS $$
-         BEGIN RAISE EXCEPTION 'fixture write boundary' USING ERRCODE='P0001'; END $$").await;
+         BEGIN RAISE EXCEPTION 'fixture write boundary' USING ERRCODE='P0001'; END; $$").await;
     execute(connection,
         "CREATE FUNCTION public.fixture_second_alias_failure() RETURNS trigger LANGUAGE plpgsql AS $$
          BEGIN IF NEW.identifier='upstream-29' THEN
-         RAISE EXCEPTION 'fixture second alias' USING ERRCODE='P0001'; END IF; RETURN NEW; END $$").await;
+         RAISE EXCEPTION 'fixture second alias' USING ERRCODE='P0001'; END IF; RETURN NEW; END; $$").await;
     let cases = [
         ("identity", "CREATE TRIGGER fixture_fail AFTER INSERT ON public.resource_identity FOR EACH ROW EXECUTE FUNCTION public.fixture_write_failure()", "DROP TRIGGER fixture_fail ON public.resource_identity"),
         ("system", "CREATE TRIGGER fixture_fail AFTER INSERT ON public.system_identity FOR EACH ROW EXECUTE FUNCTION public.fixture_write_failure()", "DROP TRIGGER fixture_fail ON public.system_identity"),
@@ -363,7 +363,7 @@ async fn visibility(connection: &mut PgConnection) {
     reset(connection).await;
     execute(connection,
         "CREATE FUNCTION public.fixture_visibility_barrier() RETURNS trigger LANGUAGE plpgsql AS $$
-         BEGIN PERFORM pg_advisory_xact_lock(150015); RETURN NEW; END $$").await;
+         BEGIN PERFORM pg_advisory_xact_lock(150015); RETURN NEW; END; $$").await;
     execute(connection,
         "CREATE TRIGGER fixture_visibility AFTER INSERT ON public.outgoing_work FOR EACH ROW EXECUTE FUNCTION public.fixture_visibility_barrier()").await;
     let before = snapshot(connection).await;
