@@ -744,7 +744,11 @@ async fn permissions(connection: &mut PgConnection) {
     }
     // Even a mistakenly broad DML grant does not bypass immutable storage.
     execute(connection, "GRANT UPDATE,DELETE,TRUNCATE ON public.server_audit,public.outgoing_work TO atomic_serving").await;
-    execute(connection, "GRANT TRUNCATE ON public.system_create_retry TO atomic_serving").await;
+    execute(
+        connection,
+        "GRANT TRUNCATE ON public.system_create_retry TO atomic_serving",
+    )
+    .await;
     for statement in [
         "UPDATE public.server_audit SET actor='replacement'",
         "DELETE FROM public.server_audit",
