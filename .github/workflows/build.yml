@@ -41,15 +41,6 @@ jobs:
           cargo --version --verbose
           rustfmt --version
           cargo clippy --version
-      - name: Emit unapproved task 20 dependency candidate and stop
-        shell: bash
-        run: |
-          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
-          cargo fetch
-          git diff -- Cargo.lock > "$RUNNER_TEMP/glaux-ci-evidence/task20-lock.patch"
-          python3 scripts/cargo_inventory.py --candidate > "$RUNNER_TEMP/glaux-ci-evidence/task20-cargo-candidate.json"
-          echo 'Preparation only; candidate requires review and this is not test evidence.'
-          exit 1
       - name: Fetch the locked dependency archives
         shell: bash
         run: |
@@ -95,6 +86,10 @@ jobs:
         run: |
           python3 -u scripts/check_identity_boundary.py | tee "$RUNNER_TEMP/glaux-ci-evidence/identity-boundary.log"
           python3 -u scripts/test-identity-failures.py
+      - name: Prove caller authentication through an independent listener
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py authentication | tee "$RUNNER_TEMP/glaux-ci-evidence/authentication.log"
       - name: Exercise exact numeric parsing and detect lossy numeric faults
         shell: bash
         run: |

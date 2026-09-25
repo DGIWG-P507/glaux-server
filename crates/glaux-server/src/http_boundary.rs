@@ -56,6 +56,8 @@ impl std::error::Error for BoundaryConfigError {}
 
 #[derive(Clone, Copy, Debug)]
 enum Kind {
+    Unauthorized,
+    InsufficientScope,
     BadRequest,
     NotFound,
     Method,
@@ -77,6 +79,15 @@ pub struct Problem {
 }
 
 impl Problem {
+    pub(crate) fn unauthorized() -> Self {
+        Self::new(Kind::Unauthorized)
+    }
+    pub(crate) fn insufficient_scope() -> Self {
+        Self::new(Kind::InsufficientScope)
+    }
+    pub(crate) fn unavailable() -> Self {
+        Self::new(Kind::Unavailable)
+    }
     fn new(kind: Kind) -> Self {
         Self {
             kind,
@@ -100,6 +111,18 @@ impl Problem {
     }
     fn catalog(self) -> (StatusCode, &'static str, &'static str, &'static str) {
         match self.kind {
+            Kind::Unauthorized => (
+                StatusCode::UNAUTHORIZED,
+                "unauthorized",
+                "Unauthorized",
+                "Authentication is required.",
+            ),
+            Kind::InsufficientScope => (
+                StatusCode::FORBIDDEN,
+                "forbidden",
+                "Forbidden",
+                "The credential lacks required scope.",
+            ),
             Kind::BadRequest => (
                 StatusCode::BAD_REQUEST,
                 "bad-request",
