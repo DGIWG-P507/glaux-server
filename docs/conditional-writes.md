@@ -83,5 +83,7 @@ python3 -u scripts/test-conditional-write-failures.py
 ```
 
 No new dependency, permanent service or laptop installation is introduced.
-HTTP, complete writable projections, retry identity, worker delivery, valid-time
+HTTP, complete writable projections, worker delivery, valid-time
 selection and backup/retention remain later tasks. No conformance is claimed.
+Optional [creation retry identity](write-retries.md) does not extend to this
+update operation or turn an internal revision into an HTTP validator.

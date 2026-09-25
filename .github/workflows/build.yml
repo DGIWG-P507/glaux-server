@@ -124,6 +124,11 @@ jobs:
         run: |
           python3 -u scripts/check-execution.py conditional-write | tee "$RUNNER_TEMP/glaux-ci-evidence/conditional-write.log"
           python3 -u scripts/test-conditional-write-failures.py
+      - name: Prove scoped write retries and intent omission detection
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py retry-write | tee "$RUNNER_TEMP/glaux-ci-evidence/retry-write.log"
+          python3 -u scripts/test-retry-write-failures.py
       - name: Verify required execution rejects disposable failures
         run: python3 -u scripts/test-ci-failures.py
       - name: Verify validation assertions detect disposable faults

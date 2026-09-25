@@ -135,7 +135,7 @@ async fn reset(connection: &mut PgConnection) {
         "ALTER TABLE public.system_revision DISABLE TRIGGER system_revision_immutable",
         "ALTER TABLE public.server_audit DISABLE TRIGGER server_audit_immutable",
         "ALTER TABLE public.outgoing_work DISABLE TRIGGER outgoing_work_immutable",
-        "TRUNCATE public.system_write_head, public.outgoing_work, public.server_audit, public.system_revision,
+        "TRUNCATE public.system_create_retry, public.system_write_head, public.outgoing_work, public.server_audit, public.system_revision,
          public.source_artifact, public.system_parent, public.source_identity,
          public.system_identity, public.resource_identity",
         "ALTER TABLE public.source_artifact ENABLE TRIGGER source_artifact_immutable",
@@ -345,7 +345,7 @@ async fn accepted(connection: &mut PgConnection) {
     for statement in [
         "UPDATE public.outgoing_work SET audit_id='01890f20-7b5a-7cc3-98c4-dc0c0c070402'",
         "DELETE FROM public.outgoing_work",
-        "TRUNCATE public.outgoing_work",
+        "TRUNCATE public.system_create_retry, public.outgoing_work",
     ] {
         let error = sqlx::query(statement)
             .execute(&mut *connection)
@@ -744,6 +744,11 @@ async fn permissions(connection: &mut PgConnection) {
     }
     // Even a mistakenly broad DML grant does not bypass immutable storage.
     execute(connection, "GRANT UPDATE,DELETE,TRUNCATE ON public.server_audit,public.outgoing_work TO atomic_serving").await;
+    execute(
+        connection,
+        "GRANT TRUNCATE ON public.system_create_retry TO atomic_serving",
+    )
+    .await;
     for statement in [
         "UPDATE public.server_audit SET actor='replacement'",
         "DELETE FROM public.server_audit",

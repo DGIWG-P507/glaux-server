@@ -143,7 +143,7 @@ async fn reset(connection: &mut PgConnection) {
         "ALTER TABLE public.system_revision DISABLE TRIGGER system_revision_immutable",
         "ALTER TABLE public.server_audit DISABLE TRIGGER server_audit_immutable",
         "ALTER TABLE public.outgoing_work DISABLE TRIGGER outgoing_work_immutable",
-        "TRUNCATE public.system_write_head,public.outgoing_work,public.server_audit,public.system_revision,
+        "TRUNCATE public.system_create_retry,public.system_write_head,public.outgoing_work,public.server_audit,public.system_revision,
          public.source_artifact,public.system_parent,public.source_identity,public.system_identity,public.resource_identity",
         "ALTER TABLE public.source_artifact ENABLE TRIGGER source_artifact_immutable",
         "ALTER TABLE public.system_revision ENABLE TRIGGER system_revision_immutable",

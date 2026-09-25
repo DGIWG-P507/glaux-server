@@ -43,6 +43,8 @@ python3 -u scripts/check-execution.py atomic-write
 python3 -u scripts/test-atomic-write-failures.py
 python3 -u scripts/check-execution.py conditional-write
 python3 -u scripts/test-conditional-write-failures.py
+python3 -u scripts/check-execution.py retry-write
+python3 -u scripts/test-retry-write-failures.py
 python3 -u scripts/test-ci-failures.py
 python3 -u scripts/test-validation-failures.py
 python3 -u scripts/test-projection-failures.py
@@ -84,7 +86,7 @@ proof for this packaging task, not a claim that schema validation ran.
 [check-execution.py](../scripts/check-execution.py) preserves command failure and
 requires actual successful execution evidence. It accepts exactly `rust`,
 `schema-fuzz`, `numeric-fuzz`, `time-fuzz`, `database`, `time-database`,
-`system-storage`, `revision-storage`, `atomic-write` or `conditional-write`,
+`system-storage`, `revision-storage`, `atomic-write`, `conditional-write` or `retry-write`,
 not arbitrary selectors. Every named Rust test must execute successfully, and
 each fuzz campaign must emit its completed-invariant marker; the wrapper imposes
 a 180-second process timeout. Both the [lifecycle runner](../scripts/test_database.py)
@@ -141,6 +143,12 @@ including twelve full-state rollback boundaries and synchronized visibility
 from a second database connection. Its separate disposable omission control
 requires a passing baseline, the precise missing-outgoing-work assertion, and
 a restored passing execution. Compile/setup failures are not detection.
+
+The [retry-write proof](write-retries.md) checks retained original outcomes,
+content/scope conflicts, local disclosure denial, expiry and synchronized
+competing creation requests. A separate disposable content-comparison fault must
+fail the exact intended assertion between passing baseline/restored executions.
+Its required execution markers and logs remain part of the unconditional build.
 
 ## Main-branch rule
 
