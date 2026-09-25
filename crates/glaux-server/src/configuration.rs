@@ -237,7 +237,10 @@ mod tests {
         }
         assert!(Configuration::parse(&vec![b' '; 65_537], |_| None).is_err());
         let config = parse(&valid).unwrap();
-        assert!(matches!(config.database.get_ssl_mode(), PgSslMode::VerifyFull));
+        assert!(matches!(
+            config.database.get_ssl_mode(),
+            PgSslMode::VerifyFull
+        ));
         assert_eq!(config.listener(), "127.0.0.1:8080".parse().unwrap());
         assert_eq!(config.timeout(), Duration::from_millis(500));
     }
