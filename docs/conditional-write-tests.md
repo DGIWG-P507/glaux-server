@@ -48,6 +48,13 @@ PostgreSQL/PostGIS harness. No caller-selected target, operational data,
 additional service or company-laptop runtime is used. The real source remains
 unchanged during disposable fault controls. Cleanup/setup failures are fatal.
 
+The `conditional-write-proof` example is invoked through
+`python3 scripts/check-execution.py conditional-write`. Exact ordered markers
+require six groups, seven update rollback boundaries and three races. The
+unconditional CI step then runs `python3 scripts/test-conditional-write-failures.py`:
+a disposable passing baseline, an omitted-comparison copy that must reach the
+named stale-condition assertion, then the rebuilt original passing source.
+
 Remaining work includes HTTP representation-specific validators, authentication
 and authorization, full family-specific writable projections, retry records,
 external delivery, recovery and retention. Internal revision IDs are not a
