@@ -421,8 +421,7 @@ async fn insert_failures(connection: &mut PgConnection) {
         execute(connection, install).await;
         let error = create_system(connection, &fixture())
             .await
-            .err()
-            .expect("injected write must fail");
+            .expect_err("injected write must fail");
         assert!(
             matches!(&error, StorageError::Database(inner)
             if inner.as_database_error().and_then(|e| e.code()).as_deref() == Some("P0001")),

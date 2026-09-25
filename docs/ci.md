@@ -134,13 +134,13 @@ comparison faults in disposable copies. Their exact baselines must pass before
 the intended assertion failures count. Results and per-fault logs are retained
 alongside the existing suite evidence; no score replaces the value assertions.
 
-## Main-branch rule
-
 The [atomic-write proof](atomic-write-tests.md) adds seven required groups,
 including eleven full-state rollback boundaries and synchronized visibility
 from a second database connection. Its separate disposable omission control
 requires a passing baseline, the precise missing-outgoing-work assertion, and
 a restored passing execution. Compile/setup failures are not detection.
+
+## Main-branch rule
 
 The approved configuration is recorded in [main-ruleset.json](main-ruleset.json):
 main-only, active, no bypass actors (including no administrator exception),
