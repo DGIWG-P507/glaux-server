@@ -10,7 +10,7 @@ use glaux_server::revisions::{NewSourceArtifact, RevisionId, SystemRevision};
 use glaux_server::storage::{
     StorageError, SystemRecord, SystemRepository, migrate, packaged_migrations,
 };
-use sqlx::{Connection, PgConnection, Row};
+use sqlx::{AssertSqlSafe, Connection, PgConnection, Row};
 
 const DSN: &str = "postgres://postgres@127.0.0.1:5432/glaux_harness_test?sslmode=disable";
 const TIME: &str = "2017-01-01T01:00:00.12345678901234567890+01:00";
@@ -103,7 +103,12 @@ fn original() -> CreateSystem {
 }
 
 async fn execute(connection: &mut PgConnection, statement: &str) {
-    sqlx::query(statement).execute(connection).await.unwrap();
+    // Private fixture helper: every caller uses literals or the closed table/
+    // trigger-action lists below. No external input enters SQL identifiers.
+    sqlx::query(AssertSqlSafe(statement))
+        .execute(connection)
+        .await
+        .unwrap();
 }
 
 fn passed(group: &str) {
@@ -116,7 +121,8 @@ async fn snapshot(connection: &mut PgConnection, head: bool) -> String {
     } else {
         "'[]'::json"
     };
-    sqlx::query_scalar(&format!(
+    // Only the two fixed head_sql expressions above are interpolated.
+    sqlx::query_scalar(AssertSqlSafe(format!(
         "SELECT json_build_object(
          'identity',(SELECT coalesce(json_agg(t ORDER BY id),'[]') FROM public.resource_identity t),
          'system',(SELECT coalesce(json_agg(t ORDER BY id),'[]') FROM public.system_identity t),
@@ -127,7 +133,7 @@ async fn snapshot(connection: &mut PgConnection, head: bool) -> String {
          'revision',(SELECT coalesce(json_agg(t ORDER BY id),'[]') FROM public.system_revision t),
          'audit',(SELECT coalesce(json_agg(t ORDER BY id),'[]') FROM public.server_audit t),
          'work',(SELECT coalesce(json_agg(t ORDER BY id),'[]') FROM public.outgoing_work t),
-         'head',{head_sql})::text"))
+         'head',{head_sql})::text")))
         .fetch_one(connection).await.unwrap()
 }
 
@@ -191,7 +197,7 @@ async fn assert_facts(connection: &mut PgConnection, current: u16, history: &[u1
         ("outgoing_work", 500),
     ] {
         let ids: Vec<String> =
-            sqlx::query_scalar(&format!("SELECT id::text FROM public.{table} ORDER BY id"))
+            sqlx::query_scalar(AssertSqlSafe(format!("SELECT id::text FROM public.{table} ORDER BY id")))
                 .fetch_all(&mut *connection)
                 .await
                 .unwrap();
@@ -294,10 +300,14 @@ async fn migration(connection: &mut PgConnection) {
             .execute(&mut *connection).await.unwrap();
     }
     let before = snapshot(connection, false).await;
-    assert!(
-        migrate(connection).await.is_err(),
-        "ambiguous migration must fail, not choose a head"
-    );
+    let Err(StorageError::Migration(sqlx::migrate::MigrateError::ExecuteMigration(error, 7))) =
+        migrate(connection).await
+    else {
+        panic!("ambiguous migration must fail at migration 7");
+    };
+    let database_error = error.as_database_error().expect("expected database rejection");
+    assert_eq!(database_error.code().as_deref(), Some("23505"));
+    assert_eq!(database_error.constraint(), Some("system_write_head_pkey"));
     let absent: bool = sqlx::query_scalar("SELECT to_regclass('public.system_write_head') IS NULL")
         .fetch_one(&mut *connection)
         .await
