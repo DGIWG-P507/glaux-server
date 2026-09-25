@@ -45,8 +45,12 @@ def main():
         command = [sys.executable, "-u", "scripts/test_atomic_write.py"]
         markers = ["Atomic write database: all required checks passed."]
         missing = "Required atomic write database proof did not execute successfully"
+    elif sys.argv[1:] == ["conditional-write"]:
+        command = [sys.executable, "-u", "scripts/test_conditional_write.py"]
+        markers = ["Conditional write database: all required checks passed."]
+        missing = "Required conditional write database proof did not execute successfully"
     else:
-        sys.exit("Specify exactly rust, database, schema-fuzz, numeric-fuzz, time-fuzz, time-database, system-storage, revision-storage or atomic-write; no test-selection override.")
+        sys.exit("Specify exactly rust, database, schema-fuzz, numeric-fuzz, time-fuzz, time-database, system-storage, revision-storage, atomic-write or conditional-write; no test-selection override.")
     print("Required command: " + " ".join(command), flush=True)
     try:
         result = subprocess.run(

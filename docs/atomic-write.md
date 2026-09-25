@@ -12,7 +12,8 @@ context. Document attribution is not authenticated identity.
 `application::create_system` owns one transaction on an idle SQLx-managed
 connection. It inserts the System identity and description, source aliases and
 optional parent link, exact source artifact, immutable revision, accepted audit
-and outgoing-work record. It calls connection-scoped insert helpers, not
+and outgoing-work record. [Task #16](conditional-writes.md) additionally inserts
+the authoritative write head here. It calls connection-scoped insert helpers, not
 repository methods that commit independently. All succeed together; a failed
 write or rejected commit cannot leave a partially accepted operation. A receipt
 is returned only after COMMIT succeeds. Transport loss during COMMIT can leave
@@ -67,7 +68,9 @@ Migrations do not create deployment roles or change existing grants. Use a
 non-owner serving role, distinct from the migration/administrative owner, with
 USAGE on the public schema, SELECT on the migration ledger, and the SELECT/INSERT
 rights needed by these repositories. The parent-write guard additionally needs
-SELECT/UPDATE. Do not grant serving UPDATE/DELETE/TRUNCATE on retained audit,
+SELECT/UPDATE. Creation also needs SELECT/INSERT on `system_write_head`;
+[conditional updates](conditional-writes.md) name their additional column grants.
+Do not grant serving UPDATE/DELETE/TRUNCATE on retained audit,
 revision, artifact or outgoing-work tables, table ownership, schema CREATE,
 administrative membership, or superuser authority. Ordinary serving must not
 disable the retention triggers. These deployment grants must be verified;
@@ -83,7 +86,7 @@ administrator, append-only infrastructure or cryptographic tamper evidence.
 ## Proof and limits
 
 The [independent truth table](atomic-write-tests.md) precedes production changes.
-The real SQLx proof compares exact stored facts, eleven injected rollback
+The real SQLx proof compares exact stored facts, twelve injected rollback
 boundaries and an explicitly synchronized second-connection snapshot. It also
 checks denial failures, migration preservation, nested-transaction rejection and
 serving privileges. A disposable source control omits outgoing insertion and
@@ -100,6 +103,7 @@ No local installation or user database is required. Setup, build, timeout and
 cleanup errors remain failures, not proof of behavioral detection.
 Raw manually issued transaction SQL is not a supported caller contract.
 Low-level storage repositories remain primitives; future accepted-write handlers
-must use the application boundary rather than bypass it. Conditional writes,
-retry identity, other resource families, HTTP policy, public deletion, current
-revision selection, dispatch and backup/retention behavior remain later tasks.
+must use the application boundary rather than bypass it. Retry identity, other
+resource families, HTTP policy, public deletion, temporal selection, dispatch
+and backup/retention remain later tasks. The initial conditional label update
+and accepted-write head now exist under [task #16](conditional-writes.md).

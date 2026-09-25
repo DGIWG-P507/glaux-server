@@ -17,7 +17,7 @@ GROUPS = (
 )
 BOUNDARIES = (
     "identity", "system", "first-alias", "second-alias", "parent-guard", "parent",
-    "artifact", "revision", "audit", "outgoing", "commit",
+    "artifact", "revision", "audit", "outgoing", "head", "commit",
 )
 FINAL = "Required atomic write proof passed: 7 groups."
 
@@ -71,7 +71,7 @@ def main():
     output = run_binary(binary)
     print(output, flush=True)
     validate_output(output)
-    print("Atomic write: 7 Rust groups and 11 rollback boundaries passed; 0 failed; 0 skipped", flush=True)
+    print("Atomic write: 7 Rust groups and 12 rollback boundaries passed; 0 failed; 0 skipped", flush=True)
     print("Atomic write database: all required checks passed.", flush=True)
 
 

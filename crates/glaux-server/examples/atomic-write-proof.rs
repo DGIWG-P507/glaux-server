@@ -120,7 +120,8 @@ async fn snapshot(connection: &mut PgConnection) -> String {
          'artifact',(SELECT coalesce(json_agg(t ORDER BY id),'[]') FROM public.source_artifact t),
          'revision',(SELECT coalesce(json_agg(t ORDER BY id),'[]') FROM public.system_revision t),
          'audit',(SELECT coalesce(json_agg(t ORDER BY id),'[]') FROM public.server_audit t),
-         'work',(SELECT coalesce(json_agg(t ORDER BY id),'[]') FROM public.outgoing_work t))::text",
+         'work',(SELECT coalesce(json_agg(t ORDER BY id),'[]') FROM public.outgoing_work t),
+         'head',(SELECT coalesce(json_agg(t ORDER BY system_id),'[]') FROM public.system_write_head t))::text",
     )
     .fetch_one(connection)
     .await
@@ -134,7 +135,7 @@ async fn reset(connection: &mut PgConnection) {
         "ALTER TABLE public.system_revision DISABLE TRIGGER system_revision_immutable",
         "ALTER TABLE public.server_audit DISABLE TRIGGER server_audit_immutable",
         "ALTER TABLE public.outgoing_work DISABLE TRIGGER outgoing_work_immutable",
-        "TRUNCATE public.outgoing_work, public.server_audit, public.system_revision,
+        "TRUNCATE public.system_write_head, public.outgoing_work, public.server_audit, public.system_revision,
          public.source_artifact, public.system_parent, public.source_identity,
          public.system_identity, public.resource_identity",
         "ALTER TABLE public.source_artifact ENABLE TRIGGER source_artifact_immutable",
@@ -327,13 +328,13 @@ async fn accepted(connection: &mut PgConnection) {
         "duplicate attempt changed committed context"
     );
     for statement in [
-        "INSERT INTO public.outgoing_work VALUES('01890f20-7b5a-7cc3-98c4-dc0c0c070502',
+        "INSERT INTO public.outgoing_work(id,system_id,revision_id,artifact_id,audit_id,kind,outcome) VALUES('01890f20-7b5a-7cc3-98c4-dc0c0c070502',
          '01890f20-7b5a-7cc3-98c4-dc0c0c070101','01890f20-7b5a-7cc3-98c4-dc0c0c070301',
          '01890f20-7b5a-7cc3-98c4-dc0c0c070201','01890f20-7b5a-7cc3-98c4-dc0c0c070401','system.created','accepted')",
-        "INSERT INTO public.outgoing_work VALUES('01890f20-7b5a-7cc3-98c4-dc0c0c070502',
+        "INSERT INTO public.outgoing_work(id,system_id,revision_id,artifact_id,audit_id,kind,outcome) VALUES('01890f20-7b5a-7cc3-98c4-dc0c0c070502',
          '01890f20-7b5a-7cc3-98c4-dc0c0c070102','01890f20-7b5a-7cc3-98c4-dc0c0c070301',
          '01890f20-7b5a-7cc3-98c4-dc0c0c070202','01890f20-7b5a-7cc3-98c4-dc0c0c070401','system.created','accepted')",
-        "INSERT INTO public.outgoing_work VALUES('01890f20-7b5a-7cc3-98c4-dc0c0c070502',
+        "INSERT INTO public.outgoing_work(id,system_id,revision_id,artifact_id,audit_id,kind,outcome) VALUES('01890f20-7b5a-7cc3-98c4-dc0c0c070502',
          '01890f20-7b5a-7cc3-98c4-dc0c0c070102','01890f20-7b5a-7cc3-98c4-dc0c0c070301',
          '01890f20-7b5a-7cc3-98c4-dc0c0c070201','01890f20-7b5a-7cc3-98c4-dc0c0c070402','system.created','accepted')",
     ] {
@@ -428,6 +429,11 @@ async fn insert_failures(connection: &mut PgConnection) {
             "outgoing",
             "CREATE TRIGGER fixture_fail AFTER INSERT ON public.outgoing_work FOR EACH ROW EXECUTE FUNCTION public.fixture_write_failure()",
             "DROP TRIGGER fixture_fail ON public.outgoing_work",
+        ),
+        (
+            "head",
+            "CREATE TRIGGER fixture_fail AFTER INSERT ON public.system_write_head FOR EACH ROW EXECUTE FUNCTION public.fixture_write_failure()",
+            "DROP TRIGGER fixture_fail ON public.system_write_head",
         ),
         (
             "commit",
@@ -708,7 +714,7 @@ async fn permissions(connection: &mut PgConnection) {
         "GRANT USAGE ON SCHEMA public TO atomic_serving",
         "GRANT SELECT ON public._sqlx_migrations TO atomic_serving",
         "GRANT SELECT,INSERT ON public.resource_identity,public.system_identity,public.source_identity,
-         public.system_parent,public.source_artifact,public.system_revision,public.server_audit,public.outgoing_work TO atomic_serving",
+         public.system_parent,public.source_artifact,public.system_revision,public.server_audit,public.outgoing_work,public.system_write_head TO atomic_serving",
         "GRANT SELECT,UPDATE ON public.system_parent_write_guard TO atomic_serving",
     ] { execute(connection, statement).await; }
     let mut serving = PgConnection::connect(DSN).await.unwrap();

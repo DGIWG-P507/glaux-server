@@ -82,11 +82,13 @@ command. Existing identity and parent migrations remain byte-for-byte intact.
 Repository access checks schema compatibility, without installing or repairing
 it. Reapplication must preserve complete rows and source bytes.
 
-No full System mutation/current selection, concurrency preconditions,
-public history route,
-SWE compilation, other family storage, restore or conformance claim is added.
+This low-level repository does not implement full System mutation/current
+selection, precondition handling, public history routes,
+SWE compilation, other family storage or restore. It makes no conformance claim.
 The separate [#15 application boundary](atomic-write.md) now combines initial
-System creation, revision, audit and outgoing work; #16 still owns preconditions.
+System creation, revision, audit and outgoing work. The [#16 write head and
+conditional label update](conditional-writes.md) now select the last accepted
+application write; full temporal/current resource selection remains later work.
 
 ## Verification
 
