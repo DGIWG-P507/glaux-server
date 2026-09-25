@@ -65,11 +65,7 @@ impl JwtVerifier {
         })
     }
 
-    pub(super) fn verify(
-        &self,
-        token: &str,
-        now: Duration,
-    ) -> Result<CallerContext, AuthError> {
+    pub(super) fn verify(&self, token: &str, now: Duration) -> Result<CallerContext, AuthError> {
         if token.is_empty() || token.len() > MAX_TOKEN_BYTES {
             return Err(AuthError::InvalidToken);
         }
@@ -147,8 +143,12 @@ fn configured_key(value: &Value) -> Result<(String, DecodingKey), AuthConfigErro
         || ["d", "p", "q", "dp", "dq", "qi", "oth", "k"]
             .iter()
             .any(|name| key.contains_key(*name))
-        || key.get("alg").is_some_and(|value| value.as_str() != Some("RS256"))
-        || key.get("use").is_some_and(|value| value.as_str() != Some("sig"))
+        || key
+            .get("alg")
+            .is_some_and(|value| value.as_str() != Some("RS256"))
+        || key
+            .get("use")
+            .is_some_and(|value| value.as_str() != Some("sig"))
     {
         return Err(AuthConfigError);
     }
@@ -213,11 +213,12 @@ fn object(bytes: &[u8]) -> Result<Map<String, Value>, AuthError> {
 
 fn access_header(header: &Map<String, Value>) -> Result<&str, AuthError> {
     let kind = claim_text(header, "typ", 64)?;
-    if !(kind.eq_ignore_ascii_case("at+jwt")
-        || kind.eq_ignore_ascii_case("application/at+jwt"))
+    if !(kind.eq_ignore_ascii_case("at+jwt") || kind.eq_ignore_ascii_case("application/at+jwt"))
         || header.get("alg").and_then(Value::as_str) != Some("RS256")
         || header.contains_key("crit")
-        || header.get("b64").is_some_and(|value| value != &Value::Bool(true))
+        || header
+            .get("b64")
+            .is_some_and(|value| value != &Value::Bool(true))
         || ["jku", "jwk", "x5u", "x5c", "enc", "zip"]
             .iter()
             .any(|name| header.contains_key(*name))
@@ -254,7 +255,10 @@ fn audiences(value: &Value) -> Result<Vec<&str>, AuthError> {
             .collect::<Result<Vec<_>, _>>()?,
         _ => return Err(AuthError::InvalidToken),
     };
-    if values.iter().any(|value| !bounded_text(value, MAX_ID_BYTES)) {
+    if values
+        .iter()
+        .any(|value| !bounded_text(value, MAX_ID_BYTES))
+    {
         return Err(AuthError::InvalidToken);
     }
     Ok(values)
@@ -274,12 +278,9 @@ fn numeric_date(claims: &Map<String, Value>, name: &str) -> Result<ExactNumber, 
 }
 
 fn check_times(claims: &Map<String, Value>, now: Duration) -> Result<(), AuthError> {
-    let now = ExactNumber::parse_json_number(&format!(
-        "{}.{:09}",
-        now.as_secs(),
-        now.subsec_nanos()
-    ))
-    .map_err(|_| AuthError::Unavailable)?;
+    let now =
+        ExactNumber::parse_json_number(&format!("{}.{:09}", now.as_secs(), now.subsec_nanos()))
+            .map_err(|_| AuthError::Unavailable)?;
     let expiry = numeric_date(claims, "exp")?;
     let issued = numeric_date(claims, "iat")?;
     if expiry <= now || issued > now || expiry <= issued {
@@ -294,9 +295,9 @@ fn check_times(claims: &Map<String, Value>, now: Duration) -> Result<(), AuthErr
 fn scope_token(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= MAX_SCOPE_BYTES
-        && value
-            .bytes()
-            .all(|byte| byte == 0x21 || (0x23..=0x5b).contains(&byte) || (0x5d..=0x7e).contains(&byte))
+        && value.bytes().all(|byte| {
+            byte == 0x21 || (0x23..=0x5b).contains(&byte) || (0x5d..=0x7e).contains(&byte)
+        })
 }
 
 fn scopes(value: Option<&Value>) -> Result<Vec<String>, AuthError> {
@@ -397,18 +398,42 @@ mod tests {
 
     #[test]
     fn jwt_claim_lists_are_bounded_typed_and_not_policy() {
-        assert_eq!(scopes(Some(&json!("read write read"))).unwrap(), ["read", "write"]);
+        assert_eq!(
+            scopes(Some(&json!("read write read"))).unwrap(),
+            ["read", "write"]
+        );
         assert_eq!(scopes(None).unwrap(), Vec::<String>::new());
-        for value in [json!(""), json!(" read"), json!("read  write"), json!("read\twrite"), json!(["read"]), json!("r\\w")] {
+        for value in [
+            json!(""),
+            json!(" read"),
+            json!("read  write"),
+            json!("read\twrite"),
+            json!(["read"]),
+            json!("r\\w"),
+        ] {
             assert!(scopes(Some(&value)).is_err());
         }
-        assert!(scopes(Some(&json!((0..65).map(|i| format!("s{i}")).collect::<Vec<_>>().join(" ")))).is_err());
-        assert_eq!(groups(Some(&json!(["operators", "operators"]))).unwrap(), ["operators"]);
+        assert!(
+            scopes(Some(&json!(
+                (0..65)
+                    .map(|i| format!("s{i}"))
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            )))
+            .is_err()
+        );
+        assert_eq!(
+            groups(Some(&json!(["operators", "operators"]))).unwrap(),
+            ["operators"]
+        );
         assert!(groups(Some(&json!([{"value":"operators"}]))).is_err());
         assert!(groups(Some(&json!([""]))).is_err());
         assert!(audiences(&json!([])).is_err());
         assert!(audiences(&json!(["service", 1])).is_err());
-        assert_eq!(audiences(&json!(["service", "other"])).unwrap(), ["service", "other"]);
+        assert_eq!(
+            audiences(&json!(["service", "other"])).unwrap(),
+            ["service", "other"]
+        );
     }
 
     #[test]

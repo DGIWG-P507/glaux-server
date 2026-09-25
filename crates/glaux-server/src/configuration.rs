@@ -139,11 +139,13 @@ impl Configuration {
                 Arc::new(SystemClock),
             )
             .map_err(|_| ConfigError::Invalid)?,
-            Authentication::Development if has_development && !has_jwt => Authenticator::development(
-                document.development.ok_or(ConfigError::Invalid)?,
-                document.listener,
-            )
-            .map_err(|_| ConfigError::Invalid)?,
+            Authentication::Development if has_development && !has_jwt => {
+                Authenticator::development(
+                    document.development.ok_or(ConfigError::Invalid)?,
+                    document.listener,
+                )
+                .map_err(|_| ConfigError::Invalid)?
+            }
             _ => return Err(ConfigError::Invalid),
         };
         let secret = match (&document.database.url_env, &document.database.url_file) {
@@ -346,7 +348,10 @@ mod tests {
         let headers = HeaderMap::new();
         let peer = Some("127.0.0.1:32100".parse().unwrap());
         assert!(matches!(
-            parse(&disabled).unwrap().authenticator().authenticate(&headers, peer),
+            parse(&disabled)
+                .unwrap()
+                .authenticator()
+                .authenticate(&headers, peer),
             Err(AuthError::Unavailable)
         ));
         let development = document("127.0.0.1:8080", "development");
@@ -392,10 +397,9 @@ mod tests {
         let mut extra = jwt.clone();
         extra["jwt"]["keys_url"] = json!("https://attacker.invalid/keys");
         assert!(parse(&extra.to_string()).is_err());
-        let duplicate = jwt.to_string().replace(
-            "\"kid\":\"key-1\"",
-            "\"kid\":\"key-1\",\"kid\":\"key-1\"",
-        );
+        let duplicate = jwt
+            .to_string()
+            .replace("\"kid\":\"key-1\"", "\"kid\":\"key-1\",\"kid\":\"key-1\"");
         assert!(parse(&duplicate).is_err());
         let jwt_text = jwt.to_string();
         for input in [
@@ -405,9 +409,15 @@ mod tests {
             development.replace("\"subject\"", "\"unknown\""),
             format!("{},\"jwt\":null}}", &disabled[..disabled.len() - 1]),
             format!("{},\"development\":null}}", &disabled[..disabled.len() - 1]),
-            format!("{},\"development\":{{\"subject\":\"fake\"}}}}", &jwt_text[..jwt_text.len() - 1]),
+            format!(
+                "{},\"development\":{{\"subject\":\"fake\"}}}}",
+                &jwt_text[..jwt_text.len() - 1]
+            ),
         ] {
-            assert!(parse(&input).is_err(), "invalid authentication mode combination accepted");
+            assert!(
+                parse(&input).is_err(),
+                "invalid authentication mode combination accepted"
+            );
         }
     }
 }

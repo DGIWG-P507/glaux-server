@@ -235,7 +235,12 @@ fn configuration(fixture: &mut Fixture) {
     check(fixture, ordinary().as_bytes(), Some(&absent_db), true);
 
     let base = ordinary();
-    let development = config(ADDRESS, "development", "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}", 500);
+    let development = config(
+        ADDRESS,
+        "development",
+        "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}",
+        500,
+    );
     let jwt_base = base.replace("\"disabled\"", "\"jwt\"");
     let missing_keys = format!(
         "{},\"jwt\":{{\"issuer\":\"https://issuer.example.test\",\"audience\":\"glaux\",\"keys\":[]}}}}",
@@ -247,10 +252,16 @@ fn configuration(fixture: &mut Fixture) {
         base.replace("\"disabled\"", "\"jwt\""),
         base.replace("\"disabled\"", "\"development\""),
         format!("{},\"jwt\":null}}", &base[..base.len() - 1]),
-        format!("{},\"development\":{{\"subject\":\"fake\"}}}}", &base[..base.len() - 1]),
+        format!(
+            "{},\"development\":{{\"subject\":\"fake\"}}}}",
+            &base[..base.len() - 1]
+        ),
         development.replace("health-test-caller", ""),
         development.replace("\"subject\"", "\"unknown\""),
-        development.replace("\"subject\":\"health-test-caller\"", "\"subject\":\"health-test-caller\",\"subject\":\"second-caller\""),
+        development.replace(
+            "\"subject\":\"health-test-caller\"",
+            "\"subject\":\"health-test-caller\",\"subject\":\"second-caller\"",
+        ),
         missing_keys,
         base.replace("500", "99"),
         base.replace("500", "10001"),
