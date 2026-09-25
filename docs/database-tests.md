@@ -15,8 +15,14 @@ history and failed-reference rollback; it is not a backup/restore or HTTP test.
 Task #15 adds the [atomic application proof](atomic-write-tests.md), run with
 `python3 -u scripts/check-execution.py atomic-write`, followed by
 `python3 -u scripts/test-atomic-write-failures.py`. The same owned container
-hosts exact all-or-nothing writes, eleven rollback boundaries, a separate
+hosts exact all-or-nothing writes, twelve rollback boundaries, a separate
 observer and restricted-role audit checks; no transport worker is claimed.
+
+Task #16 adds the [conditional-write proof](conditional-write-tests.md) and
+`conditional-write` execution selector, followed by
+`python3 -u scripts/test-conditional-write-failures.py`. It uses real waiting
+SQLx writers, exact winning state, full stale/failure rollback and a disposable
+comparison omission. The owning issue records actual execution, not just authorship.
 
 [Issue #5 / task 1.1.3](https://github.com/DGIWG-P507/glaux-server/issues/5)
 owns this initial harness. Its execution record links the tested head, failures,

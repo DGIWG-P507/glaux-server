@@ -17,6 +17,9 @@ pub struct SystemRecord {
 #[derive(Debug)]
 pub enum StorageError {
     Conflict,
+    PreconditionFailed,
+    NotFound,
+    UninitializedRevision,
     InvalidAssociation,
     InvalidInput,
     Immutable,
@@ -31,6 +34,9 @@ impl fmt::Display for StorageError {
         // Database details may contain protected values: do not emit them here.
         f.write_str(match self {
             Self::Conflict => "identity or association conflict",
+            Self::PreconditionFailed => "supplied revision condition failed",
+            Self::NotFound => "resource not found",
+            Self::UninitializedRevision => "resource has no authoritative write revision",
             Self::InvalidAssociation => "invalid System association",
             Self::InvalidInput => "storage input violates its bounded contract",
             Self::Immutable => "retained history is immutable",
@@ -101,6 +107,13 @@ pub fn packaged_migrations() -> Migrator {
             "audit and outgoing work".into(),
             MigrationType::Simple,
             include_str!("../migrations/0006_audit_outgoing_work.sql").into_sql_str(),
+            false,
+        ),
+        Migration::new(
+            7,
+            "conditional System writes".into(),
+            MigrationType::Simple,
+            include_str!("../migrations/0007_conditional_system_writes.sql").into_sql_str(),
             false,
         ),
     ]);

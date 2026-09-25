@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, enforced CI, validation, exact values and atomic System creation — 25 September 2026 UTC.**
+**Initial build, enforced CI, validation, exact values and conditional System writes — 25 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
@@ -61,7 +61,8 @@ endpoints remain later work.
 document bytes, media type and digest separately from generated representations.
 System revisions preserve their artifact bindings and exact semantic/receipt
 instants; later revisions do not rewrite earlier records. This does not yet
-select current state or interpret full valid-time intervals.
+interpret full valid-time intervals; the write head selects the last accepted
+application write, not a temporal view.
 
 [Initial atomic System creation](docs/atomic-write.md) saves the System, its
 original document and revision, the audit record and outgoing work in one
@@ -69,6 +70,13 @@ database transaction. Failure cannot leave a partially accepted creation.
 Minimal denied-attempt metadata can be recorded separately without creating
 resources or outgoing work. This trusted internal boundary is not yet an HTTP
 permission check, dispatcher or public API.
+
+[Conditional System writes](docs/conditional-writes.md) reject an update
+based on an old supplied revision without leaving resource, audit or outgoing
+changes. A successful initial label update commits its new document, revision
+and related records together. Writes without a revision condition remain
+allowed; locking alone cannot detect a stale client's unconditional overwrite.
+This is an internal foundation, not yet an HTTP update endpoint.
 
 ## Planned capabilities
 

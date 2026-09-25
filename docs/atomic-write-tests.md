@@ -93,8 +93,10 @@ is used. The eventual execution record must distinguish actual passed groups,
 controlled behavioral failures, setup/build failures and unexecuted claims.
 
 The executable is `atomic-write-proof`, invoked by
-`python3 scripts/test_atomic_write.py`: seven required groups and eleven
+`python3 scripts/test_atomic_write.py`: seven required groups and twelve
 individual rollback boundaries, with exact ordered execution markers.
+Issue #16 adds the current write-head insertion boundary and includes that
+table in complete-state snapshots, reset isolation and serving-role grants.
 `python3 scripts/test-atomic-write-failures.py` reruns a passing disposable-source
 baseline, removes only the outgoing insertion call in a second disposable
 copy, and requires the precise missing-outgoing-facts assertion. It then

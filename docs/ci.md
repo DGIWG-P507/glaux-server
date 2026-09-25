@@ -41,6 +41,8 @@ python3 -u scripts/check-execution.py system-storage
 python3 -u scripts/check-execution.py revision-storage
 python3 -u scripts/check-execution.py atomic-write
 python3 -u scripts/test-atomic-write-failures.py
+python3 -u scripts/check-execution.py conditional-write
+python3 -u scripts/test-conditional-write-failures.py
 python3 -u scripts/test-ci-failures.py
 python3 -u scripts/test-validation-failures.py
 python3 -u scripts/test-projection-failures.py
@@ -82,7 +84,7 @@ proof for this packaging task, not a claim that schema validation ran.
 [check-execution.py](../scripts/check-execution.py) preserves command failure and
 requires actual successful execution evidence. It accepts exactly `rust`,
 `schema-fuzz`, `numeric-fuzz`, `time-fuzz`, `database`, `time-database`,
-`system-storage`, `revision-storage` or `atomic-write`,
+`system-storage`, `revision-storage`, `atomic-write` or `conditional-write`,
 not arbitrary selectors. Every named Rust test must execute successfully, and
 each fuzz campaign must emit its completed-invariant marker; the wrapper imposes
 a 180-second process timeout. Both the [lifecycle runner](../scripts/test_database.py)
@@ -135,7 +137,7 @@ the intended assertion failures count. Results and per-fault logs are retained
 alongside the existing suite evidence; no score replaces the value assertions.
 
 The [atomic-write proof](atomic-write-tests.md) adds seven required groups,
-including eleven full-state rollback boundaries and synchronized visibility
+including twelve full-state rollback boundaries and synchronized visibility
 from a second database connection. Its separate disposable omission control
 requires a passing baseline, the precise missing-outgoing-work assertion, and
 a restored passing execution. Compile/setup failures are not detection.

@@ -56,6 +56,10 @@ not authorization or complete writable-domain validation.
 
 For database-harness changes, also run the [disposable database tests](docs/database-tests.md) in the authorised hosted Linux environment. The original lifecycle and exact-time checks use Python's standard library and the pinned image's psql. The [System identity proof](docs/system-storage-tests.md), [revision/source proof](docs/revision-storage-tests.md) and [atomic application proof](docs/atomic-write-tests.md) additionally run the real Rust SQLx adapters inside that same owned, network-isolated container. Keep the exact image/version checks, owned-target validation, fixture/reset isolation and fatal setup/cleanup errors; never supply a user database or broaden cleanup to unrelated containers/volumes. A Rust-only green result does not cover these required database checks.
 
+The [conditional-write proof](docs/conditional-write-tests.md) adds real competing
+writers, exact winning facts, stale-condition rollback and comparison-omission
+detection inside that same owned harness; it is not an HTTP validator test.
+
 The project lead selected the branch/PR policy on September 18, 2026 and approved the explicit separate-review procedure and required-check enforcement decision on September 21, 2026:
 
 - Use one task branch and linked PR per implementation issue, such as `task/1.1.1-prerequisites`; target `main`. Keep unrelated work out of the PR.
