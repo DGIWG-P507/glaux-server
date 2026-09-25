@@ -51,6 +51,7 @@ alone cannot establish source preservation.
 | Accepted child creation | Exact resource, System, both aliases, parent edge, original artifact, revision, audit and outgoing-work facts all commit together; supplied actor/source and correlation remain distinct from payload assertions | Missing/mismatched audit, association or work; reserialization, rounding, invented actor, wrong revision binding |
 | Failure at each implemented INSERT boundary | Test-owned `AFTER INSERT` trigger raises after the database actually accepted the target row; complete table-value snapshot equals the pre-operation snapshot | Autocommit/nested independent commits, omitted rollback, partially retained alias, resource/context/audit/work |
 | Second source-alias insertion fails | The first alias and every earlier write roll back too | Testing only an empty association list or first-row failure |
+| Internal parent-serialization guard UPDATE fails | The internal guard and every preceding application row match the baseline | Checking only visible resource tables while internal coordination state escapes rollback |
 | Deferred constraint trigger fails at COMMIT | The operation returns failure and the entire independently observed snapshot is unchanged | Returning success before COMMIT or leaving committed earlier work |
 | Separate observer while writer is blocked after outgoing insertion | Explicit advisory-lock wait and backend identity establish the writer reached the boundary; observer sees no new resource, revision, audit or outgoing work; after release it sees the exact committed result | Treating queued/uncommitted outgoing work as durable or using sleep as ordering proof |
 | Invalid/mismatched context or existing IDs | No write occurs; complete snapshot unchanged | Partial state from precondition/input rejection or cross-resource revision binding |
@@ -90,3 +91,13 @@ network-isolated pinned PostgreSQL/PostGIS harness and real Rust SQLx calls.
 No caller-selected database, operational data, laptop runtime or installation
 is used. The eventual execution record must distinguish actual passed groups,
 controlled behavioral failures, setup/build failures and unexecuted claims.
+
+The executable is `atomic-write-proof`, invoked by
+`python3 scripts/test_atomic_write.py`: seven required groups and eleven
+individual rollback boundaries, with exact ordered execution markers.
+`python3 scripts/test-atomic-write-failures.py` reruns a passing disposable-source
+baseline, removes only the outgoing insertion call in a second disposable
+copy, and requires the precise missing-outgoing-facts assertion. It then
+rebuilds and reruns the original source. A compiler, service or cleanup failure
+cannot count as detecting the intended fault. Builds reuse the ordinary Cargo
+dependency cache; production source bytes remain unchanged.
