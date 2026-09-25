@@ -66,6 +66,11 @@ strict configuration, secret redaction, read-only startup, readiness loss/recove
 and unchanged data. [Runtime commands](docs/runtime-configuration.md) do not
 implement CSAPI resource routes, JWT verification or policy enforcement yet.
 
+The [HTTP-boundary proof](docs/http-boundary-tests.md) independently inspects
+raw status/headers and general-purpose JSON through an isolated listener, with
+known-bad response fields and a disposable wrong-origin fault. Its synthetic
+routes are compiled only into the proof example, not the production binary.
+
 The project lead selected the branch/PR policy on September 18, 2026 and approved the explicit separate-review procedure and required-check enforcement decision on September 21, 2026:
 
 - Use one task branch and linked PR per implementation issue, such as `task/1.1.1-prerequisites`; target `main`. Keep unrelated work out of the PR.

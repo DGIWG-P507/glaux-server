@@ -78,7 +78,9 @@ jobs:
         run: python3 -u scripts/check-execution.py schema-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/schema-fuzz.log"
       - name: Prove shared HTTP contracts with an independent listener client
         shell: bash
-        run: python3 -u scripts/check-execution.py http-boundary | tee "$RUNNER_TEMP/glaux-ci-evidence/http-boundary.log"
+        run: |
+          python3 -u scripts/check-execution.py http-boundary | tee "$RUNNER_TEMP/glaux-ci-evidence/http-boundary.log"
+          python3 -u scripts/test-http-boundary-failures.py
       - name: Prove public identity type boundaries and wrong-acceptance detection
         shell: bash
         run: |

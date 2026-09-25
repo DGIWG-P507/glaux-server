@@ -54,9 +54,13 @@ The file is strict JSON, at most 65,536 bytes, with these required fields:
   Two pooled database connections are the fixed bound for this health-only slice,
   not a throughput recommendation for the eventual API.
 
+An optional `http` section adds an explicit public API root and bounded request
+settings; see the [HTTP contract and exact fields](http-boundary.md).
+Omission keeps safe default limits without guessing a public origin.
+
 Unknown fields, duplicate typed fields, missing required values, unsupported
 authentication modes and wrong types fail without quoting the input. Future
-origin, identity-provider, policy, adapter and resource-limit settings are not
+identity-provider, policy, adapter and resource-specific settings are not
 silently accepted placeholders: their owning tasks will add validated fields.
 
 Supply the PostgreSQL connection URL through the selected protected reference.
@@ -93,6 +97,12 @@ policy details. Readiness is recomputed per probe, so loss and recovery of the
 required store affect it without changing liveness. A ready result concerns
 only this declared health foundation, not future CSAPI operations. Axum handles
 HEAD for GET routes; unknown routes do not expose data.
+
+The shared boundary wraps these routes for request bounds and safe 404/405
+problems. Successful health and storage-unavailable health responses keep their
+plain-text contract; an earlier HTTP limit rejection uses its own safe problem.
+The optional public-root setting does not add CSAPI/discovery routes or change
+the internal listener paths.
 
 Startup diagnostics are fixed safe messages, never raw parser/driver errors or
 effective secret-bearing configuration. A successful bind prints `Health listener

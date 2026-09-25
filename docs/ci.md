@@ -47,6 +47,8 @@ python3 -u scripts/check-execution.py retry-write
 python3 -u scripts/test-retry-write-failures.py
 python3 -u scripts/check-execution.py runtime-health
 python3 -u scripts/test-runtime-health-failures.py
+python3 -u scripts/check-execution.py http-boundary
+python3 -u scripts/test-http-boundary-failures.py
 python3 -u scripts/test-ci-failures.py
 python3 -u scripts/test-validation-failures.py
 python3 -u scripts/test-projection-failures.py
@@ -88,7 +90,7 @@ proof for this packaging task, not a claim that schema validation ran.
 [check-execution.py](../scripts/check-execution.py) preserves command failure and
 requires actual successful execution evidence. It accepts exactly `rust`,
 `schema-fuzz`, `numeric-fuzz`, `time-fuzz`, `database`, `time-database`,
-`system-storage`, `revision-storage`, `atomic-write`, `conditional-write`, `retry-write` or `runtime-health`,
+`system-storage`, `revision-storage`, `atomic-write`, `conditional-write`, `retry-write`, `runtime-health` or `http-boundary`,
 not arbitrary selectors. Every named Rust test must execute successfully, and
 each fuzz campaign must emit its completed-invariant marker; the wrapper imposes
 a 180-second process timeout. Both the [lifecycle runner](../scripts/test_database.py)
@@ -151,6 +153,13 @@ content/scope conflicts, local disclosure denial, expiry and synchronized
 competing creation requests. A separate disposable content-comparison fault must
 fail the exact intended assertion between passing baseline/restored executions.
 Its required execution markers and logs remain part of the unconditional build.
+
+The [shared HTTP proof](http-boundary-tests.md) adds seven required real-listener
+groups, raw/general-JSON oracle controls and 192 deterministic header/path cases.
+A compiled wrong-origin fault must fail the exact independent link assertion
+between passing baseline/restored runs. Configuration/root/media unit tests are
+required by name. The actual CLI/database health proof also checks the shared
+fallback and a configured URI limit, without changing stored data.
 
 ## Main-branch rule
 

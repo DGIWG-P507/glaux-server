@@ -91,6 +91,7 @@ pub async fn serve(config: Configuration) -> Result<(), RuntimeError> {
         .route("/health/live", get(live))
         .route("/health/ready", get(ready))
         .with_state(health);
+    let app = config.http_boundary().router(app);
     let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
     #[cfg(unix)]
     let mut terminate = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
