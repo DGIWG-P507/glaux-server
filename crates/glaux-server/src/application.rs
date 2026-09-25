@@ -280,8 +280,7 @@ pub async fn record_denied_system_create(
 
 fn check_revision(expected: Option<RevisionId>, current: RevisionId) -> Result<(), StorageError> {
     if expected.is_some_and(|expected| expected != current) {
-        // Behavioral-red candidate: deliberately omit rejection until proved.
-        return Ok(());
+        return Err(StorageError::PreconditionFailed);
     }
     Ok(())
 }
