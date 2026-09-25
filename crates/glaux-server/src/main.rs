@@ -2,38 +2,47 @@ use glaux_server::storage::{StorageError, check_schema, migrate};
 use glaux_server::{configuration::Configuration, runtime::serve};
 use sqlx::postgres::{PgConnectOptions, PgSslMode};
 use sqlx::{Connection, PgConnection};
-use std::process::ExitCode;
 use std::path::Path;
+use std::process::ExitCode;
 use std::time::Duration;
 
 fn main() -> ExitCode {
     let arguments: Vec<_> = std::env::args_os().skip(1).collect();
     if arguments.len() == 1 && (arguments[0] == "--help" || arguments[0] == "help") {
-        println!("Glaux Server (health-only foundation; no CSAPI routes yet).\nUsage: glaux-server check-config CONFIG.json | serve CONFIG.json | migrate | check-schema\ncheck-config validates configuration and secret references without connecting to storage.\nserve checks existing schema; it never runs migrations. Only /health/live and /health/ready exist.\nDatabase administrative commands require GLAUX_DATABASE_URL; migrate is explicit.\nSee docs/runtime-configuration.md for fields, bounds and security limits.");
+        println!(
+            "Glaux Server (health-only foundation; no CSAPI routes yet).\nUsage: glaux-server check-config CONFIG.json | serve CONFIG.json | migrate | check-schema\ncheck-config validates configuration and secret references without connecting to storage.\nserve checks existing schema; it never runs migrations. Only /health/live and /health/ready exist.\nDatabase administrative commands require GLAUX_DATABASE_URL; migrate is explicit.\nSee docs/runtime-configuration.md for fields, bounds and security limits."
+        );
         return ExitCode::SUCCESS;
     }
     if arguments.len() == 2 && (arguments[0] == "serve" || arguments[0] == "check-config") {
         let config = match Configuration::load(Path::new(&arguments[1])) {
             Ok(config) => config,
-            Err(error) => { eprintln!("glaux-server: {error}."); return ExitCode::from(2); }
+            Err(error) => {
+                eprintln!("glaux-server: {error}.");
+                return ExitCode::from(2);
+            }
         };
         if arguments[0] == "check-config" {
             println!("Configuration valid; secrets redacted.");
             return ExitCode::SUCCESS;
         }
-        let Ok(runtime) = tokio::runtime::Builder::new_current_thread().enable_all().build() else {
+        let Ok(runtime) = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+        else {
             eprintln!("glaux-server: serving runtime unavailable.");
             return ExitCode::FAILURE;
         };
         return match runtime.block_on(serve(config)) {
             Ok(()) => ExitCode::SUCCESS,
-            Err(error) => { eprintln!("glaux-server: {error}."); ExitCode::FAILURE }
+            Err(error) => {
+                eprintln!("glaux-server: {error}.");
+                ExitCode::FAILURE
+            }
         };
     }
     if arguments.len() != 1 || (arguments[0] != "migrate" && arguments[0] != "check-schema") {
-        eprintln!(
-            "glaux-server: an explicit command is required; use --help."
-        );
+        eprintln!("glaux-server: an explicit command is required; use --help.");
         return ExitCode::from(2);
     }
     let Some(options) = std::env::var("GLAUX_DATABASE_URL")

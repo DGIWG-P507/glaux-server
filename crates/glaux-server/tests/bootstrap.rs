@@ -7,11 +7,7 @@ fn startup_requires_an_explicit_command() {
         .output()
         .expect("the built bootstrap executable must run");
 
-    assert_eq!(
-        output.status.code(),
-        Some(2),
-        "implicit startup must fail"
-    );
+    assert_eq!(output.status.code(), Some(2), "implicit startup must fail");
     assert!(
         output.stdout.is_empty(),
         "no successful response is available"
