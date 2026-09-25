@@ -1,9 +1,8 @@
 use std::process::Command;
 
 #[test]
-fn unfinished_server_does_not_report_success() {
-    // Independent bootstrap contract: no listening service exists yet.
-    // A silent, successful placeholder executable must not satisfy this test.
+fn startup_requires_an_explicit_command() {
+    // Serving must be requested with explicit configuration, never by default.
     let output = Command::new(env!("CARGO_BIN_EXE_glaux-server"))
         .output()
         .expect("the built bootstrap executable must run");
@@ -11,15 +10,15 @@ fn unfinished_server_does_not_report_success() {
     assert_eq!(
         output.status.code(),
         Some(2),
-        "unfinished startup must fail"
+        "implicit startup must fail"
     );
     assert!(
         output.stdout.is_empty(),
         "no successful response is available"
     );
     assert_eq!(
-        output.stderr, b"glaux-server: no listening server is implemented; use migrate or check-schema explicitly.\n",
-        "the limitation must be explicit"
+        output.stderr, b"glaux-server: an explicit command is required; use --help.\n",
+        "the command requirement must be explicit"
     );
 }
 

@@ -25,10 +25,16 @@ WORKSPACE_EDGES = {
 # Task-owned selections; the resolved graph is separately reviewed as a snapshot.
 DIRECT_DEPENDENCIES = {
     "glaux-server": {
+        "axum": {"version": "=0.8.8", "default_features": False,
+                 "features": ["http1", "tokio"]},
+        "serde": {"version": "=1.0.229", "default_features": False,
+                  "features": ["derive", "std"]},
+        "serde_json": {"version": "=1.0.151", "default_features": True,
+                       "features": ["arbitrary_precision", "raw_value"]},
         "sqlx": {"version": "=0.9.0", "default_features": False,
                  "features": ["migrate", "postgres", "runtime-tokio", "tls-rustls-ring-webpki"]},
         "tokio": {"version": "=1.53.1", "default_features": False,
-                  "features": ["net", "rt", "sync", "time"]},
+                  "features": ["macros", "net", "rt", "signal", "sync", "time"]},
     },
     "glaux-standards": {
         "jsonschema": {"version": "=0.56.0", "default_features": False, "features": []},
@@ -45,7 +51,7 @@ DIRECT_DEPENDENCIES = {
     },
 }
 NETWORK_CLIENTS = {
-    "attohttpc", "awc", "curl", "curl-sys", "hyper", "hyper-util", "isahc",
+    "attohttpc", "awc", "curl", "curl-sys", "isahc",
     "minreq", "reqwest", "surf", "ureq",
 }
 NOTICE_NAME = re.compile(r"^(?:licen[cs]e|copying|notice|copyright)(?:$|[._-])", re.I)
@@ -212,6 +218,9 @@ def cargo_inventory(root=ROOT, *, enforce_snapshot=True):
             fetched_archive = {"file": archive.name, "sha256": archive_digest}
             require(package["name"] not in NETWORK_CLIENTS,
                     f"{label(package)}: network client is outside the offline validator scope.")
+            if package["name"] in {"hyper", "hyper-util"}:
+                require(not any(feature == "client" or feature.startswith("client-") for feature in node["features"]),
+                        f"{label(package)}: HTTP client feature is outside the health-server scope.")
             if package["name"] == "jsonschema":
                 require(not {"resolve-http", "resolve-file"} & set(node["features"]),
                         "jsonschema: HTTP/filesystem resolution feature enabled.")
