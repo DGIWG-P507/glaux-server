@@ -57,8 +57,12 @@ def main():
         command = [sys.executable, "-u", "scripts/test_runtime_health.py"]
         markers = ["Runtime health: all required checks passed."]
         missing = "Required runtime health proof did not execute successfully"
+    elif sys.argv[1:] == ["http-boundary"]:
+        command = [sys.executable, "-u", "scripts/test_http_boundary.py"]
+        markers = ["HTTP boundary: all required checks passed."]
+        missing = "Required HTTP boundary proof did not execute successfully"
     else:
-        sys.exit("Specify exactly rust, database, schema-fuzz, numeric-fuzz, time-fuzz, time-database, system-storage, revision-storage, atomic-write, conditional-write, retry-write or runtime-health; no test-selection override.")
+        sys.exit("Specify exactly rust, database, schema-fuzz, numeric-fuzz, time-fuzz, time-database, system-storage, revision-storage, atomic-write, conditional-write, retry-write, runtime-health or http-boundary; no test-selection override.")
     print("Required command: " + " ".join(command), flush=True)
     try:
         result = subprocess.run(

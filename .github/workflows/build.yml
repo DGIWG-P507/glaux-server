@@ -76,6 +76,9 @@ jobs:
       - name: Exercise the bounded schema-parser mutation campaign
         shell: bash
         run: python3 -u scripts/check-execution.py schema-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/schema-fuzz.log"
+      - name: Prove shared HTTP contracts with an independent listener client
+        shell: bash
+        run: python3 -u scripts/check-execution.py http-boundary | tee "$RUNNER_TEMP/glaux-ci-evidence/http-boundary.log"
       - name: Prove public identity type boundaries and wrong-acceptance detection
         shell: bash
         run: |
