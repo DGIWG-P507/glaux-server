@@ -105,6 +105,17 @@ manifests/lock, fetch locked archives, and run `python3 scripts/cargo_inventory.
 before replacing `docs/cargo-dependencies.json`. Ordinary CI never regenerates or
 approves that snapshot: missing or differing entries fail.
 
+The #20 selection also checked the maintainers' published advisories on
+25 September 2026. [JWT claim-type advisory GHSA-h395-gr6q-cpjc](https://github.com/Keats/jsonwebtoken/security/advisories/GHSA-h395-gr6q-cpjc)
+affects versions before 10.3.0; the 11.1.0 pin is outside that range.
+The five advisories listed by [AWS-LC-rs](https://github.com/aws/aws-lc-rs/security/advisories)
+covered PKCS7, AES-CCM, X.509 and CRL paths and were fixed by `aws-lc-sys`
+0.38.0 or 0.39.0; the selected 0.45.0 is outside those listed ranges.
+This targeted maintainer/source check is not a comprehensive vulnerability scan,
+promise of no undisclosed issue or security certification. The regression fixture
+also checks a signed but string-valued not-before claim rather than relying only
+on the patched-version label.
+
 Debian packaging copyright text is evidence, not a reliably machine-inferred
 SPDX expression for every file. The JSON therefore leaves those expressions
 unset. Missing copyright files are visible limitations, not guessed licences or

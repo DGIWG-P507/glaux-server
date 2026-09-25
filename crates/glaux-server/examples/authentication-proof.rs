@@ -226,6 +226,7 @@ fn accepted(address: SocketAddr, headers: &str, count: &AtomicUsize) {
         matches_identity(&wire),
         "valid signed access token did not produce exact verified caller: {wire:?}"
     );
+    assert_eq!(wire.header("cache-control"), Some("private, no-store"));
     assert_eq!(count.load(Ordering::SeqCst), before + 1);
 }
 
@@ -351,6 +352,7 @@ fn rejections(address: SocketAddr, fixtures: &Value, count: &AtomicUsize) {
         "audience-mixed",
         "subject-type",
         "expiry-type",
+        "not-before-type",
         "scope-type",
         "groups-type",
         "groups-mixed",

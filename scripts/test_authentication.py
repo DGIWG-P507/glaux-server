@@ -105,6 +105,7 @@ def fixtures(directory):
         ("wrong-audience", "aud", "https://wrong-api.example.test"),
         ("audience-empty", "aud", []), ("audience-mixed", "aud", [base["aud"], 17]),
         ("subject-type", "sub", 17), ("expiry-type", "exp", "1700000600"),
+        ("not-before-type", "nbf", "99999999999"),
         ("expired", "exp", 1699999999), ("future-not-before", "nbf", 1700000001),
         ("future-issued", "iat", 1700000001), ("expiry-before-issued", "exp", 1699999980),
         ("missing-scope", "scope", "write"), ("scope-type", "scope", ["read"]),

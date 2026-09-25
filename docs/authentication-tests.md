@@ -57,7 +57,11 @@ final success marker. There is no optional target, suite filter or skip mode.
 | `bounded-generated-input-and-clean-shutdown` | Independently signed, otherwise valid tokens of exactly 16,384 and 16,385 bytes exercise the adapter's inclusive size boundary directly; both decoded component sizes are within their individual limits. This deliberately avoids conflating outer HTTP header accounting with JWT size. Seed `0x2001`, a fixed wrapping LCG and 96 malformed compact-token cases require safe rejection and unchanged handler count, with all three generated partitions required. Every owned listener is closed. This is bounded parser regression/property evidence, not an exhaustive cryptographic or JWT fuzz campaign. |
 
 The current adapter's strict profile is intentionally narrower than every JWT
-format an identity provider might issue. Full provider integration, issuer-key
+format an identity provider might issue. The signed string-valued `nbf`
+fixture characterizes the JWT library's historical claim-type advisory; the
+adapter rejects it even with its custom clock checks. Accepted JWT responses
+also assert `private, no-store`, independently of the error cache checks.
+Full provider integration, issuer-key
 refresh/rotation/outages, resource authorization, reverse-proxy trust, TLS
 deployment and CSAPI conformance remain separate owning tasks.
 
