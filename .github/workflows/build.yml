@@ -41,6 +41,15 @@ jobs:
           cargo --version --verbose
           rustfmt --version
           cargo clippy --version
+      - name: Emit unapproved task 20 dependency candidate and stop
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
+          cargo fetch
+          git diff -- Cargo.lock > "$RUNNER_TEMP/glaux-ci-evidence/task20-lock.patch"
+          python3 scripts/cargo_inventory.py --candidate > "$RUNNER_TEMP/glaux-ci-evidence/task20-cargo-candidate.json"
+          echo 'Preparation only; candidate requires review and this is not test evidence.'
+          exit 1
       - name: Fetch the locked dependency archives
         shell: bash
         run: |

@@ -25,6 +25,9 @@ WORKSPACE_EDGES = {
 # Task-owned selections; the resolved graph is separately reviewed as a snapshot.
 DIRECT_DEPENDENCIES = {
     "glaux-server": {
+        "base64": {"version": "=0.22.1", "default_features": False, "features": ["std"]},
+        "jsonwebtoken": {"version": "=11.1.0", "default_features": False,
+                         "features": ["aws_lc_rs"]},
         "axum": {"version": "=0.8.8", "default_features": False,
                  "features": ["http1", "tokio"]},
         "serde": {"version": "=1.0.229", "default_features": False,
