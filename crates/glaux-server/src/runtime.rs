@@ -1,4 +1,5 @@
-//! Health-only listener. No CSAPI resource operation or authentication adapter yet.
+//! Health-only listener. Configured authentication is prepared at startup;
+//! no protected CSAPI resource operation is exposed yet.
 use crate::configuration::Configuration;
 use crate::storage::check_schema;
 use axum::extract::State;
@@ -8,6 +9,7 @@ use axum::{Router, routing::get};
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use std::fmt;
+use std::net::SocketAddr;
 use std::time::Duration;
 use tokio::net::TcpListener;
 
@@ -113,7 +115,7 @@ pub async fn serve(config: Configuration) -> Result<(), RuntimeError> {
         }
     };
     let mut server = tokio::spawn(async move {
-        axum::serve(listener, app)
+        axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
             .with_graceful_shutdown(async {
                 let _ = shutdown_rx.await;
             })

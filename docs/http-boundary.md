@@ -79,6 +79,8 @@ they identify problems, not fetchable schema or policy resources.
 | Status | Type suffix | Fixed detail |
 | --- | --- | --- |
 | 400 | bad-request | The request is malformed. |
+| 401 | unauthorized | Authentication is required. |
+| 403 | forbidden | The credential lacks required scope. |
 | 404 | not-found | The requested resource is unavailable. |
 | 405 | method-not-allowed | The method is unavailable on this route. |
 | 406 | not-acceptable | No offered representation is acceptable. |

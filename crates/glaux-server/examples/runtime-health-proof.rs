@@ -148,8 +148,13 @@ impl Drop for Process {
 }
 
 fn config(listener: &str, authentication: &str, database: &str, timeout: u32) -> String {
+    let development = if authentication == "development" {
+        r#","development":{"subject":"health-test-caller","groups":[],"scopes":[]}"#
+    } else {
+        ""
+    };
     format!(
-        "{{\"listener\":\"{listener}\",\"authentication\":\"{authentication}\",\"database\":{database},\"health_timeout_ms\":{timeout}}}"
+        "{{\"listener\":\"{listener}\",\"authentication\":\"{authentication}\",\"database\":{database},\"health_timeout_ms\":{timeout}{development}}}"
     )
 }
 
@@ -230,9 +235,23 @@ fn configuration(fixture: &mut Fixture) {
     check(fixture, ordinary().as_bytes(), Some(&absent_db), true);
 
     let base = ordinary();
+    let development = config(ADDRESS, "development", "{\"url_env\":\"GLAUX_TEST_DATABASE_URL\"}", 500);
+    let jwt_base = base.replace("\"disabled\"", "\"jwt\"");
+    let missing_keys = format!(
+        "{},\"jwt\":{{\"issuer\":\"https://issuer.example.test\",\"audience\":\"glaux\",\"keys\":[]}}}}",
+        &jwt_base[..jwt_base.len() - 1],
+    );
     let cases = [
         base.replace("\"listener\"", "\"SyntheticHealthPayloadCanary\""),
         base.replace("\"disabled\"", "\"SyntheticHealthPayloadCanary\""),
+        base.replace("\"disabled\"", "\"jwt\""),
+        base.replace("\"disabled\"", "\"development\""),
+        format!("{},\"jwt\":null}}", &base[..base.len() - 1]),
+        format!("{},\"development\":{{\"subject\":\"fake\"}}}}", &base[..base.len() - 1]),
+        development.replace("health-test-caller", ""),
+        development.replace("\"subject\"", "\"unknown\""),
+        development.replace("\"subject\":\"health-test-caller\"", "\"subject\":\"health-test-caller\",\"subject\":\"second-caller\""),
+        missing_keys,
         base.replace("500", "99"),
         base.replace("500", "10001"),
         base.replace("500", "null"),

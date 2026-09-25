@@ -17,6 +17,8 @@ new dependencies.
 | Initial PostgreSQL repository/runtime | `sqlx =0.9.0` (defaults disabled: `postgres`, `runtime-tokio`, `migrate`, `tls-rustls-ring-webpki`); `tokio =1.53.1` (defaults disabled: `rt`, `time`, `net`, `sync`, `signal`, `macros`). Server package only. [Storage contract](system-storage.md). | Actual SQLx MIT/Apache and Tokio MIT packaged notices, plus the full transitive feature/archive/notice inventory, are in the reviewed snapshot. TLS incorporates separately recorded ring Apache/ISC, webpki ISC and WebPKI-root CDLA-Permissive terms; these are not all relabelled MIT/Apache. |
 | Health-only HTTP and typed config | `axum =0.8.8`, defaults disabled, `http1`/`tokio`; `serde =1.0.229`, defaults disabled, `derive`/`std`; existing `serde_json =1.0.151` reused. [Runtime contract](runtime-configuration.md). | Axum/Tower/Hyper MIT; serde MIT OR Apache-2.0. The 19 added archives all carry packaged notices. `matchit` is MIT AND BSD-3-Clause and `sync_wrapper` is Apache-2.0; exact compound terms and notice hashes remain in the snapshot. Hyper/Hyper-util enable server, not client features. |
 | Rust, Cargo, rustfmt and Clippy | Rust `1.98.1`, minimal toolchain plus the two explicit components; actual component versions appear in each run. | Rust's [Apache-2.0 OR MIT terms and third-party notice instructions](https://github.com/rust-lang/rust/blob/1.98.1/COPYRIGHT); bundled components retain their own notices. |
+| JWT verification | `jsonwebtoken =11.1.0`, defaults disabled, `aws_lc_rs` only; `base64 =0.22.1`, defaults disabled, `std`. Static RS256 public-key verification; no PEM or HTTP discovery. [Contract](authentication.md). | JWT MIT; AWS-LC Rust ISC AND (Apache-2.0 OR ISC); native AWS-LC has additional MIT/BSD/ISC/Apache terms preserved exactly in the snapshot, not relabelled as the wrapper's licence. No FIPS feature/certification is claimed. |
+| Independent JWT fixture signer | Hosted runner's existing OpenSSL CLI, version recorded in proof logs and inventory. Ephemeral synthetic RSA keys only; not a server runtime dependency. | Runner OpenSSL's own packaged terms/notices apply; [OpenSSL licence information](https://www.openssl.org/source/license.html). No package is installed by the fixture wrapper. |
 | Checkout action | `actions/checkout` v7.0.1, `3d3c42e5aac5ba805825da76410c181273ba90b1`. | [MIT project licence](https://github.com/actions/checkout/blob/3d3c42e5aac5ba805825da76410c181273ba90b1/LICENSE). |
 | Inventory upload action | `actions/upload-artifact` v7.0.1, `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a`. | [MIT project licence](https://github.com/actions/upload-artifact/blob/043fb46d1a93c77aae656e7c1c64a875d1fc6a0a/LICENSE). Bundled action dependencies are not relicensed by that heading. |
 | Python test/check support | Runner Python 3.11+ and its standard library only; no pip dependencies. Actual version is recorded, not silently treated as fixed by `ubuntu-24.04`. | [Python's licence and incorporated-software notices](https://docs.python.org/3/license.html). |
@@ -72,12 +74,16 @@ tools, image, package data, malformed accounting or cleanup failures are errors.
 
 ## What this does not establish
 
-Task #18's reviewed lock/snapshot contains 228 registry packages (19 more than
-task #13's 209), including target-specific and optional-driver metadata not
+Task #20's reviewed lock/snapshot contains 239 registry packages (11 more than
+task #18's 228), including target-specific and optional-driver metadata not
 necessarily compiled into the Linux server. Previously locked package versions
 are retained. SQLx enables only the selected PostgreSQL driver, but Cargo's
 all-target metadata also accounts its optional driver/macro packages; presence
 in that inventory is not a claim that MySQL/SQLite or query macros are enabled.
+AWS-LC uses the hosted native compiler/CMake support. The snapshot's unified
+target-specific Wasm features are metadata, not enabled JavaScript execution in
+the Linux server. All eleven added archives have packaged licence/notice files;
+the six pre-existing notice limitations below are unchanged.
 No HTTP client or jsonschema
 HTTP/filesystem retrieval feature is enabled. All declared expressions and
 compound Unicode/TLS/data terms remain recorded rather than reduced

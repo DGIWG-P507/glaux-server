@@ -1,4 +1,6 @@
 //! Explicit caller authentication. A caller is not resource or producer authority.
+mod jwt;
+
 use crate::http_boundary::Problem;
 use axum::Router;
 use axum::extract::{ConnectInfo, Request, State};
@@ -131,7 +133,7 @@ impl IntoResponse for AuthError {
 #[derive(Clone)]
 enum Mode {
     Disabled,
-    JwtStub,
+    Jwt(Arc<jwt::JwtVerifier>),
     Development(DevelopmentConfig),
 }
 
@@ -148,10 +150,9 @@ impl Authenticator {
             clock: Arc::new(SystemClock),
         }
     }
-    pub fn jwt(_config: JwtConfig, clock: Arc<dyn Clock>) -> Result<Self, AuthConfigError> {
-        // Test-first interface: intentionally cannot authenticate before implementation.
+    pub fn jwt(config: JwtConfig, clock: Arc<dyn Clock>) -> Result<Self, AuthConfigError> {
         Ok(Self {
-            mode: Mode::JwtStub,
+            mode: Mode::Jwt(Arc::new(jwt::JwtVerifier::new(config)?)),
             clock,
         })
     }
@@ -208,10 +209,10 @@ impl Authenticator {
                     kind: CallerKind::Development,
                 })
             }
-            Mode::JwtStub => {
-                let _token = bearer(headers)?;
-                let _now = self.clock.now().ok_or(AuthError::Unavailable)?;
-                Err(AuthError::InvalidToken)
+            Mode::Jwt(verifier) => {
+                let token = bearer(headers)?;
+                let now = self.clock.now().ok_or(AuthError::Unavailable)?;
+                verifier.verify(token, now)
             }
         }
     }

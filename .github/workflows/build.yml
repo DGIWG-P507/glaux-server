@@ -90,6 +90,7 @@ jobs:
         shell: bash
         run: |
           python3 -u scripts/check-execution.py authentication | tee "$RUNNER_TEMP/glaux-ci-evidence/authentication.log"
+          python3 -u scripts/test-authentication-failures.py
       - name: Exercise exact numeric parsing and detect lossy numeric faults
         shell: bash
         run: |

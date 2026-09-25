@@ -2,13 +2,13 @@
 use axum::{
     Router,
     extract::{Extension, State},
-    http::HeaderMap,
+    http::{HeaderMap, HeaderValue, header},
     response::Response,
     routing::get,
 };
 use glaux_server::{
     authentication::{
-        Authenticator, CallerContext, CallerKind, Clock, DevelopmentConfig, JwtConfig,
+        AuthError, Authenticator, CallerContext, CallerKind, Clock, DevelopmentConfig, JwtConfig,
     },
     http_boundary::{HttpBoundary, Limits, Problem, json_response},
 };
@@ -40,7 +40,12 @@ impl Clock for ControlledClock {
 async fn who(
     Extension(caller): Extension<CallerContext>,
     State(count): State<Arc<AtomicUsize>>,
+    headers: HeaderMap,
 ) -> Result<Response, Problem> {
+    assert!(
+        !headers.contains_key(header::AUTHORIZATION),
+        "raw credential reached protected handler"
+    );
     count.fetch_add(1, Ordering::SeqCst);
     let kind = match caller.kind() {
         CallerKind::Jwt => "jwt",
@@ -299,8 +304,12 @@ fn verified(address: SocketAddr, fixtures: &Value, count: &AtomicUsize) {
         "valid",
         "valid-media-type",
         "valid-case-type",
+        "valid-b64-true",
         "valid-aud-array",
         "valid-extension",
+        "valid-deduplicated",
+        "valid-no-not-before",
+        "exact-header-limit",
     ] {
         accepted(address, &bearer(fixtures, name), count);
     }
@@ -327,6 +336,11 @@ fn rejections(address: SocketAddr, fixtures: &Value, count: &AtomicUsize) {
         "missing-type",
         "unknown-algorithm",
         "unknown-key",
+        "missing-key-id",
+        "request-key-jku",
+        "request-key-x5u",
+        "request-key-jwk",
+        "request-key-x5c",
         "unsupported-critical",
         "unencoded-payload",
         "unsigned",
@@ -340,6 +354,12 @@ fn rejections(address: SocketAddr, fixtures: &Value, count: &AtomicUsize) {
         "scope-type",
         "groups-type",
         "groups-mixed",
+        "groups-limit",
+        "scope-limit",
+        "private-number-marker",
+        "over-header-limit",
+        "padded-segment",
+        "noncanonical-signature",
         "missing-iss",
         "missing-sub",
         "missing-aud",
@@ -498,6 +518,39 @@ fn config_controls(fixtures: &Value, clock: Arc<ControlledClock>) {
     );
 }
 
+fn adapter_bounds(fixtures: &Value, clock: Arc<ControlledClock>) {
+    // The shared HTTP header budget includes framing, so test the JWT token's
+    // own inclusive limit directly rather than mistake a HTTP 431 for its rule.
+    let auth = Authenticator::jwt(jwt_config(fixtures), clock).unwrap();
+    let mut headers = HeaderMap::new();
+    for (name, size, accepted) in [
+        ("exact-token-limit", 16_384, true),
+        ("over-token-limit", 16_385, false),
+    ] {
+        let token = fixtures["tokens"][name].as_str().unwrap();
+        assert_eq!(token.len(), size);
+        headers.insert(
+            header::AUTHORIZATION,
+            HeaderValue::from_str(&format!("Bearer {token}")).unwrap(),
+        );
+        match auth.authenticate(&headers, None) {
+            Ok(caller) => {
+                assert!(accepted, "token escaped configured compact-byte bound");
+                assert_eq!(caller.issuer(), "https://issuer.example.test");
+                assert_eq!(caller.subject(), "fixture-alice");
+                assert_eq!(caller.client_id(), Some("fixture-client"));
+                assert_eq!(caller.scopes(), ["read", "write"]);
+                assert_eq!(caller.groups(), ["group-a", "group-b"]);
+                assert_eq!(caller.kind(), CallerKind::Jwt);
+            }
+            Err(error) => {
+                assert!(!accepted, "exact-size independently signed token rejected");
+                assert_eq!(error, AuthError::InvalidToken);
+            }
+        }
+    }
+}
+
 async fn listener(router: Router, checks: impl FnOnce(SocketAddr) + Send + 'static) {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
@@ -569,6 +622,7 @@ async fn proof(fixtures: Value) {
             let wire = request(address, "/who", headers);
             assert_eq!(wire.status, 200);
             let value = wire.json();
+            assert_eq!(value["issuer"], json!("urn:glaux:development"));
             assert_eq!(value["subject"], json!("development-alice"));
             assert_eq!(value["kind"], json!("development"));
             assert_eq!(value["groups"], json!(["development-group"]));
@@ -600,12 +654,16 @@ async fn proof(fixtures: Value) {
     )
     .await;
     println!("Authentication group passed: explicit-loopback-development-boundary");
+    adapter_bounds(&fixtures, clock.clone());
     let auth = Authenticator::jwt(jwt_config(&fixtures), clock).unwrap();
     listener(fixture(auth, count.clone()), move |address| {
         let mut seed = 0x2001_u32;
+        let mut partitions = [0; 3];
         for index in 0..96 {
             seed = seed.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
-            let token = match seed % 3 {
+            let partition = seed as usize % 3;
+            partitions[partition] += 1;
+            let token = match partition {
                 0 => format!("e30.e30.invalid{index}"),
                 1 => format!("a{index}.b.c.d"),
                 _ => format!("invalid{index}"),
@@ -619,6 +677,10 @@ async fn proof(fixtures: Value) {
                 &count,
             );
         }
+        assert!(
+            partitions.iter().all(|count| *count > 0),
+            "generated campaign missed a semantic partition"
+        );
     })
     .await;
     println!("Authentication group passed: bounded-generated-input-and-clean-shutdown");

@@ -91,8 +91,14 @@ def fixtures(directory):
     sign("valid")
     sign("valid-media-type", headers={**header, "typ": "application/at+jwt"})
     sign("valid-case-type", headers={**header, "typ": "AT+JWT"})
+    sign("valid-b64-true", headers={**header, "b64": True})
     sign("valid-aud-array", claims={**base, "aud": ["other-api", base["aud"]]})
     sign("valid-extension", claims={**base, "unfamiliar": {"value": 17}})
+    sign("valid-deduplicated", claims={**base, "scope": "read read write",
+                                      "groups": ["group-a", "group-a", "group-b"]})
+    without_nbf = base.copy()
+    del without_nbf["nbf"]
+    sign("valid-no-not-before", claims=without_nbf)
     sign("bad-signature", signing_key=wrong_key)
     for name, field, value in (
         ("wrong-issuer", "iss", "https://wrong.example.test"),
@@ -103,6 +109,9 @@ def fixtures(directory):
         ("future-issued", "iat", 1700000001), ("expiry-before-issued", "exp", 1699999980),
         ("missing-scope", "scope", "write"), ("scope-type", "scope", ["read"]),
         ("groups-type", "groups", "group-a"), ("groups-mixed", "groups", ["group-a", 17]),
+        ("private-number-marker", "exp", {"$serde_json::private::Number": "1700000600"}),
+        ("groups-limit", "groups", ["group-" + str(index) for index in range(65)]),
+        ("scope-limit", "scope", "read " + " ".join("scope" + str(index) for index in range(64))),
     ):
         sign(name, claims={**base, field: value})
     for field in ("iss", "sub", "aud", "exp", "iat", "client_id", "jti"):
@@ -118,8 +127,16 @@ def fixtures(directory):
     missing_type = header.copy()
     del missing_type["typ"]
     sign("missing-type", headers=missing_type)
+    missing_kid = header.copy()
+    del missing_kid["kid"]
+    sign("missing-key-id", headers=missing_kid)
+    for field, value in (("jku", "https://untrusted.example.test/keys"),
+                         ("x5u", "https://untrusted.example.test/cert"),
+                         ("jwk", jwk), ("x5c", ["synthetic-certificate"])):
+        sign("request-key-" + field, headers={**header, field: value})
     compact = json.dumps(base, separators=(",", ":"))
-    sign("duplicate-claim", payload_bytes=(compact[:-1] + ',"aud":"https://wrong-api.example.test"}').encode())
+    # Both duplicate values are otherwise valid: last-wins parsing cannot pass this check.
+    sign("duplicate-claim", payload_bytes=(compact[:-1] + ',"aud":"https://api.example.test"}').encode())
     sign("duplicate-header", header_bytes=b'{"alg":"RS256","typ":"at+jwt","kid":"fixture-key","alg":"RS256"}')
     sign("fraction-exp-after", payload_bytes=compact.replace('"exp":1700000600', '"exp":1700000000.500000001').encode())
     sign("fraction-exp-equal", payload_bytes=compact.replace('"exp":1700000600', '"exp":1700000000.500000000').encode())
@@ -134,8 +151,32 @@ def fixtures(directory):
     tokens["unsigned"] = unsigned + "."
     hs = (b64(json.dumps({**header, "alg": "HS256"}).encode()) + "." + b64(compact.encode())).encode()
     tokens["symmetric-confusion"] = hs.decode() + "." + b64(hmac.new(public, hs, hashlib.sha256).digest())
+    protected, payload, signature = tokens["valid"].split(".")
+    tokens["padded-segment"] = protected + "=." + payload + "." + signature
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+    last = alphabet.index(signature[-1])
+    require(last % 16 == 0, "Expected canonical two-character tail for 256-byte signature")
+    tokens["noncanonical-signature"] = protected + "." + payload + "." + signature[:-1] + alphabet[last + 1]
+
+    def padded(value, size):
+        result = {**value, "pad": ""}
+        count = size - len(json.dumps(result, separators=(",", ":")).encode())
+        require(count >= 0, "Requested fixture size is too small")
+        result["pad"] = "x" * count
+        require(len(json.dumps(result, separators=(",", ":")).encode()) == size,
+                "Independent fixture byte count differs")
+        return result
+
+    sign("exact-header-limit", headers=padded(header, 2048))
+    sign("over-header-limit", headers=padded(header, 2049))
+    sign("exact-token-limit", headers=padded(header, 2047), claims=padded(base, 9982))
+    sign("over-token-limit", headers=padded(header, 2048), claims=padded(base, 9982))
+    require(len(tokens["exact-token-limit"]) == 16384, "Exact token-bound fixture differs")
+    require(len(tokens["over-token-limit"]) == 16385, "Over-token-bound fixture differs")
     path = directory / "public-fixtures.json"
-    path.write_text(json.dumps({"jwk": jwk, "tokens": tokens}), encoding="utf-8")
+    public_fixture = json.dumps({"jwk": jwk, "tokens": tokens})
+    require(len(public_fixture.encode()) <= 131072, "Public fixture file exceeds reader bound")
+    path.write_text(public_fixture, encoding="utf-8")
     # No example process needs either private key; erase them before starting it.
     key.unlink()
     wrong_key.unlink()
