@@ -196,11 +196,12 @@ async fn assert_facts(connection: &mut PgConnection, current: u16, history: &[u1
         ("server_audit", 400),
         ("outgoing_work", 500),
     ] {
-        let ids: Vec<String> =
-            sqlx::query_scalar(AssertSqlSafe(format!("SELECT id::text FROM public.{table} ORDER BY id")))
-                .fetch_all(&mut *connection)
-                .await
-                .unwrap();
+        let ids: Vec<String> = sqlx::query_scalar(AssertSqlSafe(format!(
+            "SELECT id::text FROM public.{table} ORDER BY id"
+        )))
+        .fetch_all(&mut *connection)
+        .await
+        .unwrap();
         assert_eq!(
             ids,
             history
@@ -305,7 +306,9 @@ async fn migration(connection: &mut PgConnection) {
     else {
         panic!("ambiguous migration must fail at migration 7");
     };
-    let database_error = error.as_database_error().expect("expected database rejection");
+    let database_error = error
+        .as_database_error()
+        .expect("expected database rejection");
     assert_eq!(database_error.code().as_deref(), Some("23505"));
     assert_eq!(database_error.constraint(), Some("system_write_head_pkey"));
     let absent: bool = sqlx::query_scalar("SELECT to_regclass('public.system_write_head') IS NULL")
