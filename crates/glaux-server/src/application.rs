@@ -119,7 +119,10 @@ fn retry_content(input: &CreateSystem) -> Result<Vec<u8>, StorageError> {
         output.extend_from_slice(&(value.len() as u64).to_be_bytes());
         output.extend_from_slice(value);
     }
-    let mut aliases: Vec<_> = input.system.sources.iter()
+    let mut aliases: Vec<_> = input
+        .system
+        .sources
+        .iter()
         .map(|source| (source.authority().as_str(), source.identifier().as_str()))
         .collect();
     aliases.sort_unstable();
@@ -129,14 +132,30 @@ fn retry_content(input: &CreateSystem) -> Result<Vec<u8>, StorageError> {
     let mut content = b"glaux.system-create-intent.v1".to_vec();
     field(&mut content, input.system.uid.as_str().as_bytes());
     field(&mut content, input.system.label.as_bytes());
-    field(&mut content, input.system.parent.map(|id| id.to_string()).unwrap_or_default().as_bytes());
+    field(
+        &mut content,
+        input
+            .system
+            .parent
+            .map(|id| id.to_string())
+            .unwrap_or_default()
+            .as_bytes(),
+    );
     content.extend_from_slice(&(aliases.len() as u64).to_be_bytes());
     for (authority, identifier) in aliases {
         field(&mut content, authority.as_bytes());
         field(&mut content, identifier.as_bytes());
     }
-    field(&mut content, input.revision.semantic_time.as_ref()
-        .map(|time| time.source_lexeme()).unwrap_or("").as_bytes());
+    field(
+        &mut content,
+        input
+            .revision
+            .semantic_time
+            .as_ref()
+            .map(|time| time.source_lexeme())
+            .unwrap_or("")
+            .as_bytes(),
+    );
     field(&mut content, input.artifact.media_type.as_bytes());
     field(&mut content, &input.artifact.bytes);
     Ok(content)
@@ -167,8 +186,12 @@ impl PreparedRetry<'_> {
              'glaux.system-create-retry.v1' ||
              jsonb_build_array($1::text,$2::text,'system.create',$3::text,$4::text)::text, 0))",
         )
-        .bind(self.actor).bind(self.source).bind(&self.target).bind(&self.key.key)
-        .execute(&mut *connection).await?;
+        .bind(self.actor)
+        .bind(self.source)
+        .bind(&self.target)
+        .bind(&self.key.key)
+        .execute(&mut *connection)
+        .await?;
         // A separate READ COMMITTED statement sees a predecessor after waiting.
         // Database wall clock is evaluated here, not before acquiring the lock.
         let row = sqlx::query(
@@ -179,15 +202,36 @@ impl PreparedRetry<'_> {
                AND operation='system.create' AND target=$3 AND key=$4
                AND expires_at > clock_timestamp()",
         )
-        .bind(self.actor).bind(self.source).bind(&self.target).bind(&self.key.key)
-        .fetch_optional(&mut *connection).await?;
-        let Some(row) = row else { return Ok(None); };
+        .bind(self.actor)
+        .bind(self.source)
+        .bind(&self.target)
+        .bind(&self.key.key)
+        .fetch_optional(&mut *connection)
+        .await?;
+        let Some(row) = row else {
+            return Ok(None);
+        };
         let receipt = WriteReceipt {
-            system_id: row.try_get::<String,_>("system_id")?.parse().map_err(|_| StorageError::InvalidStoredValue)?,
-            revision_id: row.try_get::<String,_>("revision_id")?.parse().map_err(|_| StorageError::InvalidStoredValue)?,
-            artifact_id: row.try_get::<String,_>("artifact_id")?.parse().map_err(|_| StorageError::InvalidStoredValue)?,
-            audit_id: row.try_get::<String,_>("audit_id")?.parse().map_err(|_| StorageError::InvalidStoredValue)?,
-            event_id: row.try_get::<String,_>("event_id")?.parse().map_err(|_| StorageError::InvalidStoredValue)?,
+            system_id: row
+                .try_get::<String, _>("system_id")?
+                .parse()
+                .map_err(|_| StorageError::InvalidStoredValue)?,
+            revision_id: row
+                .try_get::<String, _>("revision_id")?
+                .parse()
+                .map_err(|_| StorageError::InvalidStoredValue)?,
+            artifact_id: row
+                .try_get::<String, _>("artifact_id")?
+                .parse()
+                .map_err(|_| StorageError::InvalidStoredValue)?,
+            audit_id: row
+                .try_get::<String, _>("audit_id")?
+                .parse()
+                .map_err(|_| StorageError::InvalidStoredValue)?,
+            event_id: row
+                .try_get::<String, _>("event_id")?
+                .parse()
+                .map_err(|_| StorageError::InvalidStoredValue)?,
         };
         // Revoke disclosure before distinguishing equal from conflicting intent.
         if !authorize(&receipt) {
@@ -225,12 +269,19 @@ impl PreparedRetry<'_> {
              WHERE system_create_retry.expires_at <= EXCLUDED.retained_at
              RETURNING true",
         )
-        .bind(self.actor).bind(self.source).bind(&self.target).bind(&self.key.key)
-        .bind(&self.digest).bind(receipt.system_id.to_string())
-        .bind(receipt.revision_id.to_string()).bind(receipt.artifact_id.to_string())
-        .bind(receipt.audit_id.to_string()).bind(receipt.event_id.to_string())
+        .bind(self.actor)
+        .bind(self.source)
+        .bind(&self.target)
+        .bind(&self.key.key)
+        .bind(&self.digest)
+        .bind(receipt.system_id.to_string())
+        .bind(receipt.revision_id.to_string())
+        .bind(receipt.artifact_id.to_string())
+        .bind(receipt.audit_id.to_string())
+        .bind(receipt.event_id.to_string())
         .bind(f64::from(self.key.retention_seconds))
-        .fetch_optional(connection).await?;
+        .fetch_optional(connection)
+        .await?;
         if recorded != Some(true) {
             return Err(StorageError::Conflict);
         }
@@ -363,12 +414,22 @@ where
     let content = retry.map(|_| retry_content(input)).transpose()?;
     let prepared = if let (Some(key), Some(content)) = (retry, content) {
         Some(PreparedRetry {
-            actor: input.audit.actor.as_deref().ok_or(StorageError::InvalidInput)?,
+            actor: input
+                .audit
+                .actor
+                .as_deref()
+                .ok_or(StorageError::InvalidInput)?,
             source: input.audit.source.as_deref(),
-            target: input.system.parent.map(|id| id.to_string()).unwrap_or_default(),
+            target: input
+                .system
+                .parent
+                .map(|id| id.to_string())
+                .unwrap_or_default(),
             key,
             digest: sqlx::query_scalar("SELECT sha256($1::bytea)")
-                .bind(content).fetch_one(&mut *connection).await?,
+                .bind(content)
+                .fetch_one(&mut *connection)
+                .await?,
         })
     } else {
         None
@@ -380,7 +441,9 @@ where
         audit_id: input.audit_id,
         event_id: input.event_id,
     };
-    let mut transaction = connection.begin_with("BEGIN ISOLATION LEVEL READ COMMITTED").await?;
+    let mut transaction = connection
+        .begin_with("BEGIN ISOLATION LEVEL READ COMMITTED")
+        .await?;
     let result = async {
         if let Some(prepared) = &prepared
             && let Some(recorded) = prepared.replay(&mut transaction, &mut authorize).await?

@@ -404,12 +404,19 @@ async fn scopes(connection: &mut PgConnection) {
     assert_eq!(target, parent.id.to_string());
     let before = snapshot(connection).await;
     assert!(matches!(
-        create_system_with_retry(connection, &input(6, 6), Some(&RetryKey {
-            key: "fresh-denied".to_owned(), ..key()
-        }), |candidate| {
-            assert_eq!(*candidate, expected(6));
-            false
-        }).await,
+        create_system_with_retry(
+            connection,
+            &input(6, 6),
+            Some(&RetryKey {
+                key: "fresh-denied".to_owned(),
+                ..key()
+            }),
+            |candidate| {
+                assert_eq!(*candidate, expected(6));
+                false
+            }
+        )
+        .await,
         Err(StorageError::Denied)
     ));
     assert_eq!(snapshot(connection).await, before);
@@ -770,12 +777,18 @@ async fn concurrent_scope(connection: &mut PgConnection, change_actor: bool) {
     assert!(unlocked);
     assert_eq!(
         tokio::time::timeout(Duration::from_secs(5), first_task)
-            .await.unwrap().unwrap().unwrap(),
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap(),
         expected(1)
     );
     assert_eq!(
         tokio::time::timeout(Duration::from_secs(5), second_task)
-            .await.unwrap().unwrap().unwrap(),
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap(),
         expected(2)
     );
     let actual: Vec<(String, String, String, String, String, String, String)> = sqlx::query_as(
@@ -788,17 +801,45 @@ async fn concurrent_scope(connection: &mut PgConnection, change_actor: bool) {
          AND w.audit_id=t.audit_id AND w.kind='system.created' ORDER BY t.system_id")
         .fetch_all(&mut *connection).await.unwrap();
     let expected_rows = vec![
-        ("retry-actor".to_owned(), "retry-source".to_owned(), id(1001).to_string(),
-         id(3001).to_string(), id(2001).to_string(), id(4001).to_string(), id(5001).to_string()),
-        (if change_actor { "other-actor" } else { "retry-actor" }.to_owned(),
-         if change_actor { "retry-source" } else { "other-source" }.to_owned(),
-         id(1002).to_string(), id(3002).to_string(), id(2002).to_string(),
-         id(4002).to_string(), id(5002).to_string()),
+        (
+            "retry-actor".to_owned(),
+            "retry-source".to_owned(),
+            id(1001).to_string(),
+            id(3001).to_string(),
+            id(2001).to_string(),
+            id(4001).to_string(),
+            id(5001).to_string(),
+        ),
+        (
+            if change_actor {
+                "other-actor"
+            } else {
+                "retry-actor"
+            }
+            .to_owned(),
+            if change_actor {
+                "retry-source"
+            } else {
+                "other-source"
+            }
+            .to_owned(),
+            id(1002).to_string(),
+            id(3002).to_string(),
+            id(2002).to_string(),
+            id(4002).to_string(),
+            id(5002).to_string(),
+        ),
     ];
-    assert_eq!(actual, expected_rows, "concurrent contexts borrowed or mixed another outcome");
+    assert_eq!(
+        actual, expected_rows,
+        "concurrent contexts borrowed or mixed another outcome"
+    );
     for (table, offset) in [
-        ("resource_identity", 1000), ("source_artifact", 2000), ("system_revision", 3000),
-        ("server_audit", 4000), ("outgoing_work", 5000),
+        ("resource_identity", 1000),
+        ("source_artifact", 2000),
+        ("system_revision", 3000),
+        ("server_audit", 4000),
+        ("outgoing_work", 5000),
     ] {
         let ids: Vec<String> = sqlx::query_scalar(AssertSqlSafe(format!(
             "SELECT id::text FROM public.{table} ORDER BY id"
@@ -806,10 +847,20 @@ async fn concurrent_scope(connection: &mut PgConnection, change_actor: bool) {
         .fetch_all(&mut *connection)
         .await
         .unwrap();
-        assert_eq!(ids, vec![id(offset + 1).to_string(), id(offset + 2).to_string()]);
+        assert_eq!(
+            ids,
+            vec![id(offset + 1).to_string(), id(offset + 2).to_string()]
+        );
     }
-    execute(connection, "DROP TRIGGER retry_wait ON public.outgoing_work").await;
-    println!("Retry race passed: different-{}", if change_actor { "actor" } else { "source" });
+    execute(
+        connection,
+        "DROP TRIGGER retry_wait ON public.outgoing_work",
+    )
+    .await;
+    println!(
+        "Retry race passed: different-{}",
+        if change_actor { "actor" } else { "source" }
+    );
 }
 
 fn sequence(seed: u32) -> Vec<u32> {
