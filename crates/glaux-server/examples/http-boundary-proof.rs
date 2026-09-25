@@ -619,6 +619,12 @@ fn bounds(address: SocketAddr) {
         " ".repeat(129)
     );
     problem(&exchange(address, &chunked, false), 413);
+    // Each block fits alone; their combined parsed header size exceeds 2048.
+    let trailers = format!(
+        "POST /json HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\nTrailer: X-Pad\r\n\r\n2\r\n{{}}\r\n0\r\nX-Pad: {}\r\n\r\n",
+        "x".repeat(1990)
+    );
+    problem(&exchange(address, &trailers, false), 431);
     problem(
         &request(
             address,

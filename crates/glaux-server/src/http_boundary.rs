@@ -431,7 +431,8 @@ async fn dispatch(state: &HttpBoundary, request: Request, next: Next) -> Result<
     if request.uri().to_string().len() > state.limits.uri_bytes {
         return Err(Problem::new(Kind::UriSize));
     }
-    if header_size(request.headers()) > state.limits.header_bytes {
+    let initial_headers = header_size(request.headers());
+    if initial_headers > state.limits.header_bytes {
         return Err(Problem::new(Kind::HeadersSize));
     }
     validate_target(request.uri())?;
@@ -448,7 +449,10 @@ async fn dispatch(state: &HttpBoundary, request: Request, next: Next) -> Result<
     }
     let deadline = Instant::now() + Duration::from_millis(state.limits.timeout_ms);
     let (parts, body) = request.into_parts();
-    let bytes = timeout_at(deadline, collect(body, state.limits))
+    let mut body_limits = state.limits;
+    // Initial fields and trailing fields share one aggregate header budget.
+    body_limits.header_bytes -= initial_headers;
+    let bytes = timeout_at(deadline, collect(body, body_limits))
         .await
         .map_err(|_| Problem::new(Kind::RequestTimeout))??;
     let request = Request::from_parts(parts, Body::from(bytes));

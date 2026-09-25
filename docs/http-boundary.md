@@ -28,8 +28,11 @@ selection, network/file retrieval, resource semantics or authorization.
 | Request-target bytes | 4,096 | 128–16,384 |
 | Body/handler deadline milliseconds | 15,000 | 10–60,000 |
 
-Header accounting includes every name/value occurrence. URI/header rejection
-happens before body consumption. The deadline is shared between body collection
+Header accounting includes every name/value occurrence plus four separator
+bytes per field, with initial fields and trailers sharing one aggregate budget.
+Initial URI/header rejection happens before body consumption; trailing fields
+are checked as they arrive and never override request authority or media.
+The deadline is shared between body collection
 and obtaining the handler response, not a promise to cancel committed work or a
 streaming-response delivery deadline. No resource writes exist here. The JSON
 parser's additional 262,144-byte ceiling remains in force even when a deployment
@@ -94,7 +97,11 @@ sent even if Accept omits problem+json, the fallback permitted by RFC 9457 §3,
 rather than replacing the real failure with recursive negotiation errors.
 The existing plain-text health responses retain their separate minimal contract.
 Correlation values are diagnostic identifiers, not credentials, resource IDs,
-ordering evidence or authority. They do not echo protected data.
+ordering evidence or authority. They use the existing UUIDv7 generator and
+therefore expose their own minting time, not a protected resource timestamp.
+Clock or entropy failure uses the literal `unavailable` rather than failing to
+report the original error; uniqueness is not promised in that case. They do not
+echo protected data.
 
 ## Configured public links
 
