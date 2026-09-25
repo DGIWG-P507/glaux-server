@@ -45,8 +45,11 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
-          cargo fetch --locked
-          git diff --exit-code -- Cargo.lock
+          # Temporary candidate preparation; cannot produce a passing build.
+          cargo fetch
+          git diff -- Cargo.lock > "$RUNNER_TEMP/glaux-ci-evidence/key-refresh-lock.patch"
+          python3 scripts/cargo_inventory.py --candidate > "$RUNNER_TEMP/glaux-ci-evidence/key-refresh-candidate.json"
+          exit 1
       - name: Verify formatting and locked dependencies
         shell: bash
         run: |
