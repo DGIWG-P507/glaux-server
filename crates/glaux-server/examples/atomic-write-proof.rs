@@ -350,7 +350,9 @@ async fn accepted(connection: &mut PgConnection) {
             .execute(&mut *connection)
             .await
             .unwrap_err();
-        let database_error = error.as_database_error().expect("database immutability error");
+        let database_error = error
+            .as_database_error()
+            .expect("database immutability error");
         assert_eq!(database_error.code().as_deref(), Some("55000"));
         assert_eq!(database_error.message(), "retained history is immutable");
         assert_eq!(
