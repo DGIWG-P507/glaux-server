@@ -161,7 +161,10 @@ pub(crate) async fn insert_system(
     sqlx::query("INSERT INTO public.resource_identity(id, family, uid) VALUES ($1::text::uuid, 'system', $2)")
         .bind(record.id.to_string()).bind(record.uid.as_str()).execute(&mut *connection).await?;
     sqlx::query("INSERT INTO public.system_identity(id, label) VALUES ($1::text::uuid, $2)")
-        .bind(record.id.to_string()).bind(&record.label).execute(&mut *connection).await?;
+        .bind(record.id.to_string())
+        .bind(&record.label)
+        .execute(&mut *connection)
+        .await?;
     for source in &record.sources {
         sqlx::query("INSERT INTO public.source_identity(resource_id, authority, identifier) VALUES ($1::text::uuid, $2, $3)")
             .bind(record.id.to_string()).bind(source.authority().as_str()).bind(source.identifier().as_str())
