@@ -341,6 +341,24 @@ async fn accepted(connection: &mut PgConnection) {
         assert_eq!(error.as_database_error().and_then(|e| e.code()).as_deref(), Some("23503"));
         assert_eq!(snapshot(connection).await, before, "mismatched outgoing binding changed state");
     }
+    for statement in [
+        "UPDATE public.outgoing_work SET audit_id='01890f20-7b5a-7cc3-98c4-dc0c0c070402'",
+        "DELETE FROM public.outgoing_work",
+        "TRUNCATE public.outgoing_work",
+    ] {
+        let error = sqlx::query(statement)
+            .execute(&mut *connection)
+            .await
+            .unwrap_err();
+        let database_error = error.as_database_error().expect("database immutability error");
+        assert_eq!(database_error.code().as_deref(), Some("55000"));
+        assert_eq!(database_error.message(), "retained history is immutable");
+        assert_eq!(
+            snapshot(connection).await,
+            before,
+            "ordinary SQL changed retained outgoing work"
+        );
+    }
     // Reopening a connection establishes ordinary durable visibility, not backup recovery.
     let mut reopened = PgConnection::connect(DSN).await.unwrap();
     assert_accepted(&mut reopened).await;
