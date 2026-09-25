@@ -777,7 +777,7 @@ async fn permissions(connection: &mut PgConnection) {
 async fn proof() {
     let mut connection = PgConnection::connect(DSN).await.unwrap();
     let identity: (String, String, String) =
-        sqlx::query_as("SELECT current_database(),current_user::text,inet_server_addr()::text")
+        sqlx::query_as("SELECT current_database(),current_user::text,host(inet_server_addr())")
             .fetch_one(&mut connection)
             .await
             .unwrap();
