@@ -51,13 +51,13 @@ def empty_rust(root):
 
 def filtered_rust(root):
     replace(root / "scripts/check-execution.py", '"--", "--nocapture",',
-            '"--", "--nocapture", "--skip", "unfinished_server_does_not_report_success",')
+            '"--", "--nocapture", "--skip", "startup_requires_an_explicit_command",')
 
 
 def ignored_rust(root):
     replace(root / "crates/glaux-server/tests/bootstrap.rs",
-            "#[test]\nfn unfinished_server_does_not_report_success",
-            "#[test]\n#[ignore]\nfn unfinished_server_does_not_report_success")
+            "#[test]\nfn startup_requires_an_explicit_command",
+            "#[test]\n#[ignore]\nfn startup_requires_an_explicit_command")
 
 
 def skipped_database(root):

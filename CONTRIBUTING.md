@@ -60,6 +60,12 @@ The [conditional-write proof](docs/conditional-write-tests.md) adds real competi
 writers, exact winning facts, stale-condition rollback and comparison-omission
 detection inside that same owned harness; it is not an HTTP validator test.
 
+The [runtime-health proof](docs/runtime-health-tests.md) starts the actual health-only
+binary in that owned container and uses an independent HTTP client. It checks
+strict configuration, secret redaction, read-only startup, readiness loss/recovery
+and unchanged data. [Runtime commands](docs/runtime-configuration.md) do not
+implement CSAPI resource routes, JWT verification or policy enforcement yet.
+
 The project lead selected the branch/PR policy on September 18, 2026 and approved the explicit separate-review procedure and required-check enforcement decision on September 21, 2026:
 
 - Use one task branch and linked PR per implementation issue, such as `task/1.1.1-prerequisites`; target `main`. Keep unrelated work out of the PR.

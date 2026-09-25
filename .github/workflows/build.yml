@@ -96,6 +96,11 @@ jobs:
         run: |
           docker version
           python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness import PIN, docker; print(PIN); print(docker("pull", "--platform", PIN["platform"], PIN["image"], timeout=180))'
+      - name: Prove runtime configuration and live storage readiness
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py runtime-health | tee "$RUNNER_TEMP/glaux-ci-evidence/runtime-health.log"
+          python3 -u scripts/test-runtime-health-failures.py
       - name: Check original corpus and offline fault controls
         shell: bash
         run: |

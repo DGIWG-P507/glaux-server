@@ -45,6 +45,8 @@ python3 -u scripts/check-execution.py conditional-write
 python3 -u scripts/test-conditional-write-failures.py
 python3 -u scripts/check-execution.py retry-write
 python3 -u scripts/test-retry-write-failures.py
+python3 -u scripts/check-execution.py runtime-health
+python3 -u scripts/test-runtime-health-failures.py
 python3 -u scripts/test-ci-failures.py
 python3 -u scripts/test-validation-failures.py
 python3 -u scripts/test-projection-failures.py
@@ -86,7 +88,7 @@ proof for this packaging task, not a claim that schema validation ran.
 [check-execution.py](../scripts/check-execution.py) preserves command failure and
 requires actual successful execution evidence. It accepts exactly `rust`,
 `schema-fuzz`, `numeric-fuzz`, `time-fuzz`, `database`, `time-database`,
-`system-storage`, `revision-storage`, `atomic-write`, `conditional-write` or `retry-write`,
+`system-storage`, `revision-storage`, `atomic-write`, `conditional-write`, `retry-write` or `runtime-health`,
 not arbitrary selectors. Every named Rust test must execute successfully, and
 each fuzz campaign must emit its completed-invariant marker; the wrapper imposes
 a 180-second process timeout. Both the [lifecycle runner](../scripts/test_database.py)
