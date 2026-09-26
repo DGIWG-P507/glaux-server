@@ -230,8 +230,13 @@ fn request(address: SocketAddr, path: &str, token: Option<&str>) -> Wire {
     let authorization = token
         .map(|token| format!("Authorization: Bearer {token}\r\n"))
         .unwrap_or_default();
+    let cookie = if path == "/who" {
+        "Cookie: fixture=SyntheticCookieCanary\r\n"
+    } else {
+        ""
+    };
     let message = format!(
-        "GET {path} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n{authorization}\r\n"
+        "GET {path} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n{authorization}{cookie}\r\n"
     );
     connection.write_all(message.as_bytes()).unwrap();
     let mut response = Vec::new();
@@ -574,21 +579,50 @@ async fn transport(fixtures: &Value) {
         count(fixtures, &target, 1).await;
     }
     count(fixtures, "attacker", 0).await;
-    mode(fixtures, "body-deadline", "hold-body").await;
-    let ctx = adapter(fixtures, "body-deadline");
-    let pending = begin(&ctx.auth, fixtures, "a");
-    barrier(fixtures, "body-deadline", 1).await;
-    let result = tokio::time::timeout(Duration::from_secs(1), pending)
-        .await
-        .expect("streamed body escaped whole-fetch deadline")
-        .unwrap();
-    assert_eq!(
-        result.err(),
-        Some(AuthError::Unavailable),
-        "partial streamed body accepted"
-    );
-    release(fixtures, "body-deadline").await;
-    count(fixtures, "body-deadline", 1).await;
+    for (target, complete) in [("body-complete", true), ("body-deadline", false)] {
+        mode(fixtures, target, "hold-body").await;
+        let ctx = adapter(fixtures, target);
+        let auth = ctx.auth.clone();
+        let headers = headers(&token(fixtures, "a"));
+        let pending = tokio::spawn(async move {
+            let started = std::time::Instant::now();
+            let result = auth.authenticate_async(&headers, None).await;
+            (result, started.elapsed())
+        });
+        let observed = control(fixtures, &format!("wait-body/{target}/1")).await;
+        assert_eq!(observed["body_flushes"][target], json!(1));
+        assert!(
+            !pending.is_finished(),
+            "streamed fetch finished before body gate release or deadline"
+        );
+        if complete {
+            release(fixtures, target).await;
+        }
+        let (result, elapsed) = tokio::time::timeout(Duration::from_secs(1), pending)
+            .await
+            .expect("streamed body escaped whole-fetch deadline")
+            .unwrap();
+        println!(
+            "Key refresh streamed body: {target}; elapsed_ms={:.3}",
+            elapsed.as_secs_f64() * 1_000.0
+        );
+        if complete {
+            identity(result.expect("released valid streamed JWKS rejected"), "a");
+            assert!(elapsed < Duration::from_millis(300));
+        } else {
+            assert_eq!(
+                result.err(),
+                Some(AuthError::Unavailable),
+                "incomplete streamed body accepted"
+            );
+            assert!(
+                elapsed >= Duration::from_millis(200),
+                "streamed body failed immediately instead of reaching fetch deadline"
+            );
+            release(fixtures, target).await;
+        }
+        count(fixtures, target, 1).await;
+    }
     println!("Key refresh group passed: tls-and-http-transport-failures");
 }
 
@@ -850,6 +884,7 @@ async fn wire_denied(
     for secret in [
         "SyntheticIssuerPrivateCanary",
         "SyntheticPrivateKeyCanary",
+        "SyntheticCookieCanary",
         "fixture-alice",
         "fixture-bob",
         "fixture-client",

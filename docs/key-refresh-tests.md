@@ -14,8 +14,13 @@ refresh interval and 300 ms network timeout. A manual key-cache clock starts at
 Issuer network timing is real operating-system time, not either manual clock.
 Explicit barrier cases use a one-second fetch timeout to allow control round
 trips. Their gate must be released explicitly within five seconds; gate timeout
-is a fixture failure. The streamed-body deadline case retains 300 ms and checks
-that the pending fetch completes within a one-second outer bound.
+is a fixture failure. The streamed-body pair retains 300 ms. Both responses
+split the same valid A key set into two chunks and establish an explicit barrier
+after flushing the incomplete prefix. The authentication future must still be
+pending at that barrier. Releasing the body before the deadline must authenticate
+the exact A caller; withholding the suffix must fail unavailable after at least
+200 ms, within a one-second outer bound. The fixture logs both measured elapsed
+times. An immediate parse or transport error cannot satisfy the deadline proof.
 
 | Event | Expected decision and fetch count |
 | --- | --- |
@@ -56,7 +61,9 @@ Barriers observe a received request before testing in-flight behavior; sleeps
 are not used to establish ordering. Counts distinguish attempted configured
 JWKS retrieval from control traffic and the attacker-target path. TLS failures
 occur before the issuer HTTP handler and therefore cannot be described as an
-HTTP request count. Issuer handlers never log request credentials.
+HTTP request count. Protected middleware requests carry a synthetic Cookie as
+well as the applicable bearer token; the issuer must receive neither header.
+Issuer handlers never log request credentials.
 
 Rust uses the real asynchronous adapter, independently checks exact caller
 fields and denial variants, and also exercises the middleware through an owned

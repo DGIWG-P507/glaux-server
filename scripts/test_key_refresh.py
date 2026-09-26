@@ -84,6 +84,7 @@ class State:
         self.condition = threading.Condition()
         self.modes = {}
         self.counts = {}
+        self.body_flushes = {}
         self.gates = {}
         self.bad_headers = False
         self.errors = []
@@ -170,16 +171,21 @@ class Issuer(QuietHandler):
         if mode == "hold-body":
             # Headers and the first body chunk arrive, then the client must
             # enforce its whole-fetch deadline while this body remains open.
+            body = json.dumps({"keys": [state.keys["a"]]}).encode()
+            prefix, suffix = body[:len(body) // 2], body[len(body) // 2:]
             try:
                 self.send_response(200)
                 self.send_header("Content-Type", "application/jwk-set+json")
                 self.send_header("Transfer-Encoding", "chunked")
                 self.send_header("Connection", "close")
                 self.end_headers()
-                self.wfile.write(b"9\r\n{\"keys\":[\r\n")
+                self.wfile.write(f"{len(prefix):x}\r\n".encode() + prefix + b"\r\n")
                 self.wfile.flush()
+                with state.condition:
+                    state.body_flushes[target] = state.body_flushes.get(target, 0) + 1
+                    state.condition.notify_all()
                 require(gate is not None and gate.wait(5), "Body gate was not explicitly released")
-                self.wfile.write(b"2\r\n]}\r\n0\r\n\r\n")
+                self.wfile.write(f"{len(suffix):x}\r\n".encode() + suffix + b"\r\n0\r\n\r\n")
             except (BrokenPipeError, ConnectionResetError, ssl.SSLError):
                 pass
             return
@@ -222,11 +228,12 @@ class Control(QuietHandler):
             state.set(parts[1], parts[2])
         elif parts[0] == "release" and len(parts) == 2:
             state.release(parts[1])
-        elif parts[0] == "wait" and len(parts) == 3:
+        elif parts[0] in ("wait", "wait-body") and len(parts) == 3:
             target, expected = parts[1], int(parts[2])
             deadline = time.monotonic() + 3
             with state.condition:
-                while state.counts.get(target, 0) < expected:
+                counts = state.counts if parts[0] == "wait" else state.body_flushes
+                while counts.get(target, 0) < expected:
                     left = deadline - time.monotonic()
                     if left <= 0:
                         self.send_bytes(500, b'{"barrier":false}')
@@ -246,7 +253,7 @@ class Control(QuietHandler):
             return
         with state.condition:
             result = {"counts": dict(state.counts), "bad_headers": state.bad_headers,
-                      "tls_failures": state.tls_failures}
+                      "tls_failures": state.tls_failures, "body_flushes": dict(state.body_flushes)}
         self.send_bytes(200, json.dumps(result).encode())
 
 
@@ -258,13 +265,13 @@ def issuer_fixture(owner):
     try:
         for handler in (Issuer, Control):
             server = OwnedServer(("127.0.0.1", 0), handler)
+            servers.append(server)
             server.state = state
             if handler is Issuer:
                 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
                 context.minimum_version = ssl.TLSVersion.TLSv1_2
                 context.load_cert_chain(str(leaf), str(leaf_key))
                 server.tls_context = context
-            servers.append(server)
             thread = threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.05})
             thread.start()
             threads.append(thread)
@@ -292,8 +299,11 @@ def issuer_fixture(owner):
     finally:
         state.release()
         addresses = [server.server_address for server in servers]
-        for server in servers:
+        # shutdown() requires a running serve_forever loop; setup can fail
+        # after binding a server but before its thread is started.
+        for server in servers[:len(threads)]:
             server.shutdown()
+        for server in servers:
             server.server_close()
         for thread in threads:
             thread.join(timeout=4)

@@ -229,7 +229,7 @@ fn certificates(pem: &str) -> Result<Vec<Certificate>, AuthConfigError> {
         let end = remaining.find(END).ok_or(AuthConfigError)? + END.len();
         // from_pem alone defers parsing in the selected Rustls backend. Parse
         // the bounded block now; the client builder also validates its DER.
-        let mut block = Certificate::from_pem_bundle(remaining[..end].as_bytes())
+        let mut block = Certificate::from_pem_bundle(&remaining.as_bytes()[..end])
             .map_err(|_| AuthConfigError)?;
         if block.len() != 1 {
             return Err(AuthConfigError);
