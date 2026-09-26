@@ -5,6 +5,7 @@
 //! binding. Decoding by itself never produces a caller context.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 use std::time::Duration;
 
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
@@ -13,7 +14,8 @@ use glaux_standards::validation;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use serde_json::{Map, Value};
 
-use super::{AuthConfigError, AuthError, CallerContext, CallerKind, JwtConfig};
+use super::keys::RemoteKeys;
+use super::{AuthConfigError, AuthError, CallerContext, CallerKind, Clock, JwtConfig};
 
 const MAX_TOKEN_BYTES: usize = 16_384;
 const MAX_HEADER_BYTES: usize = 2_048;
@@ -30,16 +32,28 @@ const MAX_NUMERIC_DATE_BYTES: usize = 128;
 pub(super) struct JwtVerifier {
     issuer: String,
     audience: String,
-    keys: BTreeMap<String, DecodingKey>,
+    keys: KeySource,
     required_scopes: Vec<String>,
 }
 
+#[derive(Clone)]
+enum KeySource {
+    Static(BTreeMap<String, DecodingKey>),
+    Remote(Arc<RemoteKeys>),
+}
+
+struct ParsedToken {
+    kid: String,
+    claims: Map<String, Value>,
+}
+
 impl JwtVerifier {
-    pub(super) fn new(config: JwtConfig) -> Result<Self, AuthConfigError> {
+    pub(super) fn new(
+        config: JwtConfig,
+        key_clock: Arc<dyn Clock>,
+    ) -> Result<Self, AuthConfigError> {
         if !bounded_text(&config.issuer, MAX_ID_BYTES)
             || !bounded_text(&config.audience, MAX_ID_BYTES)
-            || config.keys.is_empty()
-            || config.keys.len() > MAX_KEYS
             || config.required_scopes.len() > MAX_ITEMS
         {
             return Err(AuthConfigError);
@@ -50,13 +64,13 @@ impl JwtVerifier {
                 return Err(AuthConfigError);
             }
         }
-        let mut keys = BTreeMap::new();
-        for key in config.keys {
-            let (kid, decoding) = configured_key(&key)?;
-            if keys.insert(kid, decoding).is_some() {
-                return Err(AuthConfigError);
+        let keys = match config.jwks {
+            Some(remote) if config.keys.is_empty() => {
+                KeySource::Remote(Arc::new(RemoteKeys::new(remote, key_clock)?))
             }
-        }
+            None => KeySource::Static(key_set(&config.keys)?),
+            _ => return Err(AuthConfigError),
+        };
         Ok(Self {
             issuer: config.issuer,
             audience: config.audience,
@@ -66,27 +80,40 @@ impl JwtVerifier {
     }
 
     pub(super) fn verify(&self, token: &str, now: Duration) -> Result<CallerContext, AuthError> {
-        if token.is_empty() || token.len() > MAX_TOKEN_BYTES {
-            return Err(AuthError::InvalidToken);
-        }
-        let mut segments = token.split('.');
-        let encoded_header = segments.next().ok_or(AuthError::InvalidToken)?;
-        let encoded_claims = segments.next().ok_or(AuthError::InvalidToken)?;
-        let encoded_signature = segments.next().ok_or(AuthError::InvalidToken)?;
-        if segments.next().is_some() {
-            return Err(AuthError::InvalidToken);
-        }
-        let header = object(&segment(encoded_header, MAX_HEADER_BYTES)?)?;
-        let claims = object(&segment(encoded_claims, MAX_CLAIMS_BYTES)?)?;
-        // Canonical base64url and bounded signature size are checked before
-        // invoking crypto. Only configured 2048..4096-bit RSA keys are allowed.
-        let signature = segment(encoded_signature, 512)?;
-        if !(256..=512).contains(&signature.len()) {
-            return Err(AuthError::InvalidToken);
-        }
-        let kid = access_header(&header)?;
-        let key = self.keys.get(kid).ok_or(AuthError::InvalidToken)?;
+        let KeySource::Static(keys) = &self.keys else {
+            return Err(AuthError::Unavailable);
+        };
+        let parsed = parse_token(token)?;
+        let key = keys.get(&parsed.kid).ok_or(AuthError::InvalidToken)?;
+        self.verify_with_key(token, parsed.claims, key, now)
+    }
 
+    pub(super) async fn verify_async(
+        &self,
+        token: &str,
+        wall_clock: &dyn Clock,
+    ) -> Result<CallerContext, AuthError> {
+        let initial_now = wall_clock.now().ok_or(AuthError::Unavailable)?;
+        let KeySource::Remote(keys) = &self.keys else {
+            return self.verify(token, initial_now);
+        };
+        // Reject malformed envelopes and all token-selected locations before
+        // a cache lookup can trigger a request to the configured endpoint.
+        let parsed = parse_token(token)?;
+        let key = keys.get(&parsed.kid).await?;
+        // Fetch latency cannot preserve a token's earlier validity. Key-cache
+        // completion separately rechecks its monotonic trust-age deadline.
+        let now = wall_clock.now().ok_or(AuthError::Unavailable)?;
+        self.verify_with_key(token, parsed.claims, &key, now)
+    }
+
+    fn verify_with_key(
+        &self,
+        token: &str,
+        claims: Map<String, Value>,
+        key: &DecodingKey,
+        now: Duration,
+    ) -> Result<CallerContext, AuthError> {
         let mut checks = Validation::new(Algorithm::RS256);
         checks.required_spec_claims.clear();
         checks.validate_exp = false;
@@ -134,6 +161,43 @@ impl JwtVerifier {
             kind: CallerKind::Jwt,
         })
     }
+}
+
+fn parse_token(token: &str) -> Result<ParsedToken, AuthError> {
+    if token.is_empty() || token.len() > MAX_TOKEN_BYTES {
+        return Err(AuthError::InvalidToken);
+    }
+    let mut segments = token.split('.');
+    let encoded_header = segments.next().ok_or(AuthError::InvalidToken)?;
+    let encoded_claims = segments.next().ok_or(AuthError::InvalidToken)?;
+    let encoded_signature = segments.next().ok_or(AuthError::InvalidToken)?;
+    if segments.next().is_some() {
+        return Err(AuthError::InvalidToken);
+    }
+    let header = object(&segment(encoded_header, MAX_HEADER_BYTES)?)?;
+    let claims = object(&segment(encoded_claims, MAX_CLAIMS_BYTES)?)?;
+    let signature = segment(encoded_signature, 512)?;
+    if !(256..=512).contains(&signature.len()) {
+        return Err(AuthError::InvalidToken);
+    }
+    Ok(ParsedToken {
+        kid: access_header(&header)?.to_owned(),
+        claims,
+    })
+}
+
+pub(super) fn key_set(values: &[Value]) -> Result<BTreeMap<String, DecodingKey>, AuthConfigError> {
+    if values.is_empty() || values.len() > MAX_KEYS {
+        return Err(AuthConfigError);
+    }
+    let mut keys = BTreeMap::new();
+    for value in values {
+        let (kid, key) = configured_key(value)?;
+        if keys.insert(kid, key).is_some() {
+            return Err(AuthConfigError);
+        }
+    }
+    Ok(keys)
 }
 
 fn configured_key(value: &Value) -> Result<(String, DecodingKey), AuthConfigError> {
@@ -461,8 +525,9 @@ mod tests {
             issuer: "https://issuer.example.test".into(),
             audience: "glaux".into(),
             keys: vec![public.clone(), public],
+            jwks: None,
             required_scopes: vec![],
         };
-        assert!(JwtVerifier::new(config).is_err());
+        assert!(JwtVerifier::new(config, Arc::new(super::super::SystemClock)).is_err());
     }
 }

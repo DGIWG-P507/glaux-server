@@ -51,6 +51,8 @@ python3 -u scripts/check-execution.py http-boundary
 python3 -u scripts/test-http-boundary-failures.py
 python3 -u scripts/check-execution.py authentication
 python3 -u scripts/test-authentication-failures.py
+python3 -u scripts/check-execution.py key-refresh
+python3 -u scripts/test-key-refresh-failures.py
 python3 -u scripts/test-ci-failures.py
 python3 -u scripts/test-validation-failures.py
 python3 -u scripts/test-projection-failures.py
@@ -92,7 +94,7 @@ proof for this packaging task, not a claim that schema validation ran.
 [check-execution.py](../scripts/check-execution.py) preserves command failure and
 requires actual successful execution evidence. It accepts exactly `rust`,
 `schema-fuzz`, `numeric-fuzz`, `time-fuzz`, `database`, `time-database`,
-`system-storage`, `revision-storage`, `atomic-write`, `conditional-write`, `retry-write`, `runtime-health`, `http-boundary` or `authentication`,
+`system-storage`, `revision-storage`, `atomic-write`, `conditional-write`, `retry-write`, `runtime-health`, `http-boundary`, `authentication` or `key-refresh`,
 not arbitrary selectors. Every named Rust test must execute successfully, and
 each fuzz campaign must emit its completed-invariant marker; the wrapper imposes
 a 180-second process timeout. Both the [lifecycle runner](../scripts/test_database.py)
@@ -106,6 +108,15 @@ server's JWT library. Private fixture keys are erased before the proof runs.
 The audience-bypass control compiles a disposable faulty copy and must fail the
 specific wrong-audience assertion after a passing baseline; the real source is
 restored and proved again. Compiler/setup failures cannot count as detection.
+
+The [key-refresh proof](key-refresh-tests.md) uses a separately hosted-in-process
+Python HTTPS issuer, public synthetic CA, independent signing and explicit
+barriers. Key age and token time are controlled separately from network time.
+Every group and the final marker must execute exactly once in order. The
+stale-trust control starts from a passing baseline, compiles a disposable wrong
+cache predicate and requires the exact expiry-denial assertion to fail before
+restoring the source and rerunning. No operational issuer or machine trust-store
+change is involved.
 
 After the unmodified Rust/database checks pass,
 [test-ci-failures.py](../scripts/test-ci-failures.py) copies tracked source into

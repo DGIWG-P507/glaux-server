@@ -70,6 +70,11 @@ profile and explicit loopback development identities; it does not protect health
 routes or claim later resource authorization. Its [independent listener proof](docs/authentication-tests.md)
 uses ephemeral hosted OpenSSL signing, exact wire assertions and an audience-bypass
 fault. Preserve these checks and the distinction between identity and permission.
+The [bounded signing-key refresh proof](docs/key-refresh-tests.md) adds a real
+isolated HTTPS issuer, independent signatures, controlled clocks and fetch counts.
+It checks rotation, expiry, outage and cancellation without organizational keys
+or Internet discovery. Its compiled stale-trust fault is separate from the
+existing audience-bypass check; neither establishes resource authorization.
 
 The [HTTP-boundary proof](docs/http-boundary-tests.md) independently inspects
 raw status/headers and general-purpose JSON through an isolated listener, with

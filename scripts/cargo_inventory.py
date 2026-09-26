@@ -28,6 +28,8 @@ DIRECT_DEPENDENCIES = {
         "base64": {"version": "=0.22.1", "default_features": False, "features": ["std"]},
         "jsonwebtoken": {"version": "=11.1.0", "default_features": False,
                          "features": ["aws_lc_rs"]},
+        "reqwest": {"version": "=0.13.5", "default_features": False,
+                    "features": ["rustls"]},
         "axum": {"version": "=0.8.8", "default_features": False,
                  "features": ["http1", "tokio"]},
         "serde": {"version": "=1.0.229", "default_features": False,
@@ -190,6 +192,20 @@ def cargo_inventory(root=ROOT, *, enforce_snapshot=True):
             "Inventory needs review: unexpected local package outside workspace.")
     require({identity(package) for package in packages.values()} == set(locked),
             "Inventory needs review: resolved package set differs from Cargo.lock.")
+    # An issuer-key HTTP client belongs only to the server. Enabling it must not
+    # turn the offline standards resolver or domain package into a network client.
+    for member in members:
+        if packages[member]["name"] == "glaux-server":
+            continue
+        pending, visited = [member], set()
+        while pending:
+            current = pending.pop()
+            if current in visited:
+                continue
+            visited.add(current)
+            require(packages[current]["name"] not in NETWORK_CLIENTS | {"hyper", "hyper-util"},
+                    "Network client escaped the server-only issuer-key boundary.")
+            pending.extend(nodes[current]["dependencies"])
     inventory = []
     for package_id, package in sorted(packages.items(), key=lambda item: identity(item[1])):
         node = nodes[package_id]
@@ -219,11 +235,13 @@ def cargo_inventory(root=ROOT, *, enforce_snapshot=True):
             require(archive_digest == checksum,
                     f"{label(package)}: fetched archive checksum differs from Cargo.lock.")
             fetched_archive = {"file": archive.name, "sha256": archive_digest}
-            require(package["name"] not in NETWORK_CLIENTS,
-                    f"{label(package)}: network client is outside the offline validator scope.")
-            if package["name"] in {"hyper", "hyper-util"}:
-                require(not any(feature == "client" or feature.startswith("client-") for feature in node["features"]),
-                        f"{label(package)}: HTTP client feature is outside the health-server scope.")
+            require(package["name"] not in NETWORK_CLIENTS - {"reqwest"},
+                    f"{label(package)}: unselected network client.")
+            if package["name"] == "reqwest":
+                require(not {"default", "cookies", "system-proxy", "http2", "http3",
+                             "blocking", "gzip", "brotli", "deflate", "zstd"}
+                        & set(node["features"]),
+                        "reqwest: feature outside the bounded issuer-key transport.")
             if package["name"] == "jsonschema":
                 require(not {"resolve-http", "resolve-file"} & set(node["features"]),
                         "jsonschema: HTTP/filesystem resolution feature enabled.")
