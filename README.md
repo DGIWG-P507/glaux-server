@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, validation, System writes, HTTP and caller-authentication foundations — 25 September 2026 UTC.**
+**Initial build, validation, System writes, HTTP and bounded caller-authentication foundations — 26 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
@@ -101,8 +101,13 @@ wrong behavior; their synthetic routes are not exposed by the server.
 against configured public keys, issuer, audience, time and scope. Explicit
 development identities are limited to loopback testing and cannot be selected by
 request headers. Independent signed-token and real-listener checks reject forged,
-expired and wrong-service credentials. Key refresh and resource permissions remain
-later work; the production listener still exposes only minimal public health.
+expired and wrong-service credentials. Signing keys can also come from one
+explicitly configured HTTPS endpoint, with bounded refresh, atomic rotation and
+fail-closed cache expiry during issuer outages. Tokens cannot select key URLs.
+The [key-refresh checks](docs/key-refresh-tests.md) exercise a real isolated TLS
+issuer, request counts and a deliberately faulty stale-key path. Resource
+permissions remain later work; the production listener still exposes only
+minimal public health.
 
 ## Planned capabilities
 

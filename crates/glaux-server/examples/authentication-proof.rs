@@ -73,6 +73,7 @@ fn jwt_config(fixtures: &Value) -> JwtConfig {
         issuer: "https://issuer.example.test".to_owned(),
         audience: "https://api.example.test".to_owned(),
         keys: vec![fixtures["jwk"].clone()],
+        jwks: None,
         required_scopes: vec!["read".to_owned()],
     }
 }

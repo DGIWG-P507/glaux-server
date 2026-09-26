@@ -1,6 +1,10 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "authentication::keys::tests::issuer_key_configuration_rejects_unsafe_endpoints_and_timing",
+    "authentication::keys::tests::issuer_key_cache_time_and_cancellation_preserve_bounds",
+    "authentication::keys::tests::issuer_key_response_media_is_explicit",
+    "configuration::tests::runtime_key_refresh_configuration_is_explicit_and_offline",
     "database_commands_require_explicit_configuration",
     "projection::tests::minimal_requests_and_complete_responses_have_independent_contracts",
     "projection::tests::generated_response_members_remain_required",

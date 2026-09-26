@@ -60,7 +60,7 @@ Omission keeps safe default limits without guessing a public origin.
 
 Unknown fields, duplicate members (including inside public keys), missing required values, unsupported
 authentication modes and wrong types fail without quoting the input. Future
-key-fetch/cache, policy, adapter and resource-specific settings are not
+policy, adapter and resource-specific settings are not
 silently accepted placeholders: their owning tasks will add validated fields.
 
 ## Authentication selection
@@ -107,9 +107,39 @@ For externally issued JWT access tokens, select `authentication: "jwt"`, omit
 - `required_scopes`: optional list of globally required scope names; defaults
   to empty. These checks do not replace subsequent action/resource authorization.
 
-Use issuer-managed public key values, not invented example key material. The
-current adapter has no key URL, discovery, refresh or rotation configuration;
-those behaviors belong to #21. Unknown key IDs fail closed. Configuration bounds
+Use issuer-managed public key values, not invented example key material.
+Alternatively omit `keys` (or leave it empty) and configure `jwks`:
+
+```json
+{
+  "issuer": "https://issuer.example.test",
+  "audience": "https://api.example.test",
+  "jwks": {
+    "url": "https://issuer.example.test/keys",
+    "cache_ttl_seconds": 300,
+    "refresh_interval_seconds": 10,
+    "request_timeout_ms": 1000
+  },
+  "required_scopes": ["example-read"]
+}
+```
+
+This is the `jwt` object inside the existing full configuration, not a new
+top-level format or a provisioned provider. The three timing fields are required:
+cache lifetime 1–3600 seconds, minimum attempt interval 1–300 seconds no greater
+than the lifetime, timeout 100–10000 ms no greater than the interval. The URL
+must be HTTPS, at most 2048 ASCII bytes, with no credentials, query, fragment or
+backslash. No token-directed discovery or redirect is supported. Optional
+`trusted_ca_pem` supplies at most eight public CA certificates within 16 KiB,
+supplementing platform trust; private key PEM and malformed bundles fail.
+Normal TLS name/certificate verification cannot be disabled.
+
+Static nonempty `keys` and `jwks` cannot be combined. Configuration checking
+constructs the bounded client but performs no issuer request; it does not prove
+endpoint availability or operational trust. The cache starts empty and is loaded
+on an eligible protected request. Its finite lifetime is independent of HTTP
+cache headers. See [rotation, cooldown and outage semantics](authentication.md#bounded-issuer-key-refresh).
+Unknown key IDs fail closed. Configuration bounds
 and token type/signature/claim checks are documented in [the authentication
 contract](authentication.md). Bearer material is not stored in configuration.
 

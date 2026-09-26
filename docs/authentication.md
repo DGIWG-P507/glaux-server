@@ -51,8 +51,57 @@ No critical-header extensions, unencoded payload, JWE, compression, remote
 key/certificate hint, symmetric key, private key or provider discovery is
 supported. Unknown noncritical ordinary extension members are tolerated without
 authority. Public keys come from trusted configuration, never from token URLs.
-Static keys do not promise rotation, revocation or outage refresh: issue #21
-owns bounded trusted-key refresh and its unavailable behavior.
+Static keys remain operator-managed and do not acquire an automatic expiry.
+Issue #21 adds the alternative bounded HTTPS key source below.
+
+## Bounded issuer-key refresh
+
+Select exactly one source: a nonempty static `keys` array, or the `jwks` object
+described in [runtime configuration](runtime-configuration.md). The endpoint is
+operator configuration, never a token claim or header. There is no discovery,
+redirect, proxy/environment-proxy, cookie, credential forwarding or automatic
+retry. TLS verifies the certificate and name; an explicitly supplied public CA
+bundle may supplement platform trust without modifying the machine store.
+
+Configuration validation does not fetch. The first eligible protected request
+loads keys; restarting starts empty. All clones of one configured authenticator
+share one cache and one in-flight fetch. Fresh known keys need no network access,
+even while another request refreshes. An unknown key can trigger one refresh
+only after the configured minimum attempt interval. This is demand refresh, not
+a periodic job; invalid signatures under a known key do not trigger refresh.
+
+The cache lifetime and minimum attempt interval both start when a fetch starts,
+using a process-monotonic clock distinct from the token wall clock. The expiry
+boundary is exclusive. A slow fetch cannot earn extra trust time. Missing or
+backward key-clock readings fail unavailable; recovery requires a reading at
+least as high as the last observed one. Token time is read again after fetching.
+
+During an in-flight fetch or its cooldown, unknown IDs against a fresh cache
+fail `401`; an empty/expired cache fails `503`. There is no queue of refresh
+waiters. Fetch failure/timeout fails its initiating request `503` and keeps the
+old set usable only until its original deadline. Cancellation clears in-flight
+state but retains the attempt cooldown. No stale-if-error fallback exists.
+
+A successful response atomically replaces the complete set, removing retired
+keys rather than merging them. Operators must publish overlap when needed.
+Known cached keys may remain trusted until the configured lifetime expires:
+this is bounded rotation/revocation lag, not immediate revocation or token
+introspection. Separate processes/configurations have separate caches and limits.
+
+Only `200` JSON/JWK-set JSON responses with no content encoding are accepted;
+the complete body is capped at 64 KiB while streaming, and the configured timeout
+covers connection through body completion. HTTP cache headers and `304` cannot
+extend local trust. Duplicate members, duplicate key IDs, private material or an
+invalid key reject the entire response. The endpoint profile requires 1–16
+supported public RS256 keys. This is deliberately narrower than
+[RFC 7517 §5](https://www.rfc-editor.org/rfc/rfc7517.html#section-5), which recommends
+ignoring unsupported keys; mixed-algorithm provider sets need a suitable endpoint
+or another explicitly designed adapter, not silent partial acceptance here.
+
+Protected middleware uses `authenticate_async`; the synchronous helper never
+fetches and returns unavailable for a remote source with a supplied credential.
+Missing/malformed header framing is still handled first. Neither path grants
+resource permissions. See [real TLS and failure checks](key-refresh-tests.md).
 
 ## HTTP and caller boundary
 

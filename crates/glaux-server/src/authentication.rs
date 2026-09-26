@@ -1,5 +1,6 @@
 //! Explicit caller authentication. A caller is not resource or producer authority.
 mod jwt;
+mod keys;
 
 use crate::http_boundary::Problem;
 use axum::Router;
@@ -12,16 +13,29 @@ use serde_json::Value;
 use std::fmt;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct JwtConfig {
     pub issuer: String,
     pub audience: String,
+    #[serde(default)]
     pub keys: Vec<Value>,
+    pub jwks: Option<JwksConfig>,
     #[serde(default)]
     pub required_scopes: Vec<String>,
+}
+
+/// One operator-selected issuer key endpoint, not request-driven discovery.
+#[derive(Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct JwksConfig {
+    pub url: String,
+    pub cache_ttl_seconds: u64,
+    pub refresh_interval_seconds: u64,
+    pub request_timeout_ms: u64,
+    pub trusted_ca_pem: Option<String>,
 }
 
 #[derive(Clone, Deserialize)]
@@ -80,6 +94,13 @@ pub struct SystemClock;
 impl Clock for SystemClock {
     fn now(&self) -> Option<Duration> {
         SystemTime::now().duration_since(UNIX_EPOCH).ok()
+    }
+}
+
+struct KeyClock(Instant);
+impl Clock for KeyClock {
+    fn now(&self) -> Option<Duration> {
+        Some(self.0.elapsed())
     }
 }
 
@@ -151,8 +172,17 @@ impl Authenticator {
         }
     }
     pub fn jwt(config: JwtConfig, clock: Arc<dyn Clock>) -> Result<Self, AuthConfigError> {
+        Self::jwt_with_key_clock(config, clock, Arc::new(KeyClock(Instant::now())))
+    }
+    /// Explicit clocks make token wall time and key trust age separately testable.
+    /// Ordinary configuration uses SystemClock plus a process-monotonic key clock.
+    pub fn jwt_with_key_clock(
+        config: JwtConfig,
+        clock: Arc<dyn Clock>,
+        key_clock: Arc<dyn Clock>,
+    ) -> Result<Self, AuthConfigError> {
         Ok(Self {
-            mode: Mode::Jwt(Arc::new(jwt::JwtVerifier::new(config)?)),
+            mode: Mode::Jwt(Arc::new(jwt::JwtVerifier::new(config, key_clock)?)),
             clock,
         })
     }
@@ -216,6 +246,21 @@ impl Authenticator {
             }
         }
     }
+
+    /// Demand refresh is async; the synchronous API never starts network work.
+    pub async fn authenticate_async(
+        &self,
+        headers: &HeaderMap,
+        peer: Option<SocketAddr>,
+    ) -> Result<CallerContext, AuthError> {
+        match &self.mode {
+            Mode::Jwt(verifier) => {
+                let token = bearer(headers)?;
+                verifier.verify_async(token, self.clock.as_ref()).await
+            }
+            _ => self.authenticate(headers, peer),
+        }
+    }
 }
 
 fn bearer(headers: &HeaderMap) -> Result<&str, AuthError> {
@@ -254,7 +299,7 @@ async fn authenticate(
         .extensions()
         .get::<ConnectInfo<SocketAddr>>()
         .map(|peer| peer.0);
-    match auth.authenticate(request.headers(), peer) {
+    match auth.authenticate_async(request.headers(), peer).await {
         Ok(caller) => {
             request.extensions_mut().insert(caller);
             // Raw bearer material is no longer needed by the protected handler.

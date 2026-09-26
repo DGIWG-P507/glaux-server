@@ -45,11 +45,9 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
-          # Temporary candidate preparation; cannot produce a passing build.
-          cargo fetch
-          git diff -- Cargo.lock > "$RUNNER_TEMP/glaux-ci-evidence/key-refresh-lock.patch"
-          python3 scripts/cargo_inventory.py --candidate > "$RUNNER_TEMP/glaux-ci-evidence/key-refresh-candidate.json"
-          exit 1
+          cargo fetch --locked
+          git diff --exit-code -- Cargo.lock
+          cargo tree --locked --offline -p glaux-server --target x86_64-unknown-linux-gnu -e normal,build > "$RUNNER_TEMP/glaux-ci-evidence/server-linux-dependencies.txt"
       - name: Verify formatting and locked dependencies
         shell: bash
         run: |
@@ -99,6 +97,11 @@ jobs:
         run: |
           python3 -u scripts/check-execution.py numeric-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/numeric-fuzz.log"
           python3 -u scripts/test-numeric-failures.py
+      - name: Prove bounded signing-key refresh against an isolated HTTPS issuer
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py key-refresh | tee "$RUNNER_TEMP/glaux-ci-evidence/key-refresh.log"
+          python3 -u scripts/test-key-refresh-failures.py
       - name: Exercise exact time parsing and detect time faults
         shell: bash
         run: |
