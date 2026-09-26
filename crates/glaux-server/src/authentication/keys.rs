@@ -316,7 +316,11 @@ mod tests {
             "-----BEGIN PRIVATE KEY-----\nx\n-----END PRIVATE KEY-----",
             "-----BEGIN CERTIFICATE-----\ninvalid\n-----END CERTIFICATE-----",
         ] {
-            assert!(certificates(pem).is_err());
+            // A PEM block can decode to bytes that are not an X.509
+            // certificate. DER validation belongs to client construction.
+            let mut changed = config();
+            changed.trusted_ca_pem = Some(pem.into());
+            assert!(RemoteKeys::new(changed, Arc::new(super::super::SystemClock)).is_err());
         }
         let mut invalid_der = config();
         invalid_der.trusted_ca_pem =
