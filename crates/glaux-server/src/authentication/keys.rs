@@ -12,8 +12,8 @@ use jsonwebtoken::DecodingKey;
 use reqwest::{Certificate, Client, Url, header};
 use serde_json::Value;
 
-use super::{AuthConfigError, AuthError, Clock, JwksConfig};
 use super::jwt::key_set;
+use super::{AuthConfigError, AuthError, Clock, JwksConfig};
 
 const MAX_JWKS_BYTES: usize = 65_536;
 
@@ -51,9 +51,8 @@ impl Cache {
     }
 
     fn cooling_down(&self, now: Duration, interval: Duration) -> bool {
-        self.last_attempt.is_some_and(|attempt| {
-            now.checked_sub(attempt).is_none_or(|age| age < interval)
-        })
+        self.last_attempt
+            .is_some_and(|attempt| now.checked_sub(attempt).is_none_or(|age| age < interval))
     }
 }
 
@@ -116,7 +115,11 @@ impl RemoteKeys {
                 return Ok(key.clone());
             }
             if state.busy || state.cooling_down(now, self.interval) {
-                return Err(if fresh { AuthError::InvalidToken } else { AuthError::Unavailable });
+                return Err(if fresh {
+                    AuthError::InvalidToken
+                } else {
+                    AuthError::Unavailable
+                });
             }
             state.busy = true;
             state.last_attempt = Some(now);
@@ -124,7 +127,8 @@ impl RemoteKeys {
         };
         // Construction cannot yield after busy is set and before the guard.
         let _attempt = Attempt(&self.state);
-        let result = tokio::time::timeout(self.timeout, self.fetch()).await
+        let result = tokio::time::timeout(self.timeout, self.fetch())
+            .await
             .map_err(|_| AuthError::Unavailable)
             .and_then(|result| result);
         let mut state = self.state.lock().map_err(|_| AuthError::Unavailable)?;
@@ -142,18 +146,27 @@ impl RemoteKeys {
     }
 
     async fn fetch(&self) -> Result<BTreeMap<String, DecodingKey>, AuthError> {
-        let mut response = self.client.get(self.url.clone())
+        let mut response = self
+            .client
+            .get(self.url.clone())
             .header(header::ACCEPT, "application/jwk-set+json, application/json")
-            .send().await.map_err(|_| AuthError::Unavailable)?;
+            .send()
+            .await
+            .map_err(|_| AuthError::Unavailable)?;
         if response.status() != reqwest::StatusCode::OK
             || response.headers().contains_key(header::CONTENT_ENCODING)
-            || response.content_length().is_some_and(|length| length > MAX_JWKS_BYTES as u64)
+            || response
+                .content_length()
+                .is_some_and(|length| length > MAX_JWKS_BYTES as u64)
         {
             return Err(AuthError::Unavailable);
         }
         let mut types = response.headers().get_all(header::CONTENT_TYPE).iter();
-        let media = types.next().ok_or(AuthError::Unavailable)?
-            .to_str().map_err(|_| AuthError::Unavailable)?;
+        let media = types
+            .next()
+            .ok_or(AuthError::Unavailable)?
+            .to_str()
+            .map_err(|_| AuthError::Unavailable)?;
         if types.next().is_some() || !json_media(media) {
             return Err(AuthError::Unavailable);
         }
@@ -165,7 +178,8 @@ impl RemoteKeys {
             body.extend_from_slice(&chunk);
         }
         let document = validation::parse(&body).map_err(|_| AuthError::Unavailable)?;
-        let values = document.as_object()
+        let values = document
+            .as_object()
             .and_then(|document| document.get("keys"))
             .and_then(Value::as_array)
             .ok_or(AuthError::Unavailable)?;
@@ -187,9 +201,13 @@ fn endpoint(config: &JwksConfig) -> Result<Url, AuthConfigError> {
         return Err(AuthConfigError);
     }
     let url = Url::parse(&config.url).map_err(|_| AuthConfigError)?;
-    if url.scheme() != "https" || url.host_str().is_none()
-        || !url.username().is_empty() || url.password().is_some()
-        || url.query().is_some() || url.fragment().is_some() || url.port() == Some(0)
+    if url.scheme() != "https"
+        || url.host_str().is_none()
+        || !url.username().is_empty()
+        || url.password().is_some()
+        || url.query().is_some()
+        || url.fragment().is_some()
+        || url.port() == Some(0)
     {
         return Err(AuthConfigError);
     }
@@ -219,7 +237,9 @@ fn certificates(pem: &str) -> Result<Vec<Certificate>, AuthConfigError> {
         result.push(block.remove(0));
         remaining = remaining[end..].trim();
     }
-    if result.is_empty() { return Err(AuthConfigError); }
+    if result.is_empty() {
+        return Err(AuthConfigError);
+    }
     Ok(result)
 }
 
@@ -234,7 +254,9 @@ fn json_media(value: &str) -> bool {
     match (parts.next(), parts.next()) {
         (None, None) => true,
         (Some(parameter), None) => {
-            let Some((name, value)) = parameter.trim().split_once('=') else { return false; };
+            let Some((name, value)) = parameter.trim().split_once('=') else {
+                return false;
+            };
             name.eq_ignore_ascii_case("charset")
                 && (value.eq_ignore_ascii_case("utf-8") || value.eq_ignore_ascii_case("\"utf-8\""))
         }
@@ -259,29 +281,56 @@ mod tests {
     #[test]
     fn issuer_key_configuration_rejects_unsafe_endpoints_and_timing() {
         assert!(endpoint(&config()).is_ok());
-        for url in ["http://issuer.example.test/keys", "https://user:secret@issuer.example.test/keys", "https://issuer.example.test/keys?secret=x", "https://issuer.example.test/keys#x", "https://issuer.example.test:0/keys", "https://issuer.example.test\\keys", "https://issuer.example.test/\nkeys"] {
-            let mut changed = config(); changed.url = url.into();
+        for url in [
+            "http://issuer.example.test/keys",
+            "https://user:secret@issuer.example.test/keys",
+            "https://issuer.example.test/keys?secret=x",
+            "https://issuer.example.test/keys#x",
+            "https://issuer.example.test:0/keys",
+            "https://issuer.example.test\\keys",
+            "https://issuer.example.test/\nkeys",
+        ] {
+            let mut changed = config();
+            changed.url = url.into();
             assert!(endpoint(&changed).is_err(), "{url}");
         }
-        for (ttl, interval, timeout) in [(0,1,100),(3_601,1,100),(60,0,100),(600,301,100),(5,6,100),(60,5,99),(60,5,10_001),(60,1,1_001)] {
+        for (ttl, interval, timeout) in [
+            (0, 1, 100),
+            (3_601, 1, 100),
+            (60, 0, 100),
+            (600, 301, 100),
+            (5, 6, 100),
+            (60, 5, 99),
+            (60, 5, 10_001),
+            (60, 1, 1_001),
+        ] {
             let mut changed = config();
             changed.cache_ttl_seconds = ttl;
             changed.refresh_interval_seconds = interval;
             changed.request_timeout_ms = timeout;
             assert!(endpoint(&changed).is_err());
         }
-        for pem in ["", " ", "-----BEGIN PRIVATE KEY-----\nx\n-----END PRIVATE KEY-----", "-----BEGIN CERTIFICATE-----\ninvalid\n-----END CERTIFICATE-----"] {
+        for pem in [
+            "",
+            " ",
+            "-----BEGIN PRIVATE KEY-----\nx\n-----END PRIVATE KEY-----",
+            "-----BEGIN CERTIFICATE-----\ninvalid\n-----END CERTIFICATE-----",
+        ] {
             assert!(certificates(pem).is_err());
         }
         let mut invalid_der = config();
-        invalid_der.trusted_ca_pem = Some("-----BEGIN CERTIFICATE-----\nAA==\n-----END CERTIFICATE-----".into());
+        invalid_der.trusted_ca_pem =
+            Some("-----BEGIN CERTIFICATE-----\nAA==\n-----END CERTIFICATE-----".into());
         assert!(RemoteKeys::new(invalid_der, Arc::new(super::super::SystemClock)).is_err());
     }
 
     #[test]
     fn issuer_key_cache_time_and_cancellation_preserve_bounds() {
         let mut state = Cache::default();
-        assert_eq!(state.observe(Some(Duration::from_secs(10))).unwrap(), Duration::from_secs(10));
+        assert_eq!(
+            state.observe(Some(Duration::from_secs(10))).unwrap(),
+            Duration::from_secs(10)
+        );
         assert!(state.observe(None).is_err());
         assert!(state.observe(Some(Duration::from_secs(9))).is_err());
         assert_eq!(state.last_clock, Some(Duration::from_secs(10)));
@@ -302,10 +351,21 @@ mod tests {
 
     #[test]
     fn issuer_key_response_media_is_explicit() {
-        for value in ["application/json", "Application/JWK-Set+JSON", "application/json; charset=utf-8", "application/json;charset=\"UTF-8\""] {
+        for value in [
+            "application/json",
+            "Application/JWK-Set+JSON",
+            "application/json; charset=utf-8",
+            "application/json;charset=\"UTF-8\"",
+        ] {
             assert!(json_media(value));
         }
-        for value in ["text/json", "application/jwk+json", "application/json,application/json", "application/json; charset=latin1", "application/json; charset=utf-8; charset=utf-8"] {
+        for value in [
+            "text/json",
+            "application/jwk+json",
+            "application/json,application/json",
+            "application/json; charset=latin1",
+            "application/json; charset=utf-8; charset=utf-8",
+        ] {
             assert!(!json_media(value));
         }
     }

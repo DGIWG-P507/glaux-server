@@ -343,7 +343,8 @@ mod tests {
         use axum::http::HeaderMap;
         use serde_json::{Value, json};
 
-        let mut input: Value = serde_json::from_str(&document("127.0.0.1:8080", "disabled")).unwrap();
+        let mut input: Value =
+            serde_json::from_str(&document("127.0.0.1:8080", "disabled")).unwrap();
         input["authentication"] = json!("jwt");
         input["jwt"] = json!({
             "issuer":"https://issuer.example.test", "audience":"glaux",
@@ -353,16 +354,31 @@ mod tests {
         // No issuer is started: syntactic validation must not retrieve keys.
         let configured = parse(&input.to_string()).unwrap();
         assert_eq!(configured.authentication(), Authentication::Jwt);
-        assert!(matches!(configured.authenticator().authenticate(&HeaderMap::new(), None),
-                         Err(AuthError::Missing)));
+        assert!(matches!(
+            configured
+                .authenticator()
+                .authenticate(&HeaderMap::new(), None),
+            Err(AuthError::Missing)
+        ));
         let mut supplied = HeaderMap::new();
-        supplied.insert(axum::http::header::AUTHORIZATION, "Bearer synthetic".parse().unwrap());
-        assert!(matches!(configured.authenticator().authenticate(&supplied, None),
-                         Err(AuthError::Unavailable)));
+        supplied.insert(
+            axum::http::header::AUTHORIZATION,
+            "Bearer synthetic".parse().unwrap(),
+        );
+        assert!(matches!(
+            configured.authenticator().authenticate(&supplied, None),
+            Err(AuthError::Unavailable)
+        ));
         for (path, value) in [
             ("/jwt/jwks/url", json!("http://127.0.0.1:9/keys")),
-            ("/jwt/jwks/url", json!("https://user:password@example.test/keys")),
-            ("/jwt/jwks/url", json!("https://example.test/keys?credential=secret")),
+            (
+                "/jwt/jwks/url",
+                json!("https://user:password@example.test/keys"),
+            ),
+            (
+                "/jwt/jwks/url",
+                json!("https://example.test/keys?credential=secret"),
+            ),
             ("/jwt/jwks/url", json!("https://example.test/keys#fragment")),
             ("/jwt/jwks/cache_ttl_seconds", json!(0)),
             ("/jwt/jwks/cache_ttl_seconds", json!(3601)),
@@ -375,9 +391,17 @@ mod tests {
             *invalid.pointer_mut(path).unwrap() = value;
             assert!(parse(&invalid.to_string()).is_err(), "{path}");
         }
-        for field in ["url", "cache_ttl_seconds", "refresh_interval_seconds", "request_timeout_ms"] {
+        for field in [
+            "url",
+            "cache_ttl_seconds",
+            "refresh_interval_seconds",
+            "request_timeout_ms",
+        ] {
             let mut invalid = input.clone();
-            invalid["jwt"]["jwks"].as_object_mut().unwrap().remove(field);
+            invalid["jwt"]["jwks"]
+                .as_object_mut()
+                .unwrap()
+                .remove(field);
             assert!(parse(&invalid.to_string()).is_err(), "missing {field}");
         }
         let mut invalid = input.clone();
@@ -386,8 +410,10 @@ mod tests {
         let mut both = input.clone();
         both["jwt"]["keys"] = json!([{"kty":"RSA","kid":"also-static"}]);
         assert!(parse(&both.to_string()).is_err());
-        let duplicate = input.to_string().replace("\"cache_ttl_seconds\":60",
-            "\"cache_ttl_seconds\":60,\"cache_ttl_seconds\":60");
+        let duplicate = input.to_string().replace(
+            "\"cache_ttl_seconds\":60",
+            "\"cache_ttl_seconds\":60,\"cache_ttl_seconds\":60",
+        );
         assert!(parse(&duplicate).is_err());
     }
 

@@ -14,8 +14,8 @@ use glaux_standards::validation;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use serde_json::{Map, Value};
 
-use super::{AuthConfigError, AuthError, CallerContext, CallerKind, Clock, JwtConfig};
 use super::keys::RemoteKeys;
+use super::{AuthConfigError, AuthError, CallerContext, CallerKind, Clock, JwtConfig};
 
 const MAX_TOKEN_BYTES: usize = 16_384;
 const MAX_HEADER_BYTES: usize = 2_048;
@@ -48,7 +48,10 @@ struct ParsedToken {
 }
 
 impl JwtVerifier {
-    pub(super) fn new(config: JwtConfig, key_clock: Arc<dyn Clock>) -> Result<Self, AuthConfigError> {
+    pub(super) fn new(
+        config: JwtConfig,
+        key_clock: Arc<dyn Clock>,
+    ) -> Result<Self, AuthConfigError> {
         if !bounded_text(&config.issuer, MAX_ID_BYTES)
             || !bounded_text(&config.audience, MAX_ID_BYTES)
             || config.required_scopes.len() > MAX_ITEMS
@@ -177,7 +180,10 @@ fn parse_token(token: &str) -> Result<ParsedToken, AuthError> {
     if !(256..=512).contains(&signature.len()) {
         return Err(AuthError::InvalidToken);
     }
-    Ok(ParsedToken { kid: access_header(&header)?.to_owned(), claims })
+    Ok(ParsedToken {
+        kid: access_header(&header)?.to_owned(),
+        claims,
+    })
 }
 
 pub(super) fn key_set(values: &[Value]) -> Result<BTreeMap<String, DecodingKey>, AuthConfigError> {
