@@ -1,6 +1,10 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "authorization::tests::configured_policy_keeps_identity_actions_and_resource_pairs_distinct",
+    "authorization::tests::policy_configuration_and_denial_bounds_reject_ambiguity",
+    "authorization::tests::operation_context_does_not_truncate_oversized_audit_identity",
+    "authorization::tests::denial_rate_limits_share_capacity_and_reject_clock_faults",
     "configuration::tests::runtime_policy_configuration_is_explicit_and_bounded",
     "authentication::keys::tests::issuer_key_configuration_rejects_unsafe_endpoints_and_timing",
     "authentication::keys::tests::issuer_key_cache_time_and_cancellation_preserve_bounds",

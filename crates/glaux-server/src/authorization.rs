@@ -257,7 +257,7 @@ impl AccessPolicy for ConfiguredPolicy {
         caller: &CallerContext,
         action: Action,
     ) -> Result<PermissionSet, PolicyError> {
-        let mut granted = PermissionSet {
+        let granted = PermissionSet {
             grants: self
                 .grants
                 .iter()
@@ -273,9 +273,6 @@ impl AccessPolicy for ConfiguredPolicy {
                 .map(|grant| grant.scope.clone())
                 .collect(),
         };
-        // HOSTED_BEHAVIORAL_RED: remove only after the independent fixture fails
-        // its intended authorized-result assertion against this deny-all stub.
-        granted.grants.clear();
         Ok(granted)
     }
 }
@@ -863,5 +860,248 @@ impl Admission {
             }
             Err(error) => Err(Self::storage_error(ctx, error)),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::authentication::{Authenticator, DevelopmentConfig};
+    use axum::http::HeaderMap;
+
+    fn id(number: u32) -> LocalId {
+        format!("01890f20-7b5a-7cc3-98c4-{number:012x}")
+            .parse()
+            .unwrap()
+    }
+
+    fn caller(subject: &str, groups: &[&str]) -> CallerContext {
+        let peer = "127.0.0.1:12345".parse().unwrap();
+        Authenticator::development(
+            DevelopmentConfig {
+                subject: subject.to_owned(),
+                groups: groups.iter().map(|value| (*value).to_owned()).collect(),
+                scopes: Vec::new(),
+            },
+            peer,
+        )
+        .unwrap()
+        .authenticate(&HeaderMap::new(), Some(peer))
+        .unwrap()
+    }
+
+    fn grant(source: &str, actions: &[Action], resources: Option<Vec<String>>) -> GrantConfig {
+        GrantConfig {
+            issuer: "urn:glaux:development".to_owned(),
+            subject: Some("alice".to_owned()),
+            group: None,
+            source: source.to_owned(),
+            actions: actions.to_vec(),
+            resources,
+        }
+    }
+
+    fn configuration(grants: Vec<GrantConfig>) -> PolicyConfig {
+        PolicyConfig {
+            grants,
+            denial_audit: DenialLimits::default(),
+        }
+    }
+
+    #[test]
+    fn configured_policy_keeps_identity_actions_and_resource_pairs_distinct() {
+        let alice = caller("alice", &["operators"]);
+        let bob = caller("bob", &["operators"]);
+        let wrong_group = caller("bob", &["Operators"]);
+        let mut group = grant("source-B", &[Action::Read], Some(vec![id(2).to_string()]));
+        group.subject = None;
+        group.group = Some("operators".to_owned());
+        let policy = ConfiguredPolicy::new(configuration(vec![
+            grant("source-A", &[Action::Read], Some(vec![id(1).to_string()])),
+            group,
+            grant("source-A", &[Action::SubmitCommand], Some(vec![id(1).to_string()])),
+            grant("source-C", &[Action::Publish], None),
+            grant("source-D", &[Action::Read], Some(Vec::new())),
+        ]))
+        .unwrap();
+        let read = policy.permissions(&alice, Action::Read).unwrap();
+        assert!(read.allows("source-A", id(1)));
+        assert!(read.allows("source-B", id(2)));
+        assert!(!read.allows("source-A", id(2)));
+        assert!(!read.allows("source-B", id(1)));
+        assert!(!read.allows("source-a", id(1)));
+        assert!(!read.allows("source-A", id(3)));
+        assert!(!read.allows("source-D", id(1)));
+        assert!(!read.allows_source("source-D"));
+        let bob_read = policy.permissions(&bob, Action::Read).unwrap();
+        assert!(!bob_read.allows("source-A", id(1)));
+        assert!(bob_read.allows("source-B", id(2)));
+        assert!(!policy.permissions(&wrong_group, Action::Read).unwrap().allows("source-B", id(2)));
+        assert!(policy.permissions(&alice, Action::SubmitCommand).unwrap().allows("source-A", id(1)));
+        for action in [Action::Create, Action::Update, Action::ReportStatus, Action::Export, Action::Administer] {
+            assert!(!policy.permissions(&alice, action).unwrap().allows("source-A", id(1)));
+        }
+        let publish = policy.permissions(&alice, Action::Publish).unwrap();
+        assert!(publish.allows("source-C", id(1)));
+        assert!(publish.allows("source-C", id(999)));
+        assert!(!publish.allows("source-B", id(999)));
+        let mut other_issuer = grant("source-A", &[Action::Read], None);
+        other_issuer.issuer = "urn:another:issuer".to_owned();
+        let other = ConfiguredPolicy::new(configuration(vec![other_issuer])).unwrap();
+        assert!(!other.permissions(&alice, Action::Read).unwrap().allows("source-A", id(1)));
+        assert!(!ConfiguredPolicy::deny_all().permissions(&alice, Action::Read).unwrap().allows("source-A", id(1)));
+        let scope: serde_json::Value = serde_json::from_str(&read.scope_json()).unwrap();
+        assert_eq!(scope, json!([
+            {"source":"source-A","resources":["01890f20-7b5a-7cc3-98c4-000000000001"]},
+            {"source":"source-B","resources":["01890f20-7b5a-7cc3-98c4-000000000002"]},
+            {"source":"source-D","resources":[]},
+        ]));
+    }
+
+    #[test]
+    fn policy_configuration_and_denial_bounds_reject_ambiguity() {
+        let valid = grant("source-A", &[Action::Read], None);
+        for change in 0..12 {
+            let mut candidate = valid.clone();
+            match change {
+                0 => candidate.issuer.clear(),
+                1 => candidate.issuer = "unsafe\nissuer".to_owned(),
+                2 => candidate.subject = None,
+                3 => candidate.group = Some("operators".to_owned()),
+                4 => candidate.subject = Some(String::new()),
+                5 => {
+                    candidate.subject = None;
+                    candidate.group = Some(String::new());
+                }
+                6 => candidate.source.clear(),
+                7 => candidate.source = "x".repeat(257),
+                8 => candidate.actions.clear(),
+                9 => candidate.actions.push(Action::Read),
+                10 => candidate.resources = Some(vec![id(1).to_string().to_uppercase()]),
+                11 => candidate.resources = Some(vec![id(1).to_string(), id(1).to_string()]),
+                _ => unreachable!(),
+            }
+            assert!(ConfiguredPolicy::new(configuration(vec![candidate])).is_err());
+        }
+        assert!(ConfiguredPolicy::new(configuration(vec![valid.clone(); 256])).is_ok());
+        assert!(ConfiguredPolicy::new(configuration(vec![valid; 257])).is_err());
+        let mut large: Vec<_> = (0..4).map(|group| {
+            grant(
+                &format!("source-{group}"),
+                &[Action::Read],
+                Some((1..=1024).map(|offset| id(group * 1024 + offset).to_string()).collect()),
+            )
+        }).collect();
+        assert!(ConfiguredPolicy::new(configuration(large.clone())).is_ok());
+        large.push(grant("extra", &[Action::Read], Some(vec![id(4097).to_string()])));
+        assert!(ConfiguredPolicy::new(configuration(large)).is_err());
+        assert!(ConfiguredPolicy::new(configuration(vec![grant(
+            "too-many", &[Action::Read], Some((1..=1025).map(|value| id(value).to_string()).collect()),
+        )])).is_err());
+        for limits in [
+            DenialLimits { max_records: 1, max_per_window: 1, window_seconds: 1 },
+            DenialLimits { max_records: 100_000, max_per_window: 10_000, window_seconds: 86_400 },
+        ] {
+            assert!(limits.validate().is_ok());
+        }
+        for change in 0..6 {
+            let mut limits = DenialLimits::default();
+            match change {
+                0 => limits.max_records = 0,
+                1 => limits.max_records = 100_001,
+                2 => limits.max_per_window = 0,
+                3 => limits.max_per_window = 10_001,
+                4 => limits.window_seconds = 0,
+                5 => limits.window_seconds = 86_401,
+                _ => unreachable!(),
+            }
+            assert!(ConfiguredPolicy::new(PolicyConfig { grants: Vec::new(), denial_audit: limits }).is_err());
+        }
+        for malformed in [
+            json!({"grants":[]}),
+            json!({"grants":[],"denial_audit":null}),
+            json!({"grants":[],"denial_audit":{"max_records":1,"max_per_window":1,"window_seconds":1},"allow":true}),
+            json!({"grants":[],"denial_audit":{"max_records":1,"max_per_window":1,"window_seconds":1,"extra":true}}),
+        ] {
+            assert!(serde_json::from_value::<PolicyConfig>(malformed).is_err());
+        }
+        assert!(serde_json::from_value::<Action>(json!("administrator")).is_err());
+    }
+
+    #[test]
+    fn operation_context_does_not_truncate_oversized_audit_identity() {
+        let time = "2026-09-26T12:00:00.1234567890123456789Z".parse::<ExactInstant>().unwrap();
+        let ordinary = OperationContext::new(caller("alice", &[]), time.clone()).unwrap();
+        assert_eq!(ordinary.actor.as_deref(), Some("[\"urn:glaux:development\",\"alice\",\"development\"]"));
+        assert!(ordinary.correlation().parse::<LocalId>().is_ok());
+        let audit = ordinary.audit(Some("source-A"));
+        assert_eq!(audit.source.as_deref(), Some("source-A"));
+        assert_eq!(audit.correlation, ordinary.correlation());
+        assert_eq!(audit.time.source_lexeme(), "2026-09-26T12:00:00.1234567890123456789Z");
+        let subject = "long-verified-subject-".repeat(20);
+        let long = OperationContext::new(caller(&subject, &[]), time).unwrap();
+        assert!(long.actor.is_none());
+        assert_eq!(long.caller().subject(), subject);
+        let mut read_grant = grant("source-A", &[Action::Read], None);
+        read_grant.subject = Some(subject);
+        let policy = ConfiguredPolicy::new(configuration(vec![read_grant])).unwrap();
+        assert!(policy.permissions(long.caller(), Action::Read).unwrap().allows("source-A", id(1)));
+        assert!(long.audit(None).actor.is_none());
+        let error = long.error(AccessKind::Unavailable);
+        assert_eq!(error.status(), StatusCode::SERVICE_UNAVAILABLE);
+        assert_eq!(error.correlation(), long.correlation());
+        assert_eq!(error.to_string(), "operation temporarily unavailable");
+    }
+
+    struct ManualClock(Mutex<Option<Duration>>);
+
+    impl RateClock for ManualClock {
+        fn now(&self) -> Option<Duration> {
+            *self.0.lock().unwrap()
+        }
+    }
+
+    impl ManualClock {
+        fn set(&self, value: Option<Duration>) {
+            *self.0.lock().unwrap() = value;
+        }
+    }
+
+    #[test]
+    fn denial_rate_limits_share_capacity_and_reject_clock_faults() {
+        let clock = Arc::new(ManualClock(Mutex::new(Some(Duration::from_secs(100)))));
+        let admission = Admission::new(
+            Arc::new(ConfiguredPolicy::deny_all()),
+            DenialLimits { max_records: 2, max_per_window: 2, window_seconds: 10 },
+            clock.clone(),
+        ).unwrap();
+        let other = admission.clone();
+        assert!(admission.denial.take_capacity());
+        assert!(other.denial.take_capacity());
+        assert!(!admission.denial.take_capacity());
+        clock.set(Some(Duration::from_millis(109_999)));
+        assert!(!other.denial.take_capacity());
+        clock.set(Some(Duration::from_secs(99)));
+        assert!(!admission.denial.take_capacity());
+        clock.set(None);
+        assert!(!other.denial.take_capacity());
+        clock.set(Some(Duration::from_secs(110)));
+        assert!(other.denial.take_capacity());
+        assert!(admission.denial.take_capacity());
+        assert!(!other.denial.take_capacity());
+        clock.set(Some(Duration::from_millis(119_999)));
+        assert!(!admission.denial.take_capacity());
+        clock.set(Some(Duration::from_secs(120)));
+        assert!(other.denial.take_capacity());
+        assert_eq!(admission.diagnostics(), Diagnostics {
+            rate_limited: 4,
+            clock_unavailable: 2,
+            ..Diagnostics::default()
+        });
+        admission.denial.counts.storage_failed.store(u64::MAX - 1, Ordering::Relaxed);
+        increment(&other.denial.counts.storage_failed);
+        increment(&other.denial.counts.storage_failed);
+        assert_eq!(admission.diagnostics().storage_failed, u64::MAX);
+        assert_eq!(admission.diagnostics(), other.diagnostics());
     }
 }

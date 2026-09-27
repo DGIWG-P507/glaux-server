@@ -72,6 +72,13 @@ ambiguous creation evidence grants no read/update authority. This is the current
 internal ownership binding, not a public provenance claim or ownership-transfer
 API. Trusted low-level fixture/import calls must not be exposed as bypasses.
 
+Those original audit/outgoing rows currently form an authoritative source
+dependency for a live System. Later retention/export/restore implementations
+must preserve or explicitly migrate that binding before removing supporting
+rows, and verify that live ownership is not lost (Guide §4.7's dependency rule).
+This is not a perpetual audit-retention policy. No purge path exists here, and
+this issue does not claim coverage for future audit/outbox retention.
+
 Query selection applies paired source/resource permissions before counting,
 limiting or building output. A child whose direct parent is not readable is
 withheld as a whole resource; required fields are not stripped into an invalid
@@ -91,7 +98,10 @@ uses the existing atomic resource/revision/audit/outgoing transaction.
 
 The local policy is consulted on every operation. A controlled unavailable
 adapter produces safe `503`, never an allowed mutation or a successful empty
-query. Policy implementations must remain bounded local computations; a future
+query. The configured adapter is loaded at startup; there is no policy-editing
+API or hot-reload facility in this slice. Revocation fixtures exercise changing
+decisions through the local interface, not an invented administration service.
+Policy implementations must remain bounded local computations; a future
 network adapter needs its own explicit timeout/cancellation contract. No external
 call is performed inside a database write transaction.
 

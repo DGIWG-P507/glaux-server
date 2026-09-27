@@ -23,6 +23,26 @@ Expected answers name the exact permitted resources, not merely their count.
 The issued proof's fixture constants document those identifiers; fixture
 setup must verify the seeded facts before exercising admission.
 
+The executable uses UUIDv7-shaped prefix `01890f20-7b5a-7cc3-98c4-dc0c0c22`:
+
+| Suffix | Independently assigned fact |
+| --- | --- |
+| `0100` | A resource excluded by Alice's resource scope, sorting before the first permitted item |
+| `0101`, `0102` | `A one` and `A two`; `0102` has parent `0101` |
+| `0103`, `0104` | Excluded A parent and a child whose own ID is permitted but whose parent is not |
+| `0201` | Bob's `B private` resource; it has an asserted A alias without A ownership |
+| `0301` | Bare A System identity with no accepted creation ownership, despite an explicit resource grant |
+| `0151`, `0152` | Accepted A creation and a fresh generated retry candidate that must not displace its original receipt |
+| `0251`–`0254` | Unadmitted cross-source or action-denied creation candidates |
+
+Alice's deliberate cross-pair grants include A/`0201` and B/`0101`. Neither
+grants B/`0201`; flattening source and ID sets would create that unauthorized
+combination. The first list contains exactly `0101` and `0102`, with count two.
+A limit-one request still returns `0101` and count two, not the hidden `0100`
+or an empty page. Seeded A records also carry B aliases: descriptive aliases
+do not replace the original accepted source. The separately observed fixed
+audit time is `2026-09-26T12:00:00.123456789Z`.
+
 | Verified caller and operation | Expected answer | Wrong behavior this distinguishes |
 | --- | --- | --- |
 | Alice lists or reads her configured A resources | Exactly the permitted A identities, labels and links; counts derive from that same authorized set | A correct count with the wrong members; filtering after generating links/counts; treating membership in one source as access to every resource |
@@ -57,6 +77,13 @@ not authorized-to-record. A denied candidate's untrusted payload, forged actor,
 producer declaration, bearer token, secret canary and internal policy reason
 must not appear in retained audit or public errors.
 
+A visible A/`0101` update denied for missing update permission retains the
+verified actor, source A and target `0101`. A hidden B/`0201` or nonexistent
+target denial retains no source or target. Each row is retrieved independently
+by its server-generated correlation identifier and compared field by field.
+The actor is the unambiguous JSON tuple of verified issuer, subject and caller
+kind, not the body-supplied actor or producer.
+
 Exercise these cases separately, rather than treating one generic failed audit
 as all three:
 
@@ -87,7 +114,7 @@ retry and outgoing state; row counts alone are insufficient. Setup/reset and
 cleanup failures are fatal, not skipped proof. The test fixture owns all reset
 privileges and never accepts a caller-selected or operational database.
 
-The real HTTP listener mounts synthetic read/create routes through production
+The real HTTP listener mounts synthetic read/create/update routes through production
 authentication, policy/admission and HTTP-boundary components. An independent
 TCP client sends HTTP bytes and checks status, headers and general-purpose JSON,
 not production response types. Expected resource values, complete safe problems,
@@ -111,14 +138,63 @@ the independent wire-oracle controls pass. A compiler, migration, service,
 authentication or cleanup failure is not that behavioral red. The final issue
 record identifies the actual commit and result rather than assuming execution.
 
+The intended behavioral red was observed at commit
+`61fdb5030f980590d2256852d21a23ff0aac5a6c` in
+[hosted run 36285665474](https://github.com/DGIWG-P507/glaux-server/actions/runs/36285665474).
+Compilation, the preceding required checks, owned database setup and independent
+wire-oracle controls completed. The allowed-list assertion then failed at
+`allowed source query did not return exact authorized resources`: the deny-all
+stub returned HTTP 200 with zero items/count instead of the two authorized A
+resources. Owned-listener/database cleanup completed. Earlier formatting,
+disabled-Axum-JSON import and Clippy type-complexity failures are preparation
+failures recorded on the PR, not this behavioral red.
+
 After the complete unmodified proof passes, create a disposable source copy,
 bypass the reviewed source-permission comparison, compile successfully and
-require the specific cross-source/incorrect-membership assertion to fail.
+require `cross-source create escaped authorization` to fail.
 Require the preceding oracle/setup markers and absence of the final success
 marker. A different panic, process timeout or infrastructure failure cannot
 count as a detected authorization fault. Preserve the original source bytes,
 rebuild and rerun them to prove restoration; keep baseline/fault/restored raw
 logs and a concise result in the ordinary CI artifact.
+
+## Executable groups and commands
+
+The wrapper requires all eight groups once, in this order, plus the final
+`Required authorization proof passed: 8 groups.` marker. Process success without
+that execution inventory is not a pass.
+
+1. `independent-wire-oracle-controls`
+2. `exact-authorized-queries`
+3. `accepted-write-and-source-boundary`
+4. `action-resource-and-asserted-authority`
+5. `policy-unavailable-and-revocation`
+6. `bounded-denial-audit`
+7. `audit-storage-failure-and-busy`
+8. `restored-policy-and-clean-shutdown`
+
+The retry cases keep original `0151` permitted while assigning a new candidate
+`0152` to the same intent/key: the original receipt must return without another
+write. A fresh key with no candidate permission must instead receive `403`.
+Revoking the original resource's Read or Create permission separately must
+also produce exactly `403` without returning its receipt. The parent remains
+readable so an unrelated parent denial cannot satisfy these assertions.
+
+Run only in the approved hosted environment, from the repository root:
+
+```text
+python3 scripts/test_authorization.py
+python3 scripts/test-authorization-failures.py
+```
+
+Each execution uses a new owned database, a restricted serving SQL role and a
+separate privileged observer/setup connection. Cargo builds are locked/offline
+and bounded at 180 seconds, Docker proof execution at 120 seconds, the Rust
+scenario at 80 seconds, HTTP reads at five seconds and writes at three seconds.
+The wrapper does not accept a caller-selected target or suite filter. The
+fault proof changes only a disposable source copy and requires a successfully
+compiled source-permission bypass to reach its specific assertion after the
+authorized-query group. No build, service or cleanup failure counts as detection.
 
 ## Limits
 

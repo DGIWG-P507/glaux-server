@@ -316,7 +316,10 @@ async fn create_item(
         input.event_id = id(4000 + candidate).to_string().parse().unwrap();
     }
     let retry = body["retry"].as_bool().unwrap_or(false).then(|| RetryKey {
-        key: "fixture-retry-22".to_owned(),
+        key: body["retry_key"]
+            .as_str()
+            .unwrap_or("fixture-retry-22")
+            .to_owned(),
         retention_seconds: 60,
     });
     let mut connection = state.connection.lock().await;
@@ -712,6 +715,36 @@ async fn assert_denial(connection: &mut PgConnection, correlation: &str) {
     );
 }
 
+async fn assert_update_denial(
+    connection: &mut PgConnection,
+    correlation: &str,
+    visible: bool,
+) {
+    let rows: Vec<String> = sqlx::query_scalar(
+        "SELECT json_build_object('actor',actor,'source',source,'operation',operation,
+         'target',target_id::text,'revision',revision_id::text,'time',time_source,
+         'outcome',outcome,'correlation',correlation)::text
+         FROM public.server_audit WHERE correlation=$1",
+    )
+    .bind(correlation)
+    .fetch_all(connection)
+    .await
+    .unwrap();
+    assert_eq!(rows.len(), 1, "eligible update denial was not retained exactly once");
+    let actual: Value = serde_json::from_str(&rows[0]).unwrap();
+    assert_eq!(
+        actual,
+        json!({
+            "actor":"[\"urn:glaux:development\",\"development-alice\",\"development\"]",
+            "source":if visible {Some(SOURCE_A)} else {None},
+            "operation":"system.update",
+            "target":if visible {Some("01890f20-7b5a-7cc3-98c4-dc0c0c220101")} else {None},
+            "revision":null,"time":TIME,"outcome":"denied","correlation":correlation,
+        }),
+        "denied update lost safe context or retained concealed target context"
+    );
+}
+
 fn create_body(number: u16, source: &str, parent: Option<u16>, retry: bool) -> Value {
     json!({"number":number,"source":source,"parent":parent,"retry":retry,
         "actor":"forged-request-actor","group":"administrators","producer":CANARY,"statusReporter":SOURCE_B})
@@ -914,6 +947,17 @@ async fn accepted_and_cross_source(
         before,
         "new retry candidate created state or accountability"
     );
+    let mut fresh_key = create_body(151, SOURCE_A, Some(101), true);
+    fresh_key["candidate_number"] = json!(152);
+    fresh_key["retry_key"] = json!("new-key-without-candidate-permission");
+    let fresh = request(a, "POST", "/create", Some(fresh_key), "").await;
+    assert_eq!(fresh.status, 403, "fresh retry key bypassed candidate permission");
+    problem(&fresh, 403);
+    assert_eq!(
+        without_audit(snapshot(connection).await),
+        without_audit(before.clone()),
+        "denied fresh retry key created resource, receipt or outgoing work"
+    );
     *shared.policy.policy.write().unwrap() = ConfiguredPolicy::new(policy()).unwrap();
     let denied = request(
         a,
@@ -969,10 +1013,14 @@ async fn action_and_assertions(
         403,
     );
     for number in [101, 201, 999] {
-        problem(
-            &request(a, "POST", &format!("/update/{number}"), None, "").await,
-            if number == 101 { 403 } else { 404 },
-        );
+        let denied = request(a, "POST", &format!("/update/{number}"), None, "").await;
+        problem(&denied, if number == 101 { 403 } else { 404 });
+        assert_update_denial(
+            connection,
+            denied.json()["correlation"].as_str().unwrap(),
+            number == 101,
+        )
+        .await;
     }
     assert_eq!(
         without_audit(snapshot(connection).await),
@@ -1030,19 +1078,30 @@ async fn unavailable_revocation(
         before,
         "policy outage admitted or recorded unverified operation"
     );
+    problem(&request(a, "POST", "/update/102", None, "").await, 503);
+    assert_eq!(
+        snapshot(connection).await,
+        before,
+        "policy outage admitted an update"
+    );
     shared.policy.unavailable.store(false, Ordering::SeqCst);
     assert!(matches_list(
         &request(a, "GET", "/items", None, "").await,
         expected
     ));
     let mut revoked = policy();
-    // Keep create but remove read: retry must not disclose its original receipt.
-    revoked
-        .grants
-        .retain(|grant| !grant.actions.contains(&Action::Read));
+    // Keep the parent's read permission. Only the original receipt is revoked,
+    // so the replay's own read check, not a parent lookup, must prevent disclosure.
+    for grant in &mut revoked.grants {
+        if grant.actions.contains(&Action::Read)
+            && let Some(resources) = &mut grant.resources
+        {
+            resources.retain(|resource| resource != &id(151).to_string());
+        }
+    }
     *shared.policy.policy.write().unwrap() = ConfiguredPolicy::new(revoked).unwrap();
     problem(
-        &request(a, "GET", &format!("/items/{}", id(101)), None, "").await,
+        &request(a, "GET", &format!("/items/{}", id(151)), None, "").await,
         404,
     );
     let replay = request(
@@ -1053,11 +1112,28 @@ async fn unavailable_revocation(
         "",
     )
     .await;
-    assert!(
-        [403, 404].contains(&replay.status),
+    assert_eq!(
+        replay.status, 403,
         "revoked read permission leaked retry receipt"
     );
-    problem(&replay, replay.status);
+    problem(&replay, 403);
+    let mut revoked_create = policy();
+    for grant in &mut revoked_create.grants {
+        if grant.actions.contains(&Action::Create) {
+            grant.resources = Some(vec![id(101).to_string()]);
+        }
+    }
+    *shared.policy.policy.write().unwrap() = ConfiguredPolicy::new(revoked_create).unwrap();
+    let replay = request(
+        a,
+        "POST",
+        "/create",
+        Some(create_body(151, SOURCE_A, Some(101), true)),
+        "",
+    )
+    .await;
+    assert_eq!(replay.status, 403, "revoked create permission leaked retry receipt");
+    problem(&replay, 403);
     assert_eq!(
         without_audit(snapshot(connection).await),
         without_audit(before),
