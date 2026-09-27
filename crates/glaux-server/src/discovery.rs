@@ -106,23 +106,144 @@ const fn route(
     }
 }
 
-const LANDING: RouteDefinition = route("/", &[], "landing", "Landing page", Family::Discovery, "application/json");
-const CONFORMANCE: RouteDefinition = route("/conformance", &["conformance"], "conformance", "Conformance declaration", Family::Discovery, "application/json");
-const API: RouteDefinition = route("/api", &["api"], "api", "OpenAPI 3.1 description", Family::Documentation, "application/json");
-const DOCS: RouteDefinition = route("/docs", &["docs"], "docs", "Human-readable API documentation", Family::Documentation, "text/html;charset=utf-8");
-const INIT: RouteDefinition = route("/docs/init.js", &["docs", "init.js"], "documentationInitializer", "Local documentation initializer", Family::Documentation, "text/javascript;charset=utf-8");
-const BUNDLE: RouteDefinition = route("/docs/swagger-ui-bundle.js", &["docs", "swagger-ui-bundle.js"], "documentationBundle", "Pinned Swagger UI bundle", Family::Documentation, "text/javascript;charset=utf-8");
-const CSS: RouteDefinition = route("/docs/swagger-ui.css", &["docs", "swagger-ui.css"], "documentationStyle", "Pinned Swagger UI stylesheet", Family::Documentation, "text/css;charset=utf-8");
-const LICENSE: RouteDefinition = route("/docs/LICENSE", &["docs", "LICENSE"], "documentationLicense", "Swagger UI licence", Family::Download, "text/plain;charset=utf-8");
-const NOTICE: RouteDefinition = route("/docs/NOTICE", &["docs", "NOTICE"], "documentationNotice", "Swagger UI notice", Family::Download, "text/plain;charset=utf-8");
-const THIRD_PARTY: RouteDefinition = route("/docs/swagger-ui-bundle.js.LICENSE.txt", &["docs", "swagger-ui-bundle.js.LICENSE.txt"], "documentationThirdPartyNotices", "Swagger UI bundled notices", Family::Download, "text/plain;charset=utf-8");
-const SCHEMA: RouteDefinition = route("/schemas/discovery.json", &["schemas", "discovery.json"], "discoverySchema", "Original Glaux discovery schema", Family::Download, "application/schema+json");
-const LANDING_EXAMPLE: RouteDefinition = route("/examples/landing.json", &["examples", "landing.json"], "landingExample", "Current deployment landing example", Family::Download, "application/json");
-const CONFORMANCE_EXAMPLE: RouteDefinition = route("/examples/conformance.json", &["examples", "conformance.json"], "conformanceExample", "Current deployment conformance example", Family::Download, "application/json");
-pub const HEALTH_LIVE: RouteDefinition = route("/health/live", &["health", "live"], "liveness", "Operational liveness", Family::Health, "text/plain; charset=utf-8");
-pub const HEALTH_READY: RouteDefinition = route("/health/ready", &["health", "ready"], "readiness", "Operational storage readiness", Family::Health, "text/plain; charset=utf-8");
+const LANDING: RouteDefinition = route(
+    "/",
+    &[],
+    "landing",
+    "Landing page",
+    Family::Discovery,
+    "application/json",
+);
+const CONFORMANCE: RouteDefinition = route(
+    "/conformance",
+    &["conformance"],
+    "conformance",
+    "Conformance declaration",
+    Family::Discovery,
+    "application/json",
+);
+const API: RouteDefinition = route(
+    "/api",
+    &["api"],
+    "api",
+    "OpenAPI 3.1 description",
+    Family::Documentation,
+    "application/json",
+);
+const DOCS: RouteDefinition = route(
+    "/docs",
+    &["docs"],
+    "docs",
+    "Human-readable API documentation",
+    Family::Documentation,
+    "text/html;charset=utf-8",
+);
+const INIT: RouteDefinition = route(
+    "/docs/init.js",
+    &["docs", "init.js"],
+    "documentationInitializer",
+    "Local documentation initializer",
+    Family::Documentation,
+    "text/javascript;charset=utf-8",
+);
+const BUNDLE: RouteDefinition = route(
+    "/docs/swagger-ui-bundle.js",
+    &["docs", "swagger-ui-bundle.js"],
+    "documentationBundle",
+    "Pinned Swagger UI bundle",
+    Family::Documentation,
+    "text/javascript;charset=utf-8",
+);
+const CSS: RouteDefinition = route(
+    "/docs/swagger-ui.css",
+    &["docs", "swagger-ui.css"],
+    "documentationStyle",
+    "Pinned Swagger UI stylesheet",
+    Family::Documentation,
+    "text/css;charset=utf-8",
+);
+const LICENSE: RouteDefinition = route(
+    "/docs/LICENSE",
+    &["docs", "LICENSE"],
+    "documentationLicense",
+    "Swagger UI licence",
+    Family::Download,
+    "text/plain;charset=utf-8",
+);
+const NOTICE: RouteDefinition = route(
+    "/docs/NOTICE",
+    &["docs", "NOTICE"],
+    "documentationNotice",
+    "Swagger UI notice",
+    Family::Download,
+    "text/plain;charset=utf-8",
+);
+const THIRD_PARTY: RouteDefinition = route(
+    "/docs/swagger-ui-bundle.js.LICENSE.txt",
+    &["docs", "swagger-ui-bundle.js.LICENSE.txt"],
+    "documentationThirdPartyNotices",
+    "Swagger UI bundled notices",
+    Family::Download,
+    "text/plain;charset=utf-8",
+);
+const SCHEMA: RouteDefinition = route(
+    "/schemas/discovery.json",
+    &["schemas", "discovery.json"],
+    "discoverySchema",
+    "Original Glaux discovery schema",
+    Family::Download,
+    "application/schema+json",
+);
+const LANDING_EXAMPLE: RouteDefinition = route(
+    "/examples/landing.json",
+    &["examples", "landing.json"],
+    "landingExample",
+    "Current deployment landing example",
+    Family::Download,
+    "application/json",
+);
+const CONFORMANCE_EXAMPLE: RouteDefinition = route(
+    "/examples/conformance.json",
+    &["examples", "conformance.json"],
+    "conformanceExample",
+    "Current deployment conformance example",
+    Family::Download,
+    "application/json",
+);
+pub const HEALTH_LIVE: RouteDefinition = route(
+    "/health/live",
+    &["health", "live"],
+    "liveness",
+    "Operational liveness",
+    Family::Health,
+    "text/plain; charset=utf-8",
+);
+pub const HEALTH_READY: RouteDefinition = route(
+    "/health/ready",
+    &["health", "ready"],
+    "readiness",
+    "Operational storage readiness",
+    Family::Health,
+    "text/plain; charset=utf-8",
+);
 
-const ROUTES: [RouteDefinition; 15] = [LANDING, CONFORMANCE, API, DOCS, INIT, BUNDLE, CSS, LICENSE, NOTICE, THIRD_PARTY, SCHEMA, LANDING_EXAMPLE, CONFORMANCE_EXAMPLE, HEALTH_LIVE, HEALTH_READY];
+const ROUTES: [RouteDefinition; 15] = [
+    LANDING,
+    CONFORMANCE,
+    API,
+    DOCS,
+    INIT,
+    BUNDLE,
+    CSS,
+    LICENSE,
+    NOTICE,
+    THIRD_PARTY,
+    SCHEMA,
+    LANDING_EXAMPLE,
+    CONFORMANCE_EXAMPLE,
+    HEALTH_LIVE,
+    HEALTH_READY,
+];
 
 fn landing(boundary: &HttpBoundary) -> Result<Value, Problem> {
     Ok(json!({
@@ -158,7 +279,9 @@ fn success(route: RouteDefinition, head: bool, description: &str) -> Value {
         let mut content = Map::new();
         let schema = match route.path {
             "/" | "/examples/landing.json" => json!({"$ref": "#/components/schemas/Landing"}),
-            "/conformance" | "/examples/conformance.json" => json!({"$ref": "#/components/schemas/Conformance"}),
+            "/conformance" | "/examples/conformance.json" => {
+                json!({"$ref": "#/components/schemas/Conformance"})
+            }
             "/api" | "/schemas/discovery.json" => json!({"type": "object"}),
             _ => json!({"type": "string"}),
         };
@@ -172,13 +295,21 @@ fn openapi(boundary: &HttpBoundary, schema: &Value) -> Result<Value, Problem> {
     let mut paths = Map::new();
     for route in ROUTES {
         let mut methods = Map::new();
-        let method_names = match route.methods { Methods::GetHead => ["get", "head"] };
+        let method_names = match route.methods {
+            Methods::GetHead => ["get", "head"],
+        };
         for method in method_names {
             let head = method == "head";
             let mut responses = Map::new();
-            responses.insert("200".to_owned(), success(route, head, "Successful response"));
+            responses.insert(
+                "200".to_owned(),
+                success(route, head, "Successful response"),
+            );
             if route.path == HEALTH_READY.path {
-                responses.insert("503".to_owned(), success(route, head, "Storage is not ready"));
+                responses.insert(
+                    "503".to_owned(),
+                    success(route, head, "Storage is not ready"),
+                );
             }
             let mut error = json!({
                 "description": "Safe bounded HTTP error using application/problem+json; HEAD omits the response body."
@@ -198,7 +329,10 @@ fn openapi(boundary: &HttpBoundary, schema: &Value) -> Result<Value, Problem> {
             if matches!(route.parameters, Parameters::Accept) {
                 // OAS 3.1 ignores an Accept Header Parameter Object. Describe
                 // HTTP negotiation without inventing a query parameter.
-                operation["description"] = json!(format!("Standard HTTP Accept negotiation offers {}. No query parameters are defined.", route.media));
+                operation["description"] = json!(format!(
+                    "Standard HTTP Accept negotiation offers {}. No query parameters are defined.",
+                    route.media
+                ));
             }
             methods.insert(method.to_owned(), operation);
         }
@@ -206,7 +340,8 @@ fn openapi(boundary: &HttpBoundary, schema: &Value) -> Result<Value, Problem> {
     }
     // Rehome original schema references locally; no remote resolver is needed.
     let link = schema["$defs"]["link"].clone();
-    let links = json!({"type": "array", "minItems": 1, "items": {"$ref": "#/components/schemas/Link"}});
+    let links =
+        json!({"type": "array", "minItems": 1, "items": {"$ref": "#/components/schemas/Link"}});
     let mut landing = schema["$defs"]["landing"].clone();
     landing["properties"]["links"] = json!({"$ref": "#/components/schemas/Links"});
     let mut conformance = schema["$defs"]["conformance"].clone();
@@ -238,22 +373,42 @@ fn openapi(boundary: &HttpBoundary, schema: &Value) -> Result<Value, Problem> {
 }
 
 fn html(text: &str) -> String {
-    text.replace('&', "&amp;").replace('"', "&quot;").replace('<', "&lt;").replace('>', "&gt;").replace('\'', "&#39;")
+    text.replace('&', "&amp;")
+        .replace('"', "&quot;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('\'', "&#39;")
 }
 
 fn documentation(boundary: &HttpBoundary) -> Result<String, Problem> {
     let mut links = String::new();
-    for route in [API, CONFORMANCE, SCHEMA, LANDING_EXAMPLE, CONFORMANCE_EXAMPLE, LICENSE, NOTICE, THIRD_PARTY] {
-        links.push_str(&format!("<li><a href=\"{}\">{}</a></li>", html(&boundary.link(route.segments, &[])?), html(route.title)));
+    for route in [
+        API,
+        CONFORMANCE,
+        SCHEMA,
+        LANDING_EXAMPLE,
+        CONFORMANCE_EXAMPLE,
+        LICENSE,
+        NOTICE,
+        THIRD_PARTY,
+    ] {
+        links.push_str(&format!(
+            "<li><a href=\"{}\">{}</a></li>",
+            html(&boundary.link(route.segments, &[])?),
+            html(route.title)
+        ));
     }
     Ok(format!(
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Glaux Server API</title><link rel=\"stylesheet\" href=\"{}\"></head><body><h1>Glaux Server initial API</h1><p>Discovery and operational health only. No resource families or conformance classes are advertised yet. No credentials or Try-it-out controls are enabled.</p><ul>{links}</ul><div id=\"swagger-ui\"></div><script src=\"{}\" defer></script><script src=\"{}\" defer></script></body></html>",
-        html(&boundary.link(CSS.segments, &[])?), html(&boundary.link(BUNDLE.segments, &[])?), html(&boundary.link(INIT.segments, &[])?)
+        html(&boundary.link(CSS.segments, &[])?),
+        html(&boundary.link(BUNDLE.segments, &[])?),
+        html(&boundary.link(INIT.segments, &[])?)
     ))
 }
 
 fn initializer(boundary: &HttpBoundary) -> Result<String, Problem> {
-    let url = serde_json::to_string(&boundary.link(API.segments, &[])?).map_err(|_| Problem::internal())?;
+    let url = serde_json::to_string(&boundary.link(API.segments, &[])?)
+        .map_err(|_| Problem::internal())?;
     Ok(format!(
         "\"use strict\";\nwindow.addEventListener(\"DOMContentLoaded\", function () {{\n  SwaggerUIBundle({{url: {url}, dom_id: \"#swagger-ui\", layout: \"BaseLayout\", validatorUrl: null, supportedSubmitMethods: [], queryConfigEnabled: false, persistAuthorization: false, syntaxHighlight: false, deepLinking: false, displayRequestDuration: false, onComplete: function () {{ document.getElementById(\"swagger-ui\").setAttribute(\"data-glaux-rendered\", \"true\"); }} }});\n}});\n"
     ))
@@ -266,9 +421,15 @@ enum Payload {
 }
 
 impl Payload {
-    fn json(value: Value) -> Self { Self::Json(Arc::new(value)) }
-    fn text(value: String) -> Self { Self::Bytes(Bytes::from(value)) }
-    fn static_bytes(value: &'static [u8]) -> Self { Self::Bytes(Bytes::from_static(value)) }
+    fn json(value: Value) -> Self {
+        Self::Json(Arc::new(value))
+    }
+    fn text(value: String) -> Self {
+        Self::Bytes(Bytes::from(value))
+    }
+    fn static_bytes(value: &'static [u8]) -> Self {
+        Self::Bytes(Bytes::from_static(value))
+    }
 
     fn response(&self, route: RouteDefinition, headers: &HeaderMap) -> Result<Response, Problem> {
         negotiate(headers, &[route.media])?;
@@ -281,11 +442,21 @@ impl Payload {
                     (header::CACHE_CONTROL, HeaderValue::from_static("no-store")),
                 ],
                 value.clone(),
-            ).into_response(),
+            )
+                .into_response(),
         };
-        response.headers_mut().insert(header::CONTENT_SECURITY_POLICY, HeaderValue::from_static(CSP));
-        response.headers_mut().insert(header::X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff"));
-        response.headers_mut().insert(header::REFERRER_POLICY, HeaderValue::from_static("no-referrer"));
+        response.headers_mut().insert(
+            header::CONTENT_SECURITY_POLICY,
+            HeaderValue::from_static(CSP),
+        );
+        response.headers_mut().insert(
+            header::X_CONTENT_TYPE_OPTIONS,
+            HeaderValue::from_static("nosniff"),
+        );
+        response.headers_mut().insert(
+            header::REFERRER_POLICY,
+            HeaderValue::from_static("no-referrer"),
+        );
         Ok(response)
     }
 }
@@ -295,7 +466,8 @@ impl Payload {
 pub fn router(boundary: &HttpBoundary) -> Result<Router, Problem> {
     let landing = landing(boundary)?;
     let conformance = conformance(boundary)?;
-    let mut schema: Value = serde_json::from_str(include_str!("../assets/discovery-schema.json")).map_err(|_| Problem::internal())?;
+    let mut schema: Value = serde_json::from_str(include_str!("../assets/discovery-schema.json"))
+        .map_err(|_| Problem::internal())?;
     schema["$id"] = json!(boundary.link(SCHEMA.segments, &[])?);
     let description = openapi(boundary, &schema)?;
     let documents = [
@@ -304,21 +476,41 @@ pub fn router(boundary: &HttpBoundary) -> Result<Router, Problem> {
         (API, Payload::json(description)),
         (DOCS, Payload::text(documentation(boundary)?)),
         (INIT, Payload::text(initializer(boundary)?)),
-        (BUNDLE, Payload::static_bytes(include_bytes!("../assets/swagger-ui/swagger-ui-bundle.js"))),
-        (CSS, Payload::static_bytes(include_bytes!("../assets/swagger-ui/swagger-ui.css"))),
-        (LICENSE, Payload::static_bytes(include_bytes!("../assets/swagger-ui/LICENSE"))),
-        (NOTICE, Payload::static_bytes(include_bytes!("../assets/swagger-ui/NOTICE"))),
-        (THIRD_PARTY, Payload::static_bytes(include_bytes!("../assets/swagger-ui/swagger-ui-bundle.js.LICENSE.txt"))),
+        (
+            BUNDLE,
+            Payload::static_bytes(include_bytes!("../assets/swagger-ui/swagger-ui-bundle.js")),
+        ),
+        (
+            CSS,
+            Payload::static_bytes(include_bytes!("../assets/swagger-ui/swagger-ui.css")),
+        ),
+        (
+            LICENSE,
+            Payload::static_bytes(include_bytes!("../assets/swagger-ui/LICENSE")),
+        ),
+        (
+            NOTICE,
+            Payload::static_bytes(include_bytes!("../assets/swagger-ui/NOTICE")),
+        ),
+        (
+            THIRD_PARTY,
+            Payload::static_bytes(include_bytes!(
+                "../assets/swagger-ui/swagger-ui-bundle.js.LICENSE.txt"
+            )),
+        ),
         (SCHEMA, Payload::json(schema)),
         (LANDING_EXAMPLE, Payload::json(landing)),
         (CONFORMANCE_EXAMPLE, Payload::json(conformance)),
     ];
     let mut router = Router::new();
     for (route, payload) in documents {
-        router = router.route(route.path(), route.method(move |headers: HeaderMap| {
-            let payload = payload.clone();
-            async move { payload.response(route, &headers) }
-        }));
+        router = router.route(
+            route.path(),
+            route.method(move |headers: HeaderMap| {
+                let payload = payload.clone();
+                async move { payload.response(route, &headers) }
+            }),
+        );
     }
     Ok(router)
 }
@@ -345,23 +537,39 @@ mod tests {
 
     #[test]
     fn generated_documents_keep_configured_prefix_and_local_references() {
-        let boundary = HttpBoundary::new(Some("https://example.test/prefix"), Limits::default()).unwrap();
+        let boundary =
+            HttpBoundary::new(Some("https://example.test/prefix"), Limits::default()).unwrap();
         let landing = landing(&boundary).unwrap();
-        assert_eq!(landing["links"][1]["rel"], "http://www.opengis.net/def/rel/ogc/1.0/conformance");
-        assert_eq!(landing["links"][1]["href"], "https://example.test/prefix/conformance");
+        assert_eq!(
+            landing["links"][1]["rel"],
+            "http://www.opengis.net/def/rel/ogc/1.0/conformance"
+        );
+        assert_eq!(
+            landing["links"][1]["href"],
+            "https://example.test/prefix/conformance"
+        );
         let schema = serde_json::from_str(include_str!("../assets/discovery-schema.json")).unwrap();
         let api = openapi(&boundary, &schema).unwrap();
         assert_eq!(api["servers"][0]["url"], "https://example.test/prefix");
         assert_eq!(api["paths"].as_object().unwrap().len(), 15);
-        assert_eq!(api["paths"]["/health/ready"]["get"]["responses"]["503"]["content"]["text/plain; charset=utf-8"]["schema"]["type"], "string");
-        assert!(api["paths"]["/api"]["head"]["responses"]["200"].get("content").is_none());
+        assert_eq!(
+            api["paths"]["/health/ready"]["get"]["responses"]["503"]["content"]["text/plain; charset=utf-8"]
+                ["schema"]["type"],
+            "string"
+        );
+        assert!(
+            api["paths"]["/api"]["head"]["responses"]["200"]
+                .get("content")
+                .is_none()
+        );
         assert!(router(&HttpBoundary::new(None, Limits::default()).unwrap()).is_err());
     }
 
     #[test]
     fn documentation_is_external_local_and_escapes_markup() {
         assert_eq!(html("\"<&>'"), "&quot;&lt;&amp;&gt;&#39;");
-        let boundary = HttpBoundary::new(Some("https://example.test/prefix"), Limits::default()).unwrap();
+        let boundary =
+            HttpBoundary::new(Some("https://example.test/prefix"), Limits::default()).unwrap();
         let page = documentation(&boundary).unwrap();
         assert!(page.contains("src=\"https://example.test/prefix/docs/init.js\""));
         assert!(!page.contains("<script>"));

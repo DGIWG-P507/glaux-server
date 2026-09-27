@@ -435,13 +435,19 @@ mod tests {
     #[test]
     fn runtime_discovery_requires_explicit_public_root() {
         use serde_json::{Value, json};
-        let mut input: Value = serde_json::from_str(&document("127.0.0.1:8080", "disabled")).unwrap();
+        let mut input: Value =
+            serde_json::from_str(&document("127.0.0.1:8080", "disabled")).unwrap();
         assert!(!parse(&input.to_string()).unwrap().discovery_enabled());
         input["discovery"] = json!(true);
         assert!(parse(&input.to_string()).is_err());
         input["http"] = json!({"public_api_root":"https://example.test/prefix"});
         assert!(parse(&input.to_string()).unwrap().discovery_enabled());
-        for invalid in [Value::Null, json!("true"), json!(1), json!({"enabled":true})] {
+        for invalid in [
+            Value::Null,
+            json!("true"),
+            json!(1),
+            json!({"enabled":true}),
+        ] {
             input["discovery"] = invalid;
             assert!(parse(&input.to_string()).is_err());
         }
