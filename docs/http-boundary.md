@@ -4,7 +4,8 @@
 Roadmap 1.4.2 and Guide §§4.1/4.3/6.2/6.4/7.2/8.1.1. This is reusable
 request/response handling, **not resource operations or a conformance claim**.
 The production listener uses this boundary for health and opt-in
-[discovery](discovery.md). A separate example
+[discovery](discovery.md), and the explicitly enabled
+[minimal System POST](system-create.md). A separate example
 mounts synthetic fixture routes through the same production boundary for
 [independent real-listener checks](http-boundary-tests.md); those routes are
 not in the production binary.
@@ -14,10 +15,11 @@ not in the production binary.
 The boundary checks URI and aggregate header lengths, then consumes the actual
 body under a byte bound (including chunked bodies), before invoking the handler.
 No decompression is enabled. Unsupported content coding returns 415 and
-`Accept-Encoding: identity`. JSON input must declare `application/json`;
-the registration defines no optional parameters, so parameters do not change
-JSON's encoding. A media type with a `+json` suffix is not automatically the
-same contract. The JSON helper reuses the existing bounded safe parser,
+`Accept-Encoding: identity`. The original JSON helper requires
+`application/json`; the source-preserving helper accepts only its handler's
+explicit media list (`application/geo+json` for System creation). Parameters
+do not select a different decoder. A `+json` suffix is not automatically the
+same contract. Both helpers reuse the existing bounded safe parser,
 preserving exact numbers and wire object kinds, rejecting duplicate keys and
 retaining its existing depth/node/member/string limits. It performs no schema
 selection, network/file retrieval, resource semantics or authorization.
@@ -35,7 +37,8 @@ Initial URI/header rejection happens before body consumption; trailing fields
 are checked as they arrive and never override request authority or media.
 The deadline is shared between body collection
 and obtaining the handler response, not a promise to cancel committed work or a
-streaming-response delivery deadline. No resource writes exist here. The JSON
+streaming-response delivery deadline. Resource writes belong to the separate
+transactional handler, not this generic boundary. The JSON
 parser's additional 262,144-byte ceiling remains in force even when a deployment
 allows a larger non-JSON request. Malformed/ambiguous media fields and malformed
 URI escapes are 400. Oversized bodies are 413, request targets 414 and headers
@@ -89,6 +92,7 @@ they identify problems, not fetchable schema or policy resources.
 | 413 | payload-too-large | The request body exceeds its limit. |
 | 414 | uri-too-long | The request target exceeds its limit. |
 | 415 | unsupported-media-type | The request media type or coding is unsupported. |
+| 422 | unprocessable-content | The request content is not supported by this operation. |
 | 431 | headers-too-large | The request headers exceed their limit. |
 | 500 | internal | The operation could not be completed. |
 | 503 | unavailable | The operation is temporarily unavailable. |
