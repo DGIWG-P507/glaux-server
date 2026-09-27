@@ -48,6 +48,27 @@ Since 27 September 2026, implementation pauses for review at fifteen fixed point
 
 **Who runs and closes gates.** The review behind a gate runs only when the project lead authorises it, and only the project lead closes the gate. Implementation assistants never close, relabel or edit gates, and never work around one.
 
+### Changing the implementing assistant
+
+The project lead may hand implementation to a different AI assistant, for example while one is out of usage. This was first used on 27 September 2026, when Claude took over #24's closing record, #25 and #26 from Codex.
+
+**The same rules apply to every assistant.** Everything in this file applies unchanged. In addition:
+
+- **One implementer at a time.**
+  - Before starting an issue, check it for another assistant's claim comment, open task branch or open PR.
+  - If there is none, post a short claim comment first, for example "In progress: Claude (Anthropic), 28 September 2026".
+  - If another assistant has claimed the issue, or its branch or PR is still open, do not start. Ask the project lead.
+  - Remove or supersede your claim if you stop without finishing.
+- **Record who did the work.** The PR review record and the issue's execution record name the implementing and reviewing assistants and their providers, with models when known.
+- **Keep a cross-provider check.** An assistant may implement tasks in a phase and later run that phase's gate review. In that case, an assistant from a different provider, or a person, reviews that work before the project lead closes the gate. If that is not possible, the gate review states the limitation.
+- **Merging.** An assistant whose tool permissions do not allow merging leaves the reviewed, checked PR for the project lead to merge. Required checks and separate review are unchanged.
+- **Handing back.**
+  - The returning assistant pulls `main` in both repositories and re-reads the instructions.
+  - It continues from the next ready task.
+  - It does not redo or re-review merged work unless a gate review asks it to.
+
+Each full gate review records which assistants implemented and reviewed the phase's tasks, and what switching taught us.
+
 ## Initial GitHub-hosted build and test path
 
 On 21 September 2026 the project lead selected GitHub-hosted Linux for initial builds/tests. The company laptop is an editing/Git interface, not a required Rust/database host. See [setup inspection and limits](docs/setup.md) and Roadmap v1.37. This does not remove the eventual native/Compose reference instructions.
