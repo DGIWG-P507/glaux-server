@@ -35,12 +35,16 @@ An oversized or blocked issue remains open. State the precise blocker or remaini
 
 ### Review gates
 
-Since 27 September 2026, implementation pauses for review at fifteen fixed points, defined in [Roadmap §5.4](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-roadmap.md#54-review-gates). Each pause is an issue labelled [`review-gate`](https://github.com/DGIWG-P507/glaux-server/issues?q=label%3Areview-gate). Its body lists the tasks it blocks. The first task it pauses also lists it as a prerequisite, in a dated amendment.
+Since 27 September 2026, implementation pauses for review at fifteen fixed points, defined in [Roadmap §5.4](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-roadmap.md#54-review-gates). Each pause is an issue labelled [`review-gate`](https://github.com/DGIWG-P507/glaux-server/issues?q=label%3Areview-gate). Its body states the range of tasks it blocks. The first task it pauses also lists it as a prerequisite in a dated amendment, as does any other paused task whose own prerequisites could otherwise let it start early. All fifteen gates are open until the project lead closes them. The next gate is the lowest-numbered open one.
 
-**Before selecting any task, check the open gates.**
-- Do not start a task inside an open gate's blocked range, even if its other prerequisites are complete.
-- A range written "≥ X" covers task X and every later task ID, comparing phase, then group, then task number.
-- If no unblocked task is ready, stop and tell the project lead which gate is next.
+**Before selecting any task, check the open gates.** Do the same when naming the next dependency-ready issue in an execution record.
+- Do not start or name a task inside an open gate's blocked range, even if its other prerequisites are complete.
+- A range written "≥ X" covers task X and every later task ID.
+  - IDs compare as numbers, part by part: phase, then group, then task. So 2.3.10 comes after 2.3.4.
+  - Appended experimental groups sit where their number puts them. For example, 4.5 comes after 4.4 and before 5.1.
+- If no unblocked task is ready, stop and tell the project lead which gate is next. In an execution record, name it as, for example: "Review gate 1 (#N), waiting for the project lead".
+- If you cannot check the gates, do not start a task; tell the project lead.
+- Gates are periodic project-lead review pauses. They do not change the per-PR review and merge policy above.
 
 **Who runs and closes gates.** The review behind a gate runs only when the project lead authorises it, and only the project lead closes the gate. Implementation assistants never close, relabel or edit gates, and never work around one.
 
