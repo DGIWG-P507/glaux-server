@@ -59,6 +59,17 @@ the container proof does not claim that parsing HTML executes JavaScript.
 
 `python3 scripts/test-discovery-browser.py` separately uses the hosted runner's
 already-provisioned Chrome and records its actual version and runner image.
+Its version/setup probe makes one attempt with a 30-second deadline and an owned
+process group, separately from the unchanged 20-second rendering deadline and
+180-second suite bound. Timeout kills only that group and allows five seconds
+for pipe cleanup and reaping. Empty output, nonzero exit, oversized diagnostics and
+cleanup failure remain fatal; there is no automatic retry. Monotonic elapsed
+time and bounded diagnostic tails are recorded for both success and failure.
+Hosted controls exercise a known version, nonzero and empty rejection, and an
+actually started sleeping probe that must time out and be killed/reaped.
+The earlier five-second Chrome-version timeout remains an observed setup
+failure with an unidentified cause, not a rendering defect or a claimed fix
+to Chrome itself.
 It follows the root's documentation link and checks the actual initial rendered
 title, all 30 independently expected GET/HEAD operations, partial-implementation
 notice and absence of renderer errors and initial execution controls. Six

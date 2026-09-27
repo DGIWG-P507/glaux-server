@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 from urllib.parse import urlencode, urlsplit
 from urllib.request import ProxyHandler, build_opener
 
@@ -43,6 +44,109 @@ VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link",
 def require(condition, message):
     if not condition:
         raise RuntimeError(message)
+
+
+class VersionProbeError(RuntimeError):
+    def __init__(self, record):
+        super().__init__("Browser version probe failed: " + record["label"] + ": " + record["failure"])
+        self.record = record
+
+
+def version_probe(arguments, evidence, label, timeout):
+    """A single setup attempt, bounded independently of browser rendering."""
+    started = time.monotonic()
+    captured = {"stdout": bytearray(), "stderr": bytearray()}
+    process = None
+    failure = None
+    cleanup = "not started"
+    try:
+        process = subprocess.Popen(arguments, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   bufsize=0, start_new_session=True)
+        streams = {process.stdout: "stdout", process.stderr: "stderr"}
+        deadline = started + timeout
+        while streams and failure is None:
+            remaining = deadline - time.monotonic()
+            ready = select.select(list(streams), [], [], max(0, remaining))[0]
+            if remaining <= 0 or not ready:
+                failure = "timeout"
+                break
+            for stream in ready:
+                chunk = os.read(stream.fileno(), 4096)
+                if not chunk:
+                    del streams[stream]
+                else:
+                    captured[streams[stream]].extend(chunk)
+                    if len(captured[streams[stream]]) > 8192:
+                        failure = "output budget exceeded"
+                        break
+        if failure is None:
+            process.communicate(timeout=max(0, deadline - time.monotonic()))
+            cleanup = "reaped"
+    except subprocess.TimeoutExpired:
+        failure = "timeout"
+    except OSError as error:
+        failure = "execution error: " + type(error).__name__
+    finally:
+        if process is not None and cleanup != "reaped":
+            try:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                output, error = process.communicate(timeout=5)
+                # After killing the owned group, retain only a bounded diagnostic
+                # tail from any bytes left in its pipes, never an unbounded log.
+                captured["stdout"].extend(output[-4096:])
+                captured["stderr"].extend(error[-4096:])
+                cleanup = "killed and reaped"
+            except (OSError, subprocess.TimeoutExpired) as error:
+                failure = "cleanup error: " + type(error).__name__
+                cleanup = "failed"
+                process.stdout.close()
+                process.stderr.close()
+    output = bytes(captured["stdout"]).decode("utf-8", errors="replace").strip()
+    error = bytes(captured["stderr"]).decode("utf-8", errors="replace")
+    if failure is None and process.returncode != 0:
+        failure = "nonzero exit"
+    if failure is None and not output:
+        failure = "empty version"
+    record = {"label": label, "timeout_seconds": timeout,
+              "elapsed_seconds": round(time.monotonic() - started, 3),
+              "returncode": None if process is None else process.returncode,
+              "failure": failure, "cleanup": cleanup,
+              "stdout_tail": output[-4096:], "stderr_tail": error[-4096:]}
+    (evidence / ("discovery-browser-version-" + label + ".json")).write_text(json.dumps(record, indent=2))
+    print("Discovery browser version probe: " + json.dumps({key: record[key] for key in
+          ("label", "elapsed_seconds", "failure", "cleanup")}), flush=True)
+    if failure is not None:
+        raise VersionProbeError(record)
+    return output
+
+
+def version_probe_controls(evidence):
+    prefix = [sys.executable, "-c"]
+    version = version_probe(prefix + ["print('Synthetic Browser 1.2.3')"], evidence, "control-success", 5)
+    require(version == "Synthetic Browser 1.2.3", "Version helper changed its expected output")
+    cases = (
+        ("control-nonzero", "import sys; print('not a passing version'); sys.exit(7)", 5, "nonzero exit", 7),
+        ("control-empty", "pass", 5, "empty version", 0),
+        ("control-timeout", "import time; print('sleeping probe started', flush=True); time.sleep(60)",
+         2, "timeout", -signal.SIGKILL),
+    )
+    for label, source, timeout, expected, code in cases:
+        try:
+            version_probe(prefix + [source], evidence, label, timeout)
+        except VersionProbeError as error:
+            require(error.record["failure"] == expected and error.record["returncode"] == code,
+                    "Version helper control failed for an unintended reason")
+            if expected == "timeout":
+                require(error.record["cleanup"] == "killed and reaped"
+                        and error.record["stdout_tail"] == "sleeping probe started"
+                        and 2 <= error.record["elapsed_seconds"] < 8,
+                        "Sleeping version probe did not establish its bounded timeout/cleanup")
+        else:
+            raise RuntimeError("Version helper admitted a failing setup probe")
+    print("Discovery browser version controls: 1 success; 3 failures detected; 0 escaped.", flush=True)
 
 
 class Rendered(HTMLParser):
@@ -244,14 +348,14 @@ def main():
             "Browser proof is restricted to the approved GitHub-hosted Linux job")
     chrome = shutil.which("google-chrome")
     require(chrome is not None, "Hosted Google Chrome is unavailable; no installation or skip permitted")
-    version = subprocess.run([chrome, "--version"], capture_output=True, text=True,
-                             timeout=5, check=True).stdout.strip()
-    runner = {key: os.environ.get(key, "not supplied") for key in
-              ("ImageOS", "ImageVersion", "RUNNER_ARCH", "RUNNER_OS")}
-    print("Discovery browser runtime: " + json.dumps({"chrome": version, "runner": runner}), flush=True)
     runner_temp = Path(os.environ["RUNNER_TEMP"]).resolve()
     evidence = runner_temp / "glaux-ci-evidence"
     evidence.mkdir(exist_ok=True)
+    version_probe_controls(evidence)
+    version = version_probe([chrome, "--version"], evidence, "chrome", 30)
+    runner = {key: os.environ.get(key, "not supplied") for key in
+              ("ImageOS", "ImageVersion", "RUNNER_ARCH", "RUNNER_OS")}
+    print("Discovery browser runtime: " + json.dumps({"chrome": version, "runner": runner}), flush=True)
     oracle_controls()
     build = subprocess.run(["cargo", "build", "--locked", "--offline", "-p", "glaux-server", "--example",
                             "discovery-browser-fixture"], capture_output=True, text=True, timeout=30)
