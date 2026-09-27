@@ -34,7 +34,9 @@ setup must verify the seeded facts before exercising admission.
 | Configured permission permits submission but not status reporting | Reporting remains denied | Inferring status authority from identity or a different action's permission; this is interface-level coverage, not a command/status endpoint claim |
 | Controlled local policy adapter is unavailable | Safe `503`, no admitted mutation or protected read result | Failure defaulting to allow, or disguising an unavailable decision as a successful empty list |
 | Permission is revoked between requests | The next request is denied and returns no previously permitted result | Caching an earlier authorization indefinitely or treating prior success as ongoing permission |
-| Explicit anonymous read option, where configured | Only its specifically permitted reads; no anonymous write | Absence of credentials becoming default write authority |
+
+Anonymous read access is not selected by this initial adapter. It remains an
+explicit later deployment option, not a passed fixture or an implicit fallback.
 
 Missing or invalid authentication retains the earlier authentication adapter's
 safe outcome, rather than manufacturing an anonymous or verified caller.
@@ -110,7 +112,7 @@ authentication or cleanup failure is not that behavioral red. The final issue
 record identifies the actual commit and result rather than assuming execution.
 
 After the complete unmodified proof passes, create a disposable source copy,
-invert the reviewed source-permission comparison, compile successfully and
+bypass the reviewed source-permission comparison, compile successfully and
 require the specific cross-source/incorrect-membership assertion to fail.
 Require the preceding oracle/setup markers and absence of the final success
 marker. A different panic, process timeout or infrastructure failure cannot

@@ -122,6 +122,13 @@ impl PermissionSet {
         })
     }
 
+    fn allows_source(&self, source: &str) -> bool {
+        self.grants.iter().any(|grant| {
+            grant.source == source
+                && grant.resources.as_ref().is_none_or(|resources| !resources.is_empty())
+        })
+    }
+
     fn scope_json(&self) -> String {
         json!(self.grants.iter().map(|grant| json!({
             "source": grant.source,
@@ -530,6 +537,7 @@ impl Admission {
         ctx: &OperationContext,
         operation: DeniedOperation,
         kind: AccessKind,
+        safe_target: Option<(LocalId, &str)>,
     ) -> AccessError {
         if !self.denial.take_capacity() {
             return ctx.error(kind);
@@ -538,12 +546,13 @@ impl Admission {
             increment(&self.denial.counts.storage_failed);
             return ctx.error(kind);
         };
-        // Do not look up or record denied target/source existence. Attribution
-        // comes only from verified context, never the rejected request payload.
+        // Only a target already established as wholly readable may be retained.
+        // Its source is the immutable CREATE owner, not request attribution.
+        // Concealed/cross-source attempts never trigger an audit-only lookup.
         let denial = DeniedMutation {
             audit_id,
-            target: None,
-            audit: ctx.audit(None),
+            target: safe_target.map(|(id, _)| id),
+            audit: ctx.audit(safe_target.map(|(_, source)| source)),
             operation,
         };
         let counter = match application::record_denied_mutation_bounded(
@@ -567,8 +576,16 @@ impl Admission {
         retry: Option<&RetryKey>,
     ) -> Result<WriteReceipt, AccessError> {
         let create = self.permissions(ctx, Action::Create)?;
-        if !bounded_text(source, 256) || !create.allows(source, input.system.id) {
-            return Err(self.deny(connection, ctx, DeniedOperation::Create, AccessKind::Denied).await);
+        // A fresh candidate ID is not part of retry intent. Only the callback
+        // knows whether this attempt selects an original receipt or creates the
+        // candidate; it authorizes that selected ID before comparing intent.
+        let permitted_scope = if retry.is_some() {
+            create.allows_source(source)
+        } else {
+            create.allows(source, input.system.id)
+        };
+        if !bounded_text(source, 256) || !permitted_scope {
+            return Err(self.deny(connection, ctx, DeniedOperation::Create, AccessKind::Denied, None).await);
         }
         if ctx.actor.is_none() {
             return Err(ctx.error(AccessKind::Unavailable));
@@ -580,11 +597,12 @@ impl Admission {
             let parent_source = authorization_storage::system_source(connection, parent)
                 .await.map_err(|error| Self::storage_error(ctx, error))?;
             match (parent_source, page.items.first()) {
-                (Some(parent_source), Some(record)) if create.allows(&parent_source, parent) => {
+                (Some(parent_source), Some(record))
+                    if retry.is_some() || create.allows(&parent_source, parent) => {
                     let parent_link = if let Some(link) = record.parent {
                         let Some(link_source) = authorization_storage::system_source(connection, link)
                             .await.map_err(|error| Self::storage_error(ctx, error))? else {
-                            return Err(self.deny(connection, ctx, DeniedOperation::Create, AccessKind::Denied).await);
+                            return Err(self.deny(connection, ctx, DeniedOperation::Create, AccessKind::Denied, None).await);
                         };
                         Some((link, link_source))
                     } else {
@@ -592,7 +610,7 @@ impl Admission {
                     };
                     Some((parent, parent_source, parent_link))
                 }
-                _ => return Err(self.deny(connection, ctx, DeniedOperation::Create, AccessKind::Denied).await),
+                _ => return Err(self.deny(connection, ctx, DeniedOperation::Create, AccessKind::Denied, None).await),
             }
         } else {
             None
@@ -612,7 +630,7 @@ impl Admission {
                 create.allows(source, receipt.system_id)
                     && (!replay || read.allows(source, receipt.system_id))
                     && parent.as_ref().is_none_or(|(id, owner, link)| {
-                        create.allows(owner, *id) && read.allows(owner, *id)
+                        (replay || create.allows(owner, *id)) && read.allows(owner, *id)
                             && link.as_ref().is_none_or(|(id, owner)| read.allows(owner, *id))
                     })
             },
@@ -623,7 +641,7 @@ impl Admission {
                 Err(ctx.error(AccessKind::Unavailable))
             }
             Err(StorageError::Denied) => {
-                Err(self.deny(connection, ctx, DeniedOperation::Create, AccessKind::Denied).await)
+                Err(self.deny(connection, ctx, DeniedOperation::Create, AccessKind::Denied, None).await)
             }
             Err(error) => Err(Self::storage_error(ctx, error)),
         }
@@ -644,14 +662,14 @@ impl Admission {
         let page = authorization_storage::list_systems(connection, &read.scope_json(), Some(id), 1)
             .await.map_err(|error| Self::storage_error(ctx, error))?;
         if page.items.is_empty() {
-            return Err(self.deny(connection, ctx, DeniedOperation::Update, AccessKind::NotFound).await);
+            return Err(self.deny(connection, ctx, DeniedOperation::Update, AccessKind::NotFound, None).await);
         }
         let Some(source) = authorization_storage::system_source(connection, id)
             .await.map_err(|error| Self::storage_error(ctx, error))? else {
-            return Err(self.deny(connection, ctx, DeniedOperation::Update, AccessKind::NotFound).await);
+            return Err(self.deny(connection, ctx, DeniedOperation::Update, AccessKind::NotFound, None).await);
         };
         if !update.allows(&source, id) {
-            return Err(self.deny(connection, ctx, DeniedOperation::Update, AccessKind::Denied).await);
+            return Err(self.deny(connection, ctx, DeniedOperation::Update, AccessKind::Denied, Some((id, &source))).await);
         }
         if ctx.actor.is_none() {
             return Err(ctx.error(AccessKind::Unavailable));
@@ -659,7 +677,7 @@ impl Admission {
         let parent = if let Some(parent_id) = page.items.first().and_then(|record| record.parent) {
             let Some(parent_source) = authorization_storage::system_source(connection, parent_id)
                 .await.map_err(|error| Self::storage_error(ctx, error))? else {
-                return Err(self.deny(connection, ctx, DeniedOperation::Update, AccessKind::NotFound).await);
+                return Err(self.deny(connection, ctx, DeniedOperation::Update, AccessKind::NotFound, None).await);
             };
             Some((parent_id, parent_source))
         } else {
@@ -690,7 +708,9 @@ impl Admission {
                 Err(ctx.error(AccessKind::Unavailable))
             }
             Err(StorageError::Denied) => {
-                Err(self.deny(connection, ctx, DeniedOperation::Update, callback_error).await)
+                let safe_target = matches!(callback_error, AccessKind::Denied)
+                    .then_some((id, source.as_str()));
+                Err(self.deny(connection, ctx, DeniedOperation::Update, callback_error, safe_target).await)
             }
             Err(error) => Err(Self::storage_error(ctx, error)),
         }

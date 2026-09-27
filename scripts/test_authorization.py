@@ -60,7 +60,7 @@ def main():
     print(output, flush=True)
     validate_output(output)
     print("Authorization: 8 required HTTP/database groups passed; 0 failed; 0 skipped", flush=True)
-    print("Authorization database: all required checks passed.", flush=True)
+    print("Authorization: all required checks passed.", flush=True)
 
 
 if __name__ == "__main__":

@@ -127,7 +127,9 @@ impl Configuration {
         let document: Document = serde_json::from_slice(bytes).map_err(|_| ConfigError::Invalid)?;
         let policy = match (has_policy, document.policy) {
             (false, None) => ConfiguredPolicy::deny_all(),
-            (true, Some(policy)) => ConfiguredPolicy::new(policy).map_err(|_| ConfigError::Invalid)?,
+            (true, Some(policy)) => {
+                ConfiguredPolicy::new(policy).map_err(|_| ConfigError::Invalid)?
+            }
             _ => return Err(ConfigError::Invalid),
         };
         let admission = Admission::new(
@@ -361,7 +363,8 @@ mod tests {
     #[test]
     fn runtime_policy_configuration_is_explicit_and_bounded() {
         use serde_json::{Value, json};
-        let mut input: Value = serde_json::from_str(&document("127.0.0.1:8080", "development")).unwrap();
+        let mut input: Value =
+            serde_json::from_str(&document("127.0.0.1:8080", "development")).unwrap();
         input["policy"] = json!({
             "grants": [{"issuer":"urn:glaux:development", "group":"example-group",
                 "source":"urn:glaux:test:source-a", "actions":["read"], "resources":null}],
@@ -391,16 +394,30 @@ mod tests {
             ("/policy/grants/0", "unknown", json!(true)),
         ] {
             let mut invalid = input.clone();
-            invalid.pointer_mut(path).unwrap().as_object_mut().unwrap().insert(key.into(), value);
+            invalid
+                .pointer_mut(path)
+                .unwrap()
+                .as_object_mut()
+                .unwrap()
+                .insert(key.into(), value);
             assert!(parse(&invalid.to_string()).is_err(), "{path}/{key}");
         }
         let mut missing = input.clone();
-        missing["policy"].as_object_mut().unwrap().remove("denial_audit");
+        missing["policy"]
+            .as_object_mut()
+            .unwrap()
+            .remove("denial_audit");
         assert!(parse(&missing.to_string()).is_err());
         let mut no_subject = input.clone();
-        no_subject["policy"]["grants"][0].as_object_mut().unwrap().remove("group");
+        no_subject["policy"]["grants"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("group");
         assert!(parse(&no_subject.to_string()).is_err());
-        let duplicated = input.to_string().replace("\"max_records\":100", "\"max_records\":100,\"max_records\":100");
+        let duplicated = input.to_string().replace(
+            "\"max_records\":100",
+            "\"max_records\":100,\"max_records\":100",
+        );
         assert!(parse(&duplicated).is_err());
     }
 

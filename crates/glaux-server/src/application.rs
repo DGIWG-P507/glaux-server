@@ -605,10 +605,9 @@ pub async fn record_denied_mutation_bounded(
         check_schema(&mut transaction).await?;
         // Fixed namespace shared by every caller of this bounded path. Using a
         // different client source, actor or operation cannot obtain another cap.
-        let acquired: bool =
-            sqlx::query_scalar("SELECT pg_try_advisory_xact_lock(1196183896, 22)")
-                .fetch_one(&mut *transaction)
-                .await?;
+        let acquired: bool = sqlx::query_scalar("SELECT pg_try_advisory_xact_lock(1196183896, 22)")
+            .fetch_one(&mut *transaction)
+            .await?;
         if !acquired {
             return Ok(DenialStorage::Busy);
         }

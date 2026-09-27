@@ -45,12 +45,12 @@ def main():
         HELPERS["copy_source"](files, baseline, faulty)
         path = faulty / SOURCE
         source = path.read_text()
-        anchor = "grant.source == source // SOURCE_PERMISSION_COMPARISON"
+        anchor = "grant.source == source; // SOURCE_PERMISSION_COMPARISON"
         require(source.count(anchor) == 1, "Source-permission mutation anchor changed")
         # Preserve action/resource selection, but admit every source. The valid
         # baseline must still work so the intended denied-source case detects it.
         path.write_text(source.replace(anchor,
-                        "(grant.source == source || grant.source != source) // SOURCE_PERMISSION_COMPARISON"))
+                        "(grant.source == source || grant.source != source); // SOURCE_PERMISSION_COMPARISON"))
         try:
             binary = build_proof(faulty, target)
             try:
