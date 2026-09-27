@@ -3,10 +3,10 @@
 use crate::configuration::Configuration;
 use crate::discovery;
 use crate::storage::check_schema;
+use axum::Router;
 use axum::extract::State;
 use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
-use axum::Router;
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use std::fmt;
@@ -91,8 +91,14 @@ pub async fn serve(config: Configuration) -> Result<(), RuntimeError> {
     }
     let boundary = config.http_boundary();
     let app = Router::new()
-        .route(discovery::HEALTH_LIVE.path(), discovery::HEALTH_LIVE.method(live))
-        .route(discovery::HEALTH_READY.path(), discovery::HEALTH_READY.method(ready))
+        .route(
+            discovery::HEALTH_LIVE.path(),
+            discovery::HEALTH_LIVE.method(live),
+        )
+        .route(
+            discovery::HEALTH_READY.path(),
+            discovery::HEALTH_READY.method(ready),
+        )
         .with_state(health);
     let app = if config.discovery_enabled() {
         app.merge(discovery::router(&boundary).map_err(|_| RuntimeError::Discovery)?)
