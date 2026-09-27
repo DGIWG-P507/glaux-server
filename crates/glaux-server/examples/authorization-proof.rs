@@ -1,8 +1,8 @@
 //! Independent raw HTTP and SQL evidence for bounded action/source admission.
 use axum::{
-    Json, Router,
-    extract::{Extension, Path, State},
-    http::{HeaderMap, StatusCode},
+    Router,
+    extract::{Extension, Path, Request, State},
+    http::StatusCode,
     response::Response,
     routing::{get, post},
 };
@@ -292,10 +292,14 @@ async fn get_item(
 async fn create_item(
     Extension(caller): Extension<CallerContext>,
     State(state): State<Arc<Endpoint>>,
-    headers: HeaderMap,
-    Json(body): Json<Value>,
+    request: Request,
 ) -> Result<Response, AccessError> {
-    assert!(!headers.contains_key("authorization"));
+    assert!(!request.headers().contains_key("authorization"));
+    let body = HttpBoundary::new(None, Limits::default())
+        .unwrap()
+        .read_json(request)
+        .await
+        .expect("fixed synthetic body must pass the bounded JSON boundary");
     let ctx = context(caller);
     let number = u16::try_from(body["number"].as_u64().unwrap()).unwrap();
     let source = body["source"].as_str().unwrap();
