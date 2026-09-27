@@ -15,7 +15,7 @@ Keep third-party licences and notices with their source material; the project li
 - [Roadmap](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-roadmap.md): task scope, dependencies, publication and execution workflow.
 - [Initial Planning Guidance](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Governance/initial-planning-guidance.md): planning-document authority and change rules.
 
-Read the relevant sections rather than treating a summary or peer implementation as controlling authority. Goal v1.7 and Guide v1.2 remain the historical preparation baseline of the initial issues; current planning is Goal v1.10, Guide v1.21 and Roadmap v1.38. Follow their approved revisions and dated issue amendments. The Roadmap's §5 governs implementation issues; research-report approval procedures are not additional implementation gates. If an issue conflicts with a controlling source, identify the conflict and resolve it through the existing change process instead of silently changing scope.
+Read the relevant sections rather than treating a summary or peer implementation as controlling authority. Goal v1.7 and Guide v1.2 remain the historical preparation baseline of the initial issues; current planning is Goal v1.10, Guide v1.21 and Roadmap v1.39. Follow their approved revisions and dated issue amendments. The Roadmap's §5 governs implementation issues; research-report approval procedures are not additional implementation gates. If an issue conflicts with a controlling source, identify the conflict and resolve it through the existing change process instead of silently changing scope.
 
 ## Creating implementation issues
 
@@ -32,6 +32,17 @@ Automated publication must populate the same Markdown body explicitly, omitting 
 For the project lead's assisted workflow, each `proceed` authorizes one dependency-ready implementation issue after complete issue publication. State the selected issue and intended result, inspect the current checkout and prerequisites, implement and verify the bounded change, update relevant documentation, and record evidence. Stop after its handoff; do not continue down the queue automatically.
 
 An oversized or blocked issue remains open. State the precise blocker or remaining work and explicitly correct the issue/Roadmap if necessary; do not omit obligations, close partial work or invent a passed check. Missing tools may be a valid result of the prerequisite-inspection issue, while still blocking later build or database issues.
+
+### Review gates
+
+Since 27 September 2026, implementation pauses for review at fifteen fixed points, defined in [Roadmap §5.4](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-roadmap.md#54-review-gates). Each pause is an issue labelled [`review-gate`](https://github.com/DGIWG-P507/glaux-server/issues?q=label%3Areview-gate). Its body lists the tasks it blocks. The first task it pauses also lists it as a prerequisite, in a dated amendment.
+
+**Before selecting any task, check the open gates.**
+- Do not start a task inside an open gate's blocked range, even if its other prerequisites are complete.
+- A range written "≥ X" covers task X and every later task ID, comparing phase, then group, then task number.
+- If no unblocked task is ready, stop and tell the project lead which gate is next.
+
+**Who runs and closes gates.** The review behind a gate runs only when the project lead authorises it, and only the project lead closes the gate. Implementation assistants never close, relabel or edit gates, and never work around one.
 
 ## Initial GitHub-hosted build and test path
 
