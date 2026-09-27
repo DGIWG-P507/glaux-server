@@ -10,7 +10,7 @@ fn main() -> ExitCode {
     let arguments: Vec<_> = std::env::args_os().skip(1).collect();
     if arguments.len() == 1 && (arguments[0] == "--help" || arguments[0] == "help") {
         println!(
-            "Glaux Server (health-only foundation; no CSAPI routes yet).\nUsage: glaux-server check-config CONFIG.json | serve CONFIG.json | migrate | check-schema\ncheck-config validates configuration and secret references without connecting to storage.\nserve checks existing schema; it never runs migrations. Only /health/live and /health/ready exist.\nDatabase administrative commands require GLAUX_DATABASE_URL; migrate is explicit.\nSee docs/runtime-configuration.md for fields, bounds and security limits."
+            "Glaux Server (initial health and discovery; no CSAPI resource routes yet).\nUsage: glaux-server check-config CONFIG.json | serve CONFIG.json | migrate | check-schema\ncheck-config validates configuration and secret references without connecting to storage.\nserve checks existing schema; it never runs migrations. Health routes always exist; discovery requires discovery: true and http.public_api_root.\nDatabase administrative commands require GLAUX_DATABASE_URL; migrate is explicit.\nSee docs/runtime-configuration.md for fields, bounds and security limits."
         );
         return ExitCode::SUCCESS;
     }

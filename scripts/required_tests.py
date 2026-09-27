@@ -1,6 +1,10 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "discovery::tests::initial_route_definitions_are_unique_and_claim_no_classes",
+    "discovery::tests::generated_documents_keep_configured_prefix_and_local_references",
+    "discovery::tests::documentation_is_external_local_and_escapes_markup",
+    "configuration::tests::runtime_discovery_requires_explicit_public_root",
     "authorization::tests::configured_policy_keeps_identity_actions_and_resource_pairs_distinct",
     "authorization::tests::policy_configuration_and_denial_bounds_reject_ambiguity",
     "authorization::tests::operation_context_does_not_truncate_oversized_audit_identity",

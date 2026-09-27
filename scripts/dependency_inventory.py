@@ -18,6 +18,7 @@ import tomllib
 
 from database_harness import DisposablePostgis, PIN, ROOT, docker
 from cargo_inventory import cargo_inventory
+from renderer_inventory import renderer_inventory
 
 
 def require(condition, message):
@@ -161,6 +162,7 @@ def main():
             "image_version": os.environ.get("ImageVersion"),
         },
         "cargo": cargo_inventory(), "actions": action_inventory(),
+        "documentation_renderer": renderer_inventory(),
         "database_image": image_inventory(),
         "limitations": [
             "Cargo packages/features/notices match the separately reviewed committed snapshot; this inventory is evidence, not automatic dependency or legal approval.",

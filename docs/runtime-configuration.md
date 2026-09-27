@@ -1,10 +1,11 @@
-# Runtime configuration and health-only serving
+# Runtime configuration, health and initial discovery
 
 [Issue #18](https://github.com/DGIWG-P507/glaux-server/issues/18) establishes
 Roadmap 1.4.1's startup/health foundation. [Issue #20](https://github.com/DGIWG-P507/glaux-server/issues/20)
 adds configured JWT verification and explicit development callers under Guide
-§4.10. The binary still exposes **only the two health routes below**, not CSAPI
-resource operations or a production deployment. No conformance is advertised.
+§4.10. [Issue #23](https://github.com/DGIWG-P507/glaux-server/issues/23) adds
+explicitly enabled discovery and documentation alongside the two health routes.
+There are no CSAPI resource operations or completed conformance declarations.
 
 ## Commands and configuration
 
@@ -51,12 +52,27 @@ The file is strict JSON, at most 65,536 bytes, with these required fields:
   chmod, print or provision secrets. Examples never contain real credentials.
 - `health_timeout_ms` is an integer from 100 to 10,000. It bounds the complete
   readiness acquisition/schema probe, as well as database statement/lock waits.
-  Two pooled database connections are the fixed bound for this health-only slice,
+  Two pooled database connections are the fixed bound for this initial slice,
   not a throughput recommendation for the eventual API.
 
 An optional `http` section adds an explicit public API root and bounded request
 settings; see the [HTTP contract and exact fields](http-boundary.md).
 Omission keeps safe default limits without guessing a public origin.
+
+The optional top-level `discovery` Boolean defaults to `false`. Only `true`
+enables the [initial discovery and documentation routes](discovery.md), and
+requires an explicit `http.public_api_root`. Null and non-Boolean values fail.
+For example, add both of these members to the full configuration above:
+
+```json
+"discovery": true,
+"http": { "public_api_root": "https://api.example.test/prefix" }
+```
+
+This is a configuration fragment, not a standalone JSON file. A deployment at
+that root must strip `/prefix` before forwarding to the unprefixed listener.
+Supplying a public root alone does not enable discovery. Public discovery and
+health do not expose data or grant resource access.
 
 Unknown fields, duplicate members (including inside public keys), missing required values, unsupported
 authentication modes and wrong types fail without quoting the input. Future
@@ -66,8 +82,7 @@ silently accepted placeholders: their owning tasks will add validated fields.
 The optional [local permission policy](authorization.md) adds strict `policy`
 grants and finite denial-audit limits. Omission denies all protected resource
 operations; authentication alone never grants them. The configured admission
-object is available for resource handlers without adding routes to this
-health-only binary.
+object is available for future resource handlers without exposing resource routes.
 
 ## Authentication selection
 
@@ -150,8 +165,8 @@ and token type/signature/claim checks are documented in [the authentication
 contract](authentication.md). Bearer material is not stored in configuration.
 
 `Configuration::authenticator()` returns the validated adapter for a route group
-to wrap with `Authenticator::protect`. The current health-only server does not
-attach authentication to its deliberately public minimal health routes or expose
+to wrap with `Authenticator::protect`. The current server does not
+attach authentication to its deliberately public health/discovery routes or expose
 a synthetic protected example endpoint. It does supply actual socket peer
 information for future protected groups. Configuring an adapter is not a claim
 that resource access policy, identity administration or trusted proxy integration
@@ -162,8 +177,8 @@ has been implemented.
 Supply the PostgreSQL connection URL through the selected protected reference.
 Network connections always use certificate/hostname-verifying TLS even if the
 URL asks to disable it. Only an actual Unix-domain socket route disables TLS.
-No TLS server or proxy is configured by this issue. A non-loopback health listener
-serves only minimal health states over HTTP; a deployment remains responsible
+No TLS server or proxy is configured by these issues. A non-loopback listener
+serves public health and any enabled documentation over HTTP; a deployment remains responsible
 for its ingress/isolation and must not mistake it for secure resource serving.
 
 ## Startup, health and shutdown
@@ -177,7 +192,7 @@ catalog-corruption audit or a guarantee against a database administrator's chang
 Normal startup and probes perform no migrations, resets, seeding or resource
 writes. The existing `migrate` and `check-schema` administrative commands still
 require `GLAUX_DATABASE_URL`; only an explicit `migrate` changes schema. Their
-privileges are separate from serving. For these health-only routes a login role
+privileges are separate from serving. For these health/discovery routes a login role
 needs database connection/schema access and SELECT on `public._sqlx_migrations`;
 it needs no mutation or migration authority.
 
@@ -197,8 +212,8 @@ HEAD for GET routes; unknown routes do not expose data.
 The shared boundary wraps these routes for request bounds and safe 404/405
 problems. Successful health and storage-unavailable health responses keep their
 plain-text contract; an earlier HTTP limit rejection uses its own safe problem.
-The optional public-root setting does not add CSAPI/discovery routes or change
-the internal listener paths.
+The public-root setting alone adds no routes and never changes internal listener
+paths. Discovery requires its separate explicit switch.
 
 Startup diagnostics are fixed safe messages, never raw parser/driver errors or
 effective secret-bearing configuration. A successful bind prints `Health listener
@@ -207,7 +222,7 @@ absent, not implicitly healthy. Their later checks must not become substitutes
 for this required storage check.
 
 On Ctrl-C (or SIGTERM on Unix), stop accepting and allow up to five seconds for
-in-flight health requests before returning a shutdown error. No background
+in-flight requests before returning a shutdown error. No background
 publication/command work exists here to resume. No local software installation
 is part of these instructions. [Real-listener verification](runtime-health-tests.md)
 records the accepted/rejected table, secret canaries, storage outage, schema
@@ -216,4 +231,6 @@ drift, unchanged data and deliberate wrong-readiness detection.
 Dependencies use the approved Axum/Tokio direction with minimal HTTP/1 serving
 features: [Axum 0.8.8 serving API](https://docs.rs/axum/0.8.8/axum/fn.serve.html).
 The [dependency inventory](dependencies.md) separately records exact resolved
-versions/features and licences; no outbound HTTP client/schema retrieval is enabled.
+versions/features and licences. Discovery/schema rendering needs no outbound
+retrieval; the separately configured issuer-key client retains its explicit
+[authentication boundary](authentication.md#bounded-issuer-key-refresh).

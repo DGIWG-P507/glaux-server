@@ -60,8 +60,8 @@ The [conditional-write proof](docs/conditional-write-tests.md) adds real competi
 writers, exact winning facts, stale-condition rollback and comparison-omission
 detection inside that same owned harness; it is not an HTTP validator test.
 
-The [runtime-health proof](docs/runtime-health-tests.md) starts the actual health-only
-binary in that owned container and uses an independent HTTP client. It checks
+The [runtime-health proof](docs/runtime-health-tests.md) starts the actual server
+in its health-only configuration in that owned container and uses an independent HTTP client. It checks
 strict configuration, secret redaction, read-only startup, readiness loss/recovery
 and unchanged data. [Runtime commands](docs/runtime-configuration.md) do not
 expose CSAPI resource routes yet. The
@@ -87,6 +87,13 @@ The [HTTP-boundary proof](docs/http-boundary-tests.md) independently inspects
 raw status/headers and general-purpose JSON through an isolated listener, with
 known-bad response fields and a disposable wrong-origin fault. Its synthetic
 routes are compiled only into the proof example, not the production binary.
+
+The [discovery proof](docs/discovery-tests.md) compares the enabled document
+inventory with the actual listener in both directions using independent raw HTTP
+and general JSON expectations. Keep configured-prefix, disabled-route, local
+download, browser-rendering and deliberately false-declaration checks when adding
+resource handlers. Route metadata must grow with handlers, not ahead of them;
+an OpenAPI document does not by itself close a standards conformance class.
 
 The project lead selected the branch/PR policy on September 18, 2026 and approved the explicit separate-review procedure and required-check enforcement decision on September 21, 2026:
 

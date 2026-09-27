@@ -6,12 +6,12 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, validation, System writes, HTTP, authentication and permission foundations — 27 September 2026 UTC.**
+**Initial build, validation, System writes, HTTP, authentication, permissions and discovery — 27 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
 - Apache-2.0 licensing and the contributor/review workflow are in place. The [active main-branch rule](https://github.com/DGIWG-P507/glaux-server/rules/23796335) requires a pull request and passing, up-to-date CI, with no bypass or mandatory human approval. [Issue #6](https://github.com/DGIWG-P507/glaux-server/issues/6) and [PR #314](https://github.com/DGIWG-P507/glaux-server/pull/314) record settings, failed/missing-check blocking proofs, actual runs and review.
-- The initial three-package Rust workspace and [CI suite](docs/ci.md) cover formatting, Clippy, build, executable regressions, real database/listener tests and controls against false-green results. The [dependency/licence inventory](docs/dependencies.md) records what those runs use. Internal System writes and a health-only HTTP listener exist; this is not yet a runnable CSAPI resource service.
+- The initial three-package Rust workspace and [CI suite](docs/ci.md) cover formatting, Clippy, build, executable regressions, real database/listener tests and controls against false-green results. The [dependency/licence inventory](docs/dependencies.md) records what those runs use. Internal System writes, health routes and opt-in discovery/documentation exist; this is not yet a runnable CSAPI resource service.
 
 Use the [clean check instructions](docs/ci.md#reproduce-the-checks) and the [Build workflow](https://github.com/DGIWG-P507/glaux-server/actions/workflows/build.yml). Builds and disposable database tests run on GitHub-hosted Linux; no Rust/database installation on the company laptop or permanent cloud service is required. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records planning decisions; issues and PRs record execution.
 
@@ -88,8 +88,15 @@ an internal application capability, not yet a public HTTP extension.
 `check-config`, explicit `serve`, and separate `/health/live` and `/health/ready`
 routes. Startup rejects unsafe configuration and incompatible storage without
 migrating or resetting it. Health diagnostics omit secrets; database loss makes
-readiness fail while the process can still report liveness. Discovery and CSAPI
-resource endpoints remain later tasks.
+readiness fail while the process can still report liveness. CSAPI resource
+endpoints remain later tasks.
+
+[Initial discovery and API documents](docs/discovery.md) are explicitly enabled
+with `discovery: true` and a configured public API root. The landing page links
+to an honest empty conformance declaration, an OpenAPI 3.1 description and local
+browser documentation, schemas and examples. The pinned renderer needs no CDN
+or external validation service. These documents describe the enabled routes;
+they do not claim that a CSAPI resource family or conformance class is complete.
 
 The [shared HTTP boundary](docs/http-boundary.md) adds bounded requests, safe
 problem responses, media-preference selection and links built from an explicitly

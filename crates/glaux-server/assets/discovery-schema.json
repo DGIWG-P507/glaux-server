@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Glaux initial discovery documents",
+  "description": "Original Glaux initial discovery schema, not an OGC conformance claim or a CSAPI resource schema.",
+  "oneOf": [
+    { "$ref": "#/$defs/landing" },
+    { "$ref": "#/$defs/conformance" }
+  ],
+  "$defs": {
+    "link": {
+      "type": "object",
+      "required": ["href", "rel", "type", "title"],
+      "properties": {
+        "href": { "type": "string", "format": "uri" },
+        "rel": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "links": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/link" }
+    },
+    "landing": {
+      "type": "object",
+      "required": ["title", "description", "links"],
+      "properties": {
+        "title": { "const": "Glaux Server" },
+        "description": { "type": "string", "minLength": 1 },
+        "links": { "$ref": "#/$defs/links" }
+      },
+      "additionalProperties": false
+    },
+    "conformance": {
+      "type": "object",
+      "required": ["conformsTo", "links"],
+      "properties": {
+        "conformsTo": { "type": "array", "maxItems": 0, "items": { "type": "string", "format": "uri" } },
+        "links": { "$ref": "#/$defs/links" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

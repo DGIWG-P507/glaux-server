@@ -25,6 +25,8 @@ new dependencies.
 | Python test/check support | Runner Python 3.11+ and its standard library only; no pip dependencies. Actual version is recorded, not silently treated as fixed by `ubuntu-24.04`. | [Python's licence and incorporated-software notices](https://docs.python.org/3/license.html). |
 | Disposable database image | Linux/amd64 `postgis/postgis@sha256:7e00e8c3539fdd43f513b98806c8204714dcd09dea683c259e333d7690317119`; PostgreSQL 18.6 / PostGIS 3.6.4. | [Image packaging: MIT](https://github.com/postgis/docker-postgis/blob/2bcd236e3af9ec6e668db51eb37162a79f0eaeaa/LICENSE); [PostgreSQL License](https://www.postgresql.org/about/licence/); [PostGIS: GPL-2.0-or-later](https://github.com/postgis/postgis/blob/3.6.4/LICENSE.TXT); separately licensed image packages. |
 | Hosted Linux build environment | `ubuntu-24.04`, with Docker and native compiler supplied by the runner. The run records its actual image, Docker and compiler versions. | [GitHub runner-image inventory](https://github.com/actions/runner-images/tree/main/images/ubuntu); underlying packages retain their own licences. This rolling runner label is not an immutable OS image pin. |
+| Local documentation renderer | Swagger UI `5.33.0`, commit `cfd4a6c3cbaeeb7c13a8bada7c754de42d78cd5b`; exact prebuilt bundle/CSS and three notice files in the [asset manifest](../crates/glaux-server/assets/swagger-ui/manifest.json). No npm install, CDN or remote validator. | Retained upstream Apache-2.0 LICENSE/NOTICE plus emitted bundle notices, including MIT/BSD components and DOMPurify's Apache-2.0 OR MPL-2.0 notice; not all bundled code is relabelled Apache-2.0. All three notice files are served alongside documentation. |
+| Browser rendering fixture | Hosted runner's already-provisioned Chrome, actual version and runner image recorded by each proof. No browser installation by this task. | Chrome and its incorporated components retain their own terms; this executable is a hosted test tool, not a redistributed Glaux component. |
 
 The image's registry package versions are PostgreSQL `18.6-1.pgdg13+2` and PostGIS
 `3.6.4+dfsg-2.pgdg13+1`. The platform manifest above is the execution pin; the
@@ -61,6 +63,8 @@ script and pins reproduce it after that artifact expires. It contains:
 - Exact action revisions checked against the currently reviewed set. Unexpected
   actions, changed pins, unreviewed Cargo packages/features, changed package edges or
   original-code licence drift fail rather than silently become approved entries.
+- The five renderer files' exact sizes and SHA-256 values against separately
+  recorded upstream-byte expectations; changed bytes, file sets or identity fail.
 - The pinned image identity and every installed package reported by `dpkg-query`,
   with package/source versions and architecture. Every package is accounted for
   with the path, resolved path and SHA-256 of its available
@@ -74,6 +78,14 @@ through actual SQL. The image must already have been pulled explicitly; missing
 tools, image, package data, malformed accounting or cleanup failures are errors.
 
 ## What this does not establish
+
+The #23 renderer selection checked the maintainer's published
+[URL-parameter advisory](https://github.com/swagger-api/swagger-ui/security/advisories/GHSA-qrmm-w75w-3wpx)
+on 27 September 2026. Its affected range ends at 4.1.2; the selected 5.33.0 is
+outside it. Glaux still explicitly disables query configuration, remote
+validation and Try-it-out, and tests malicious document/configuration URL
+parameters in the actual browser. This is targeted source diligence, not a
+comprehensive scan of the bundled JavaScript graph or proof of no unknown defect.
 
 Task #21's reviewed lock/snapshot contains 279 registry packages (40 more than
 task #20's 239), including target-specific and optional-driver metadata not
@@ -145,6 +157,8 @@ a clean legal result. Installed package accounting does not cover files outside
 the package manager, bundled npm components within GitHub actions, every Rust
 toolchain component's transitive notices, or every package on the hosted runner.
 It is not a complete release SBOM, CVE scan, legal approval, security certification
-or redistribution analysis. No server release or dependency redistribution is
-performed by this task. Any later third-party code, schema or fixture reuse needs
+or redistribution analysis. No server release is performed here. Task #23 does
+redistribute the selected renderer subset in the repository and embedded binary,
+with its upstream notices retained and downloadable; the original dependency
+inventory task did not redistribute it. Any later third-party code, schema or fixture reuse needs
 its actual terms and notices considered under [CONTRIBUTING](../CONTRIBUTING.md#license-and-contributions).
