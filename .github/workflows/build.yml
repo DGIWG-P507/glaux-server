@@ -17,8 +17,10 @@ env:
 # only the final `Rust bootstrap` job, which fails unless every lane listed in its
 # reviewed set ran and succeeded. GitHub accepts skipped required checks, so that
 # gate is unconditional and treats skipped, cancelled or missing lanes as failure.
-# Each lane repeats checkout, commit identity and pinned-toolchain setup, then
-# builds every target before its time-limited suites.
+# Each lane repeats checkout, commit identity and pinned-toolchain setup. The
+# suite lanes build every target before their time-limited suites; the static
+# lane keeps the original build step. A job listed in neither the gate's
+# reviewed list nor its `needs` is NOT gated, so review every new job.
 
 jobs:
   static-checks:
@@ -461,8 +463,9 @@ jobs:
           import os
           import sys
 
-          # Reviewed set of required lanes. Adding, removing or renaming a lane
-          # must update both this list and `needs`, or this gate fails.
+          # Reviewed set of required lanes. A lane in only one of this list and
+          # `needs` fails the gate. A job in neither is not gated at all, so
+          # every new check job must be added to both.
           expected = [
               "static-checks", "rust-suites", "listener-proofs",
               "database-storage", "database-service", "ci-controls",

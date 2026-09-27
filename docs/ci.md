@@ -26,13 +26,17 @@ No check, fault control, inventory or exact-head verification was removed.
 Each lane runs on a fresh runner:
 - It checks out the exact tested head and verifies it.
 - It installs the pinned toolchain.
-- It builds every workspace target before its time-limited suites.
+- The five suite lanes build every workspace target before their time-limited suites. `static-checks` keeps the original build step; its test-discovery check compiles test targets as it did before.
 - It pulls the pinned database image when its suites need one.
 - It rechecks the original corpus digests after its own execution.
 
 The false-green controls run in the same lane as fresh unmodified Rust and database baselines. So "the normal checks pass first" still holds inside that runner.
 
-The final `rust-bootstrap` job, named **`Rust bootstrap`**, is the check the ruleset requires. It runs unconditionally and fails unless every lane in its reviewed list reports `success`. A failed, skipped or cancelled lane fails the gate, and so does a lane missing from `needs`. It also fails if `needs` contains a lane that is not in the reviewed list. Keep the list, `needs` and this table in agreement when adding checks.
+The final `rust-bootstrap` job, named **`Rust bootstrap`**, is the check the ruleset requires. It runs unconditionally and fails unless every lane in its reviewed list reports `success`. A failed, skipped or cancelled lane fails the gate, and so does a lane missing from `needs`. It also fails if `needs` contains a lane that is not in the reviewed list.
+
+**A job listed in neither place is not gated.** If it fails, `Rust bootstrap` can still pass. When adding checks, put them in an existing lane, or add the new lane to the reviewed list, `needs` and this table together. Review of workflow changes must confirm every check job is gated.
+
+Per-suite limits are unchanged by the lanes. The largest single step, the nine false-green controls, still takes about four minutes, and its first control compiles from scratch inside its own limit.
 
 ## Reproduce the checks
 
