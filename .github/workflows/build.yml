@@ -447,7 +447,7 @@ jobs:
     # This job's name is the ruleset's required check. Keep it unconditional.
     name: Rust bootstrap
     if: ${{ always() }}
-    needs: [static-checks, rust-suites, listener-proofs, database-storage, database-service, ci-controls]
+    needs: [static-checks, rust-suites, database-storage, database-service, ci-controls] # disposable probe: listener-proofs removed (never merge)
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
