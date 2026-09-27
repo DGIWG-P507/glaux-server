@@ -41,10 +41,12 @@ def main():
         HELPERS["copy_source"](files, baseline, faulty)
         path = faulty / SOURCE
         source = path.read_text()
-        old = "let matching_source = grant.source == source; // SOURCE_PERMISSION_COMPARISON"
-        require(source.count(old) == 1, "Source-permission fault target changed")
-        path.write_text(source.replace(old,
-            "let matching_source = grant.source == source || true; // SOURCE_PERMISSION_COMPARISON"))
+        for marker in ("SOURCE_PERMISSION_COMPARISON", "SOURCE_PREFLIGHT_PERMISSION_COMPARISON"):
+            old = "let matching_source = grant.source == source; // " + marker
+            require(source.count(old) == 1, "Source-permission fault target changed: " + marker)
+            source = source.replace(old,
+                "let matching_source = grant.source == source || true; // " + marker)
+        path.write_text(source)
         try:
             binaries = build_proof(faulty, target)
             try:

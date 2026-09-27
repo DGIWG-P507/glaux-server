@@ -41,8 +41,11 @@ content is explicitly rejected rather than silently discarded.
 Conditions refer to the POST request target, not its not-yet-created member.
 This initial POST-only collection has no current representation or validator:
 If-Match fails with 412, If-None-Match permits the operation, and malformed tags
-fail with 400. A denied caller still receives 403 before a valid condition can
-reveal a different result. If-Modified-Since does not make POST conditional.
+fail with 400. Valid empty entity-tag lists are exercised in both headers;
+they are not malformed. A denied caller still receives 403 before a valid
+condition or malformed JSON can reveal a different result. Its only state
+change is the bounded, safely attributed denial-audit record.
+If-Modified-Since does not make POST conditional.
 
 | Ordered group | Evidence |
 | --- | --- |
@@ -61,8 +64,10 @@ private key is removed before the public fixture enters the container. No
 production signing or decoding types define the expected caller or wire body.
 
 The fault run copies sources into an owned temporary directory, establishes a
-complete passing baseline, bypasses the existing source-permission comparison,
-and requires the named cross-source assertion to fail after the earlier groups.
+complete passing baseline, coherently bypasses both source-permission comparisons
+(cheap preflight and selected-resource admission), and requires the named
+cross-source assertion to fail after the earlier groups. Each exact mutation
+target must occur once; neither production guard is disabled in the real tree.
 It then restores the unchanged source and requires another complete pass.
 Compilation/setup failure, an unrelated assertion, timeout or missing output
 does not establish detection. This document describes required checks; actual

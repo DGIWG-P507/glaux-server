@@ -19,9 +19,6 @@ use serde_json::Value;
 use sqlx::PgPool;
 use std::sync::Arc;
 
-// Temporary, explicit first hosted behavioral-red checkpoint. The route and
-// positive implementation are drafted together; activation awaits that result.
-const SYSTEM_CREATION_ACTIVE: bool = false; // SYSTEM_CREATION_RED
 const INPUT_MEDIA: &str = "application/geo+json";
 
 #[derive(Clone, Deserialize)]
@@ -200,9 +197,8 @@ fn entity_condition(headers: &HeaderMap, name: HeaderName) -> Result<bool, Probl
             index += 1;
         }
     }
-    if tags == 0 {
-        return Err(Problem::bad_request());
-    }
+    // RFC 9110 uses #entity-tag, not 1#entity-tag: a present empty list is valid
+    // and distinct from an absent field. Bounded empty elements are ignored.
     Ok(true)
 }
 
@@ -257,26 +253,11 @@ fn minimal(validator: &ProjectionValidator, bytes: &[u8]) -> Result<(Uid, String
 }
 
 async fn create(State(state): State<CreateState>, request: Request) -> Result<Response, Error> {
-    if !SYSTEM_CREATION_ACTIVE {
-        return Err(Problem::unavailable().into());
-    }
     let caller = request
         .extensions()
         .get::<CallerContext>()
         .cloned()
         .ok_or_else(Problem::unauthorized)?;
-    let retry = retry(request.headers(), state.config.retry_retention_seconds)?;
-    let precondition = precondition(request.headers())?;
-    let bytes = state
-        .boundary
-        .read_json_bytes(request, &[INPUT_MEDIA])
-        .await?;
-    let (uid, label) = minimal(&state.validator, &bytes)?;
-    let system_id = LocalId::generate().map_err(|_| Problem::unavailable())?;
-    let artifact_id = ArtifactId::generate().map_err(|_| Problem::unavailable())?;
-    let revision_id = RevisionId::generate().map_err(|_| Problem::unavailable())?;
-    let audit_id = AuditId::generate().map_err(|_| Problem::unavailable())?;
-    let event_id = EventId::generate().map_err(|_| Problem::unavailable())?;
     let mut connection = state
         .pool
         .acquire()
@@ -293,6 +274,22 @@ async fn create(State(state): State<CreateState>, request: Request) -> Result<Re
     .map_err(|_| Problem::unavailable())?;
     let time = ExactInstant::parse_rfc3339(&receipt_lexeme).map_err(|_| Problem::unavailable())?;
     let context = OperationContext::new(caller, time.clone())?;
+    state
+        .admission
+        .preflight_system_create(&mut connection, &context, &state.config.source)
+        .await?;
+    let retry = retry(request.headers(), state.config.retry_retention_seconds)?;
+    let precondition = precondition(request.headers())?;
+    let bytes = state
+        .boundary
+        .read_json_bytes(request, &[INPUT_MEDIA])
+        .await?;
+    let (uid, label) = minimal(&state.validator, &bytes)?;
+    let system_id = LocalId::generate().map_err(|_| Problem::unavailable())?;
+    let artifact_id = ArtifactId::generate().map_err(|_| Problem::unavailable())?;
+    let revision_id = RevisionId::generate().map_err(|_| Problem::unavailable())?;
+    let audit_id = AuditId::generate().map_err(|_| Problem::unavailable())?;
+    let event_id = EventId::generate().map_err(|_| Problem::unavailable())?;
     let input = CreateSystem {
         system: SystemRecord {
             id: system_id,
@@ -366,6 +363,9 @@ mod tests {
         let mut headers = HeaderMap::new();
         assert!(precondition(&headers).unwrap());
         for value in [
+            "",
+            " \t ",
+            ",,,",
             "*",
             "\"old\"",
             "W/\"old\"",
@@ -380,14 +380,12 @@ mod tests {
             headers.remove(header::IF_NONE_MATCH);
         }
         for value in [
-            "",
             "w/\"lowercase\"",
             "*,\"tag\"",
             "\"unfinished",
             "\"bad space\"",
             "tag",
             "\"one\" \"two\"",
-            ",,,",
         ] {
             headers.insert(header::IF_MATCH, HeaderValue::from_str(value).unwrap());
             assert!(precondition(&headers).is_err(), "{value}");
@@ -408,6 +406,16 @@ mod tests {
         headers.insert(
             header::IF_MATCH,
             HeaderValue::from_str(&format!("\"{}\"", "x".repeat(4096))).unwrap(),
+        );
+        assert!(precondition(&headers).is_err());
+        headers.insert(
+            header::IF_MATCH,
+            HeaderValue::from_str(&",".repeat(64)).unwrap(),
+        );
+        assert!(!precondition(&headers).unwrap());
+        headers.insert(
+            header::IF_MATCH,
+            HeaderValue::from_str(&",".repeat(65)).unwrap(),
         );
         assert!(precondition(&headers).is_err());
     }

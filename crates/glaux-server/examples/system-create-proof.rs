@@ -584,6 +584,13 @@ async fn proof() {
     .await;
     rejected(
         &mut connection,
+        &body("urn:glaux:test:condition-empty", "sosa:Sensor"),
+        "If-Match: \r\n",
+        412,
+    )
+    .await;
+    rejected(
+        &mut connection,
         &body("urn:glaux:test:condition-malformed", "sosa:Sensor"),
         "If-Match: not-quoted\r\n",
         400,
@@ -692,6 +699,28 @@ async fn proof() {
         without_denials(snapshot(&mut connection).await),
         without_denials(after),
         "precondition handling bypassed denial isolation"
+    );
+    let before = snapshot(&mut connection).await;
+    let denied_malformed = post("{", "");
+    protected_problem(&denied_malformed, 403);
+    let after = snapshot(&mut connection).await;
+    assert_eq!(
+        without_denials(after.clone()),
+        without_denials(before.clone()),
+        "malformed unauthorized write changed resource or outgoing state"
+    );
+    let denials = additions(&before, &after, "audit");
+    assert_eq!(denials.len(), 1);
+    assert_eq!(denials[0]["outcome"], json!("denied"));
+    assert_eq!(denials[0]["actor"], json!(development_actor("writer-a")));
+    assert!(
+        denials[0]["source"].is_null()
+            && denials[0]["target_id"].is_null()
+            && denials[0]["revision_id"].is_null()
+    );
+    assert_eq!(
+        denials[0]["correlation"].as_str(),
+        denied_malformed.header("x-request-id")
     );
     server.stop();
     let mut server = start(&mut fixture, "writer-b", SOURCE_B, true);
@@ -849,6 +878,8 @@ async fn proof() {
             &value,
             if index == 0 {
                 "If-None-Match: *\r\nIf-Modified-Since: Sat, 01 Jan 2000 00:00:00 GMT\r\n"
+            } else if index == 1 {
+                "If-None-Match: \r\n"
             } else {
                 ""
             },

@@ -43,7 +43,9 @@ one-hour example is illustrative. Existing configurations remain unchanged.
 
 The source is trusted deployment configuration, not a request header or a
 submitted producer claim. Permission for that source and the create action is
-still required. Different source-configured listeners can use the same store;
+still required. A cheap action/source screen precedes body/schema processing;
+the selected member or retained retry outcome is authorized again at the atomic
+write boundary. Different source-configured listeners can use the same store;
 this slice introduces no public source-selection parameter. JWT deployments use
 the existing issuer/audience/key checks. Development callers remain explicit,
 loopback-only test identities: never publish or proxy that listener externally.
@@ -126,7 +128,8 @@ representation, ETag or modification date exists yet. `If-Match`, including `*`,
 therefore fails with `412`; `If-None-Match`, including `*`, passes. These conditions
 concern the request target, not the future item named by Location. Evaluate them
 after normal authentication/permission checks; a denied caller must not get an
-authorized precondition result. Malformed entity tags fail with `400`.
+authorized precondition result. A present empty entity-tag list is valid:
+If-Match still fails and If-None-Match passes. Malformed tags fail with `400`.
 `If-Modified-Since` is ignored for POST; `If-Unmodified-Since` is ignored without
 an available modification date. No conditional header is mandatory. Revisit this
 explicit representation state when the collection representation is implemented.

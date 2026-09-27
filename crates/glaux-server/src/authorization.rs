@@ -124,7 +124,8 @@ impl PermissionSet {
 
     fn allows_source(&self, source: &str) -> bool {
         self.grants.iter().any(|grant| {
-            grant.source == source
+            let matching_source = grant.source == source; // SOURCE_PREFLIGHT_PERMISSION_COMPARISON
+            matching_source
                 && grant
                     .resources
                     .as_ref()
@@ -613,6 +614,33 @@ impl Admission {
         };
         increment(counter);
         ctx.error(kind)
+    }
+
+    /// Cheap action/source screening before JSON and schema processing. It does
+    /// not authorize a candidate or saved retry outcome; create_system_if repeats
+    /// those actual-resource checks under the existing transaction boundary.
+    pub(crate) async fn preflight_system_create(
+        &self,
+        connection: &mut PgConnection,
+        ctx: &OperationContext,
+        source: &str,
+    ) -> Result<(), AccessError> {
+        let create = self.permissions(ctx, Action::Create)?;
+        if !bounded_text(source, 256) || !create.allows_source(source) {
+            return Err(self
+                .deny(
+                    connection,
+                    ctx,
+                    DeniedOperation::Create,
+                    AccessKind::Denied,
+                    None,
+                )
+                .await);
+        }
+        if ctx.actor.is_none() {
+            return Err(ctx.error(AccessKind::Unavailable));
+        }
+        Ok(())
     }
 
     pub async fn create_system(
