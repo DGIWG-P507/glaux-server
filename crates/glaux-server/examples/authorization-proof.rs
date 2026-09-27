@@ -683,7 +683,17 @@ async fn denial_count(connection: &mut PgConnection) -> i64 {
 }
 
 async fn assert_denial(connection: &mut PgConnection, correlation: &str) {
-    let row:(Option<String>,Option<String>,String,Option<String>,Option<String>,String,String,String)=sqlx::query_as(
+    type DenialRow = (
+        Option<String>,
+        Option<String>,
+        String,
+        Option<String>,
+        Option<String>,
+        String,
+        String,
+        String,
+    );
+    let row: DenialRow = sqlx::query_as(
         "SELECT actor,source,operation,target_id::text,revision_id::text,time_source,outcome,correlation
          FROM public.server_audit WHERE outcome='denied' ORDER BY id LIMIT 1").fetch_one(connection).await.unwrap();
     assert_eq!(
