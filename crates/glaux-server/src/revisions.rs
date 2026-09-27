@@ -58,7 +58,9 @@ pub struct SourceArtifact {
 
 /// Semantic time is an optional instant, not full SensorML validTime support.
 /// Receipt time is supplied by trusted application context, never inferred
-/// from a UUID, source document, semantic time or database clock.
+/// from a UUID, source document, semantic time or implicit database default.
+/// A caller may explicitly sample a trusted clock (including the configured
+/// database clock) for operation receipt; that is not domain or commit time.
 #[derive(Clone, Debug)]
 pub struct SystemRevision {
     pub id: RevisionId,

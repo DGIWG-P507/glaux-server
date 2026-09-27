@@ -60,6 +60,14 @@ pub(super) fn negotiate(headers: &HeaderMap, offered: &[&str]) -> Result<usize, 
 }
 
 pub(super) fn check_json_media(headers: &HeaderMap) -> Result<(), Problem> {
+    check_media(headers, &["application/json"])
+}
+
+/// Syntax-check parameters without allowing them to change JSON decoding.
+pub(super) fn check_media(headers: &HeaderMap, offered: &[&str]) -> Result<(), Problem> {
+    if offered.is_empty() || offered.len() > MAX_RANGES {
+        return Err(Problem::internal());
+    }
     let values = headers.get_all(header::CONTENT_TYPE);
     let mut fields = values.iter();
     let Some(value) = fields.next() else {
@@ -69,7 +77,12 @@ pub(super) fn check_json_media(headers: &HeaderMap) -> Result<(), Problem> {
         return Err(Problem::bad_request());
     }
     let media = parse_media(value.as_bytes(), false).map_err(|()| Problem::bad_request())?;
-    if media.kind == b"application" && media.subtype == b"json" {
+    let mut accepted = false;
+    for offer in offered {
+        let offer = parse_media(offer.as_bytes(), false).map_err(|()| Problem::internal())?;
+        accepted |= media.kind == offer.kind && media.subtype == offer.subtype;
+    }
+    if accepted {
         // RFC 8259's application/json registration defines no parameters that
         // change JSON decoding. They are syntax-checked, not schema selectors.
         Ok(())

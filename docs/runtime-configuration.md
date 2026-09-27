@@ -5,7 +5,8 @@ Roadmap 1.4.1's startup/health foundation. [Issue #20](https://github.com/DGIWG-
 adds configured JWT verification and explicit development callers under Guide
 §4.10. [Issue #23](https://github.com/DGIWG-P507/glaux-server/issues/23) adds
 explicitly enabled discovery and documentation alongside the two health routes.
-There are no CSAPI resource operations or completed conformance declarations.
+[Issue #24](https://github.com/DGIWG-P507/glaux-server/issues/24) adds separately
+enabled minimal System creation. There are no completed conformance declarations.
 
 ## Commands and configuration
 
@@ -74,6 +75,14 @@ that root must strip `/prefix` before forwarding to the unprefixed listener.
 Supplying a public root alone does not enable discovery. Public discovery and
 health do not expose data or grant resource access.
 
+The optional `system_creation` object separately enables only `POST /systems`.
+It requires an explicit public root, non-disabled authentication, a trusted
+configured `source` (1–256 UTF-8 bytes without control characters) and positive
+`retry_retention_seconds` (an unsigned 32-bit integer). Omission disables
+creation; null, unknown fields and missing fields fail. Discovery can remain
+off; if enabled, it describes the actual creation route and selected identity
+mode. See the [complete minimal configuration and representation](system-create.md).
+
 Unknown fields, duplicate members (including inside public keys), missing required values, unsupported
 authentication modes and wrong types fail without quoting the input. Future
 adapter and resource-specific settings are not
@@ -82,7 +91,8 @@ silently accepted placeholders: their owning tasks will add validated fields.
 The optional [local permission policy](authorization.md) adds strict `policy`
 grants and finite denial-audit limits. Omission denies all protected resource
 operations; authentication alone never grants them. The configured admission
-object is available for future resource handlers without exposing resource routes.
+object gates the enabled System creation route and remains the boundary for
+later resource handlers.
 
 ## Authentication selection
 
@@ -168,9 +178,9 @@ contract](authentication.md). Bearer material is not stored in configuration.
 to wrap with `Authenticator::protect`. The current server does not
 attach authentication to its deliberately public health/discovery routes or expose
 a synthetic protected example endpoint. It does supply actual socket peer
-information for future protected groups. Configuring an adapter is not a claim
-that resource access policy, identity administration or trusted proxy integration
-has been implemented.
+information for the enabled protected System creation group. Configuring an
+adapter alone grants no resource access and implements no identity administration
+or trusted proxy integration.
 
 ## Database secret and transport boundary
 
@@ -178,8 +188,9 @@ Supply the PostgreSQL connection URL through the selected protected reference.
 Network connections always use certificate/hostname-verifying TLS even if the
 URL asks to disable it. Only an actual Unix-domain socket route disables TLS.
 No TLS server or proxy is configured by these issues. A non-loopback listener
-serves public health and any enabled documentation over HTTP; a deployment remains responsible
-for its ingress/isolation and must not mistake it for secure resource serving.
+serves public health, any enabled documentation and any enabled System creation
+over HTTP; deployment must provide suitable secure ingress/isolation before
+carrying credentials or protected data. The listener itself does not provide TLS.
 
 ## Startup, health and shutdown
 
@@ -195,6 +206,8 @@ require `GLAUX_DATABASE_URL`; only an explicit `migrate` changes schema. Their
 privileges are separate from serving. For these health/discovery routes a login role
 needs database connection/schema access and SELECT on `public._sqlx_migrations`;
 it needs no mutation or migration authority.
+Enabling creation also requires the bounded serving privileges used by its
+[write path](system-create.md), not schema-owner or migration authority.
 
 | GET route | Exact result | Meaning |
 | --- | --- | --- |

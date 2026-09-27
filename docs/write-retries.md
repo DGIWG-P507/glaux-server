@@ -3,7 +3,8 @@
 [Issue #17](https://github.com/DGIWG-P507/glaux-server/issues/17) implements
 Guide v1.21 §§4.6/6.4 on the existing trusted application boundary. It does not
 add an HTTP header parser, authentication service, command execution or a public
-receipt API. The future HTTP extension remains optional.
+receipt API. Issue #24 now exposes this foundation through the optional
+[minimal System POST retry header](system-create.md); no public receipt API is added.
 
 ## Same request, same committed outcome
 
@@ -107,5 +108,5 @@ python3 -u scripts/test-retry-write-failures.py
 ```
 
 No new dependency, company-laptop installation or permanent service is needed.
-Public HTTP replay responses, other resource families, command/broker retry,
+Other resource families, command/broker retry,
 deletion, restore and broader policy enforcement remain their owning tasks.

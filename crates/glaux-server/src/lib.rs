@@ -9,3 +9,4 @@ pub mod http_boundary;
 pub mod revisions;
 pub mod runtime;
 pub mod storage;
+pub mod system_http;

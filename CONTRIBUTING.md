@@ -63,8 +63,8 @@ detection inside that same owned harness; it is not an HTTP validator test.
 The [runtime-health proof](docs/runtime-health-tests.md) starts the actual server
 in its health-only configuration in that owned container and uses an independent HTTP client. It checks
 strict configuration, secret redaction, read-only startup, readiness loss/recovery
-and unchanged data. [Runtime commands](docs/runtime-configuration.md) do not
-expose CSAPI resource routes yet. The
+and unchanged data. [Runtime commands](docs/runtime-configuration.md) separately
+enable the bounded System creation route. The
 [authentication adapter](docs/authentication.md) now verifies the selected JWT
 profile and explicit loopback development identities; it does not protect health
 routes or claim later resource authorization. Its [independent listener proof](docs/authentication-tests.md)
@@ -94,6 +94,13 @@ and general JSON expectations. Keep configured-prefix, disabled-route, local
 download, browser-rendering and deliberately false-declaration checks when adding
 resource handlers. Route metadata must grow with handlers, not ahead of them;
 an OpenAPI document does not by itself close a standards conformance class.
+
+The [System creation proof](docs/system-create-tests.md) exercises that actual
+protected route with independent wire and database oracles. Retain exact
+original-byte, identity, audit/outgoing, source authority, optional retry and
+pre-commit rollback assertions; full CRUD and canonical GET are later tasks.
+Its compiled authority-bypass control must detect the intended wrong behavior,
+not merely fail setup.
 
 The project lead selected the branch/PR policy on September 18, 2026 and approved the explicit separate-review procedure and required-check enforcement decision on September 21, 2026:
 

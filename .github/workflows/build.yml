@@ -361,6 +361,11 @@ jobs:
         run: |
           python3 -u scripts/check-execution.py runtime-health | tee "$RUNNER_TEMP/glaux-ci-evidence/runtime-health.log"
           python3 -u scripts/test-runtime-health-failures.py
+      - name: Prove System creation through the actual HTTP and transaction boundary
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py system-create | tee "$RUNNER_TEMP/glaux-ci-evidence/system-create.log"
+          python3 -u scripts/test-system-create-failures.py
       - name: Prove action source and resource permissions through a real listener and database
         shell: bash
         run: |
