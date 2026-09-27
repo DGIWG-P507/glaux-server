@@ -348,7 +348,7 @@ fn openapi(boundary: &HttpBoundary, schema: &Value) -> Result<Value, Problem> {
     conformance["properties"]["links"] = json!({"$ref": "#/components/schemas/Links"});
     Ok(json!({
         "openapi": "3.1.0",
-        "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+        "jsonSchemaDialect": "https://spec.openapis.org/oas/3.1/dialect/base",
         "info": {
             "title": "Glaux Server initial API",
             "version": env!("CARGO_PKG_VERSION"),

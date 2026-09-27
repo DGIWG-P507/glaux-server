@@ -33,6 +33,12 @@ through response `content`, while HEAD documents the corresponding GET headers
 without advertising a response body; negotiation is described as HTTP behavior,
 not an invented query parameter.
 
+The OpenAPI document uses the specification's default OAS 3.1 base dialect,
+which extends JSON Schema 2020-12 and is the dialect tooling must support
+(§4.8.24.2.3). This also avoids the pinned renderer's unsupported-dialect
+warning. The separately downloadable discovery schema retains its own
+JSON Schema 2020-12 declaration; no schema constraints change.
+
 ## Scope and configuration
 
 Discovery is an explicit opt-in (`discovery: true`) and requires

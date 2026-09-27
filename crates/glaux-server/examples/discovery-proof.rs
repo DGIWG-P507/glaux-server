@@ -690,6 +690,10 @@ fn discover(root: &str) -> (Value, Value, Value) {
     assert_eq!(api.status, 200);
     let api = api.json();
     assert_eq!(api["openapi"], json!("3.1.0"));
+    assert_eq!(
+        api["jsonSchemaDialect"],
+        json!("https://spec.openapis.org/oas/3.1/dialect/base")
+    );
     assert_eq!(api["servers"], json!([{"url":root}]));
     let paths = api["paths"].as_object().unwrap();
     assert_eq!(

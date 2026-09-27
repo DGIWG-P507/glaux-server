@@ -88,7 +88,9 @@ class Rendered(HTMLParser):
                 self.methods.append(value)
             if "opblock-summary-path" in classes:
                 self.paths.append(value)
-            if current == "h2" and "title" in classes:
+            # Pinned Swagger UI 5.33 renders its API title as h1; the outer
+            # documentation page's own h1 has no title class and cannot satisfy it.
+            if current == "h1" and "title" in classes:
                 self.titles.append(value)
             if current == tag:
                 break
@@ -113,7 +115,9 @@ def assert_rendered(document):
 
 
 def oracle_controls():
-    sample = ('<main data-glaux-rendered="true"><h2 class="title">Glaux Server initial API</h2>'
+    sample = ('<main data-glaux-rendered="true"><h1 class="title">Glaux Server initial API'
+              '<span><small><pre class="version"> 0.1.0 </pre></small>'
+              '<small><pre>OAS 3.1</pre></small></span></h1>'
               '<p>No resource families or conformance classes are advertised yet.</p>'
               + ''.join('<span class="opblock-summary-method">' + method + '</span>'
                         '<span class="opblock-summary-path">' + path + '</span>'
