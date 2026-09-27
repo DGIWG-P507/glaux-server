@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, validation, System writes, HTTP and bounded caller-authentication foundations — 26 September 2026 UTC.**
+**Initial build, validation, System writes, HTTP, authentication and permission foundations — 27 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
@@ -105,9 +105,16 @@ expired and wrong-service credentials. Signing keys can also come from one
 explicitly configured HTTPS endpoint, with bounded refresh, atomic rotation and
 fail-closed cache expiry during issuer outages. Tokens cannot select key URLs.
 The [key-refresh checks](docs/key-refresh-tests.md) exercise a real isolated TLS
-issuer, request counts and a deliberately faulty stale-key path. Resource
-permissions remain later work; the production listener still exposes only
-minimal public health.
+issuer, request counts and a deliberately faulty stale-key path.
+
+[Initial resource permissions](docs/authorization.md) separately restrict what
+a verified caller may read or change for a configured source and set of Systems.
+Queries restrict records before counts and links; writes cannot gain authority
+from a submitted producer or source claim. Selected denied mutations retain safe
+audit information within explicit limits, and policy/audit failures never grant
+access. Independent two-source listener/database checks exercise this shared
+boundary. These are foundations for later resource routes: the production
+listener still exposes only minimal public health.
 
 ## Planned capabilities
 

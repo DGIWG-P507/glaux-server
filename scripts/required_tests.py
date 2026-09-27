@@ -1,6 +1,7 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "configuration::tests::runtime_policy_configuration_is_explicit_and_bounded",
     "authentication::keys::tests::issuer_key_configuration_rejects_unsafe_endpoints_and_timing",
     "authentication::keys::tests::issuer_key_cache_time_and_cancellation_preserve_bounds",
     "authentication::keys::tests::issuer_key_response_media_is_explicit",

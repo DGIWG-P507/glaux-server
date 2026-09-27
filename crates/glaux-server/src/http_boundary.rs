@@ -58,6 +58,9 @@ impl std::error::Error for BoundaryConfigError {}
 enum Kind {
     Unauthorized,
     InsufficientScope,
+    Forbidden,
+    Conflict,
+    Precondition,
     BadRequest,
     NotFound,
     Method,
@@ -79,6 +82,18 @@ pub struct Problem {
 }
 
 impl Problem {
+    pub(crate) fn forbidden() -> Self {
+        Self::new(Kind::Forbidden)
+    }
+    pub(crate) fn not_found() -> Self {
+        Self::new(Kind::NotFound)
+    }
+    pub(crate) fn conflict() -> Self {
+        Self::new(Kind::Conflict)
+    }
+    pub(crate) fn precondition_failed() -> Self {
+        Self::new(Kind::Precondition)
+    }
     pub(crate) fn unauthorized() -> Self {
         Self::new(Kind::Unauthorized)
     }
@@ -122,6 +137,24 @@ impl Problem {
                 "forbidden",
                 "Forbidden",
                 "The credential lacks required scope.",
+            ),
+            Kind::Forbidden => (
+                StatusCode::FORBIDDEN,
+                "forbidden",
+                "Forbidden",
+                "The operation is not permitted.",
+            ),
+            Kind::Conflict => (
+                StatusCode::CONFLICT,
+                "conflict",
+                "Conflict",
+                "The request conflicts with the current resource state.",
+            ),
+            Kind::Precondition => (
+                StatusCode::PRECONDITION_FAILED,
+                "precondition-failed",
+                "Precondition Failed",
+                "The supplied condition is not satisfied.",
             ),
             Kind::BadRequest => (
                 StatusCode::BAD_REQUEST,
@@ -203,8 +236,21 @@ fn correlation() -> String {
 
 impl IntoResponse for Problem {
     fn into_response(self) -> Response {
-        let (status, slug, title, detail) = self.catalog();
         let correlation = correlation();
+        self.into_response_with_correlation(&correlation)
+    }
+}
+
+impl Problem {
+    /// Reuse server-minted operation correlation for safe problem/audit linkage.
+    /// Only canonical local IDs or the fixed entropy-failure marker are allowed.
+    pub(crate) fn into_response_with_correlation(self, supplied: &str) -> Response {
+        let (status, slug, title, detail) = self.catalog();
+        let correlation = if supplied == "unavailable" || supplied.parse::<LocalId>().is_ok() {
+            supplied.to_owned()
+        } else {
+            correlation()
+        };
         let value = json!({
             "type": format!("urn:glaux:problem:{slug}"),
             "title": title,

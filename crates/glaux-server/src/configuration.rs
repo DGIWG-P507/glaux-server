@@ -1,5 +1,6 @@
 //! Bounded, explicit startup configuration. Never format input or resolved secrets.
 use crate::authentication::{Authenticator, DevelopmentConfig, JwtConfig, SystemClock};
+use crate::authorization::{Admission, ConfiguredPolicy, PolicyConfig, SystemRateClock};
 use crate::http_boundary::{HttpBoundary, Limits};
 use serde::Deserialize;
 use sqlx::ConnectOptions;
@@ -36,6 +37,7 @@ struct Document {
     authentication: Authentication,
     jwt: Option<JwtConfig>,
     development: Option<DevelopmentConfig>,
+    policy: Option<PolicyConfig>,
     database: SecretReference,
     health_timeout_ms: u64,
     http: Option<HttpDocument>,
@@ -55,6 +57,7 @@ pub struct Configuration {
     listener: SocketAddr,
     authentication: Authentication,
     authenticator: Authenticator,
+    admission: Admission,
     database: PgConnectOptions,
     timeout: Duration,
     http: HttpBoundary,
@@ -120,7 +123,19 @@ impl Configuration {
         let syntax = glaux_standards::validation::parse(bytes).map_err(|_| ConfigError::Invalid)?;
         let has_jwt = syntax.get("jwt").is_some();
         let has_development = syntax.get("development").is_some();
+        let has_policy = syntax.get("policy").is_some();
         let document: Document = serde_json::from_slice(bytes).map_err(|_| ConfigError::Invalid)?;
+        let policy = match (has_policy, document.policy) {
+            (false, None) => ConfiguredPolicy::deny_all(),
+            (true, Some(policy)) => ConfiguredPolicy::new(policy).map_err(|_| ConfigError::Invalid)?,
+            _ => return Err(ConfigError::Invalid),
+        };
+        let admission = Admission::new(
+            Arc::new(policy.clone()),
+            policy.limits(),
+            Arc::new(SystemRateClock::default()),
+        )
+        .map_err(|_| ConfigError::Invalid)?;
         let http = document.http.unwrap_or_default();
         let http = HttpBoundary::new(http.public_api_root.as_deref(), http.limits)
             .map_err(|_| ConfigError::Invalid)?;
@@ -188,6 +203,7 @@ impl Configuration {
             listener: document.listener,
             authentication: document.authentication,
             authenticator,
+            admission,
             database: options,
             timeout: Duration::from_millis(document.health_timeout_ms),
             http,
@@ -205,6 +221,11 @@ impl Configuration {
     }
     pub fn http_boundary(&self) -> HttpBoundary {
         self.http.clone()
+    }
+    /// Share the same validated policy and denial-rate state across route handlers.
+    /// Authentication must supply a verified caller before using this boundary.
+    pub fn admission(&self) -> Admission {
+        self.admission.clone()
     }
     pub(crate) fn database(&self) -> PgConnectOptions {
         self.database.clone()
@@ -335,6 +356,52 @@ mod tests {
             );
         }
         assert!(parse(&with_http(r#"{"limits":{"body_bytes":256,"header_bytes":2048,"uri_bytes":1024,"timeout_ms":500}}"#)).is_ok());
+    }
+
+    #[test]
+    fn runtime_policy_configuration_is_explicit_and_bounded() {
+        use serde_json::{Value, json};
+        let mut input: Value = serde_json::from_str(&document("127.0.0.1:8080", "development")).unwrap();
+        input["policy"] = json!({
+            "grants": [{"issuer":"urn:glaux:development", "group":"example-group",
+                "source":"urn:glaux:test:source-a", "actions":["read"], "resources":null}],
+            "denial_audit": {"max_records":100, "max_per_window":10, "window_seconds":60}
+        });
+        assert!(parse(&input.to_string()).is_ok());
+        for (path, value) in [
+            ("/policy", Value::Null),
+            ("/policy/denial_audit/max_records", json!(0)),
+            ("/policy/denial_audit/max_records", json!(100001)),
+            ("/policy/denial_audit/max_per_window", json!(0)),
+            ("/policy/denial_audit/window_seconds", json!(0)),
+            ("/policy/grants/0/source", json!("")),
+            ("/policy/grants/0/issuer", json!("")),
+            ("/policy/grants/0/group", json!("")),
+            ("/policy/grants/0/resources", json!(["not-a-local-id"])),
+            ("/policy/grants/0/actions", json!(["invented_action"])),
+        ] {
+            let mut invalid = input.clone();
+            *invalid.pointer_mut(path).unwrap() = value;
+            assert!(parse(&invalid.to_string()).is_err(), "{path}");
+        }
+        for (path, key, value) in [
+            ("/policy", "unknown", json!(true)),
+            ("/policy/denial_audit", "unlimited", json!(true)),
+            ("/policy/grants/0", "subject", json!("also-subject")),
+            ("/policy/grants/0", "unknown", json!(true)),
+        ] {
+            let mut invalid = input.clone();
+            invalid.pointer_mut(path).unwrap().as_object_mut().unwrap().insert(key.into(), value);
+            assert!(parse(&invalid.to_string()).is_err(), "{path}/{key}");
+        }
+        let mut missing = input.clone();
+        missing["policy"].as_object_mut().unwrap().remove("denial_audit");
+        assert!(parse(&missing.to_string()).is_err());
+        let mut no_subject = input.clone();
+        no_subject["policy"]["grants"][0].as_object_mut().unwrap().remove("group");
+        assert!(parse(&no_subject.to_string()).is_err());
+        let duplicated = input.to_string().replace("\"max_records\":100", "\"max_records\":100,\"max_records\":100");
+        assert!(parse(&duplicated).is_err());
     }
 
     #[test]
