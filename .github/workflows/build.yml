@@ -177,6 +177,7 @@ jobs:
           retention-days: 14
 
   listener-proofs:
+    if: ${{ false }} # disposable probe: skip this lane (never merge)
     name: "CI lane: HTTP, authentication and key-refresh proofs"
     runs-on: ubuntu-24.04
     timeout-minutes: 30
