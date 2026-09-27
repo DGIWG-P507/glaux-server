@@ -48,6 +48,8 @@ python3 -u scripts/check-execution.py retry-write
 python3 -u scripts/test-retry-write-failures.py
 python3 -u scripts/check-execution.py runtime-health
 python3 -u scripts/test-runtime-health-failures.py
+python3 -u scripts/check-execution.py system-create
+python3 -u scripts/test-system-create-failures.py
 python3 -u scripts/check-execution.py http-boundary
 python3 -u scripts/test-http-boundary-failures.py
 python3 -u scripts/check-execution.py authentication
@@ -100,13 +102,21 @@ proof for this packaging task, not a claim that schema validation ran.
 [check-execution.py](../scripts/check-execution.py) preserves command failure and
 requires actual successful execution evidence. It accepts exactly `rust`,
 `schema-fuzz`, `numeric-fuzz`, `time-fuzz`, `database`, `time-database`,
-`system-storage`, `revision-storage`, `atomic-write`, `conditional-write`, `retry-write`, `runtime-health`, `discovery`, `discovery-browser`, `http-boundary`, `authentication`, `authorization` or `key-refresh`,
+`system-storage`, `revision-storage`, `atomic-write`, `conditional-write`, `retry-write`, `runtime-health`, `system-create`, `discovery`, `discovery-browser`, `http-boundary`, `authentication`, `authorization` or `key-refresh`,
 not arbitrary selectors. Every named Rust test must execute successfully, and
 each fuzz campaign must emit its completed-invariant marker; the wrapper imposes
 a 180-second process timeout. Both the [lifecycle runner](../scripts/test_database.py)
 and [exact-time runner](../scripts/test_time_database.py) reject missing or
 skipped cases. No step uses continue-on-error to turn
 failure into success. Shell pipelines use pipefail.
+
+The [System creation proof](system-create-tests.md) exercises the actual binary,
+independent HTTP/JSON and complete before/after database facts. Its separate
+compiled source-authority fault must fail the intended assertion after a passing
+baseline, then pass after restoration. Setup/compiler failure is not detection.
+The full job has a 30-minute bound: the preceding suite already took about
+17 minutes, and this slice adds real-listener/database and compiled-fault runs.
+Individual command timeouts and required checks are unchanged.
 
 The [authentication proof](authentication-tests.md) requires all seven listener/
 adapter groups. Its fixture signer is the runner's existing OpenSSL CLI, not the

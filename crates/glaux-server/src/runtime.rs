@@ -1,8 +1,8 @@
-//! Health and explicitly enabled discovery. Authentication is prepared at startup;
-//! no protected CSAPI resource operation is exposed yet.
+//! Health, explicitly enabled discovery and initial authenticated System creation.
 use crate::configuration::Configuration;
 use crate::discovery;
 use crate::storage::check_schema;
+use crate::system_http;
 use axum::Router;
 use axum::extract::State;
 use axum::http::{StatusCode, header};
@@ -53,6 +53,7 @@ async fn ready(State(health): State<Health>) -> Response {
 pub enum RuntimeError {
     Storage,
     Discovery,
+    SystemCreation,
     Listener,
     Signal,
     Serving,
@@ -64,6 +65,7 @@ impl fmt::Display for RuntimeError {
         f.write_str(match self {
             Self::Storage => "required storage or schema unavailable",
             Self::Discovery => "configured discovery documents unavailable",
+            Self::SystemCreation => "configured System creation unavailable",
             Self::Listener => "server listener unavailable",
             Self::Signal => "shutdown signal unavailable",
             Self::Serving => "server listener failed",
@@ -101,7 +103,12 @@ pub async fn serve(config: Configuration) -> Result<(), RuntimeError> {
         )
         .with_state(health);
     let app = if config.discovery_enabled() {
-        app.merge(discovery::router(&boundary).map_err(|_| RuntimeError::Discovery)?)
+        app.merge(discovery::router_with_system_creation(&boundary, config.system_creation_enabled(), config.authentication()).map_err(|_| RuntimeError::Discovery)?)
+    } else {
+        app
+    };
+    let app = if config.system_creation_enabled() {
+        app.merge(system_http::router(&config, pool.clone()).map_err(|_| RuntimeError::SystemCreation)?)
     } else {
         app
     };

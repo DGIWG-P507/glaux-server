@@ -7,9 +7,9 @@ policy establishes **what that caller may do, for which source and resources**.
 Being authenticated, uploading a document, naming a producer, or having command
 submission permission never implicitly grants another action or reporting role.
 
-This is a library boundary exercised through synthetic HTTP routes and actual
-System storage. The production binary exposes public health and opt-in
-[discovery](discovery.md), not protected resource operations. The route-owning
+This library boundary is exercised through synthetic HTTP routes and actual
+System storage, and now used by the production [minimal System POST](system-create.md).
+Public health and opt-in [discovery](discovery.md) remain public. The route-owning
 tasks must use this admission boundary; the older application/repository
 functions are trusted internal persistence primitives, not request handlers.
 

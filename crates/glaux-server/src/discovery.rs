@@ -1,11 +1,12 @@
-//! Initial, explicitly enabled discovery. No resource or conformance claim.
+//! Explicit discovery of installed routes, without completed-class claims.
+use crate::configuration::Authentication;
 use crate::http_boundary::{HttpBoundary, Problem, json_response, negotiate};
 use axum::Router;
 use axum::body::Bytes;
 use axum::handler::Handler;
 use axum::http::{HeaderMap, HeaderValue, header};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{MethodRouter, get};
+use axum::routing::{MethodRouter, get, post};
 use serde_json::{Map, Value, json};
 use std::sync::Arc;
 
@@ -19,6 +20,7 @@ enum Family {
     Documentation,
     Download,
     Health,
+    Registration,
 }
 
 impl Family {
@@ -28,6 +30,7 @@ impl Family {
             Self::Documentation => "Documentation",
             Self::Download => "Offline downloads",
             Self::Health => "Operational health (Glaux extension)",
+            Self::Registration => "Initial System registration",
         }
     }
 }
@@ -41,6 +44,7 @@ enum Parameters {
 #[derive(Clone, Copy)]
 enum Methods {
     GetHead,
+    Post,
 }
 
 /// Ordinary code metadata, also used when installing existing health handlers.
@@ -69,6 +73,7 @@ impl RouteDefinition {
     {
         match self.methods {
             Methods::GetHead => get(handler),
+            Methods::Post => post(handler),
         }
     }
 
@@ -227,6 +232,20 @@ pub const HEALTH_READY: RouteDefinition = route(
     "text/plain; charset=utf-8",
 );
 
+/// The same metadata selects the actual registration handler's path and method.
+pub const SYSTEM_CREATE: RouteDefinition = RouteDefinition {
+    methods: Methods::Post,
+    parameters: Parameters::None,
+    ..route(
+        "/systems",
+        &["systems"],
+        "createSystem",
+        "Create a minimal System",
+        Family::Registration,
+        "application/geo+json",
+    )
+};
+
 const ROUTES: [RouteDefinition; 15] = [
     LANDING,
     CONFORMANCE,
@@ -291,14 +310,20 @@ fn success(route: RouteDefinition, head: bool, description: &str) -> Value {
     response
 }
 
-fn openapi(boundary: &HttpBoundary, schema: &Value) -> Result<Value, Problem> {
+fn openapi(
+    boundary: &HttpBoundary,
+    schema: &Value,
+    system_creation: bool,
+    authentication: Authentication,
+) -> Result<Value, Problem> {
     let mut paths = Map::new();
     for route in ROUTES {
         let mut methods = Map::new();
-        let method_names = match route.methods {
-            Methods::GetHead => ["get", "head"],
+        let method_names: &[&str] = match route.methods {
+            Methods::GetHead => &["get", "head"],
+            Methods::Post => &["post"],
         };
-        for method in method_names {
+        for &method in method_names {
             let head = method == "head";
             let mut responses = Map::new();
             responses.insert(
@@ -346,7 +371,7 @@ fn openapi(boundary: &HttpBoundary, schema: &Value) -> Result<Value, Problem> {
     landing["properties"]["links"] = json!({"$ref": "#/components/schemas/Links"});
     let mut conformance = schema["$defs"]["conformance"].clone();
     conformance["properties"]["links"] = json!({"$ref": "#/components/schemas/Links"});
-    Ok(json!({
+    let mut api = json!({
         "openapi": "3.1.0",
         "jsonSchemaDialect": "https://spec.openapis.org/oas/3.1/dialect/base",
         "info": {
@@ -369,7 +394,75 @@ fn openapi(boundary: &HttpBoundary, schema: &Value) -> Result<Value, Problem> {
                 }
             }
         }}
-    }))
+    });
+    if system_creation {
+        api["info"]["description"] = json!("Initial discovery, health and explicitly enabled minimal System creation. Retrieval, other resource operations and complete conformance classes are not advertised. OpenAPI 3.1 availability does not declare the separate OAS 3.0 class.");
+        api["paths"][SYSTEM_CREATE.path()] = json!({"post": system_creation_operation(authentication)});
+    }
+    if system_creation && authentication == Authentication::Jwt {
+        api["components"]["securitySchemes"] = json!({
+            "bearerAuth": {"type":"http", "scheme":"bearer", "bearerFormat":"JWT",
+                "description":"Token verified under configured issuer, audience and trust; successful authentication alone grants no source/action permission."}
+        });
+    }
+    Ok(api)
+}
+
+fn system_creation_operation(authentication: Authentication) -> Value {
+    let mut operation = json!({
+        "operationId": SYSTEM_CREATE.operation,
+        "summary": SYSTEM_CREATE.title,
+        "tags": [SYSTEM_CREATE.family.name()],
+        "description": "Partial creation contract: one non-spatial GeoJSON System with uid, name and featureType. The configured ingestion source and verified caller determine authority, never body attribution. Optional content outside this documented subset is rejected, not silently discarded. Success is an empty 201; Accept does not select a resource body. Location identifies the new canonical resource, whose GET is not implemented in this increment. This POST-only collection target currently has no representation or validator: If-Match fails, If-None-Match passes after authorization. Supplied local id and generated links are structurally checked then ignored as authority; original bytes remain restricted evidence.",
+        "x-glaux-conformance-dependencies": [],
+        "parameters": [{
+            "name":"Idempotency-Key", "in":"header", "required":false,
+            "description":"Optional Glaux retry extension, scoped to verified caller/configured source and this operation. Same exact intent within configured retention returns the original Location after reauthorization; different intent conflicts. Expiry permits new admission and does not guarantee deduplication.",
+            "schema":{"type":"string", "minLength":1, "maxLength":256}
+        }],
+        "requestBody": {
+            "required":true,
+            "content":{"application/geo+json":{
+                "schema":{
+                    "type":"object", "required":["type","geometry","properties"],
+                    "additionalProperties":false,
+                    "properties":{
+                        "type":{"const":"Feature"}, "geometry":{"type":"null"},
+                        "id":{"oneOf":[{"type":"string","minLength":1},{"type":"number"}],"description":"Ignored after structural checking; the server generates its own UUIDv7 local identifier."},
+                        "links":{"type":"array","minItems":1,"items":{"type":"object","required":["href"],"properties":{
+                            "href":{"type":"string","format":"uri"}, "rel":{"type":"string"}, "type":{"type":"string"},
+                            "hreflang":{"type":"string","minLength":1,"pattern":"^([a-z]{2}(-[A-Z]{2})?)|x-default$"},
+                            "title":{"type":"string","minLength":1}, "uid":{"type":"string","format":"uri"},
+                            "rt":{"type":"string","format":"uri"}, "if":{"type":"string","format":"uri"}
+                        }},"description":"Optional generated-link input is checked using the pinned CSAPI link schema before removal; it supplies no stored association or authority."},
+                        "properties":{
+                            "type":"object", "required":["uid","name","featureType"], "additionalProperties":false,
+                            "properties":{
+                                "uid":{"type":"string","format":"uri","description":"Absolute URI, byte-preserved; Glaux limit 4096 UTF-8 bytes."},
+                                "name":{"type":"string","minLength":1,"description":"Glaux limit 4096 UTF-8 bytes."},
+                                "featureType":{"type":"string","enum":["sosa:Sensor","sosa:Actuator","sosa:Sampler","sosa:Platform","sosa:System","http://www.w3.org/ns/sosa/Sensor","http://www.w3.org/ns/sosa/Actuator","http://www.w3.org/ns/sosa/Sampler","http://www.w3.org/ns/sosa/Platform","http://www.w3.org/ns/sosa/System"]}
+                            }
+                        }
+                    }
+                },
+                "example":{"type":"Feature","geometry":null,"properties":{"uid":"urn:glaux:example:thermometer","name":"Example thermometer","featureType":"sosa:Sensor"}}
+            }}
+        },
+        "responses":{
+            "201":{"description":"Creation committed, or same-key same-intent retained outcome reauthorized. Empty body; no resource representation or ETag.","headers":{
+                "Location":{"required":true,"schema":{"type":"string","format":"uri"},"description":"Configured public root plus /systems/{server-generated UUIDv7}; never derived from Host or forwarding headers."},
+                "Cache-Control":{"schema":{"type":"string","const":"private, no-store"}}
+            }},
+            "default":{"description":"Problem Details:400 malformed input;401 credentials;403 source/action denied;409 UID or retry conflict;412 false precondition;413 request limit;415 unsupported media/coding;422 unsupported minimal-slice content;503 required dependency unavailable. No accepted resource/outgoing work on rejected pre-admission requests; bounded safe denial auditing is separate.","content":{"application/problem+json":{"schema":{"$ref":"#/components/schemas/Problem"}}}}
+        }
+    });
+    operation["security"] = if authentication == Authentication::Jwt {
+        json!([{"bearerAuth":[]}])
+    } else {
+        operation["x-glaux-development-identity"] = json!("Explicit loopback-only configured identity; no caller credential header. Configured source/action permissions are still mandatory, and anonymous/disabled authentication cannot enable this operation.");
+        json!([])
+    };
+    operation
 }
 
 fn html(text: &str) -> String {
@@ -464,17 +557,37 @@ impl Payload {
 /// The caller opts in, merges this router with health, then wraps HttpBoundary.
 /// All material is generated once from explicit configuration, never Host input.
 pub fn router(boundary: &HttpBoundary) -> Result<Router, Problem> {
-    let landing = landing(boundary)?;
+    router_with_system_creation(boundary, false, Authentication::Disabled)
+}
+
+/// The enable flag and authentication mode are the same validated values used
+/// to install the creation handler. A POST-only route is not a browsable list.
+pub fn router_with_system_creation(
+    boundary: &HttpBoundary,
+    system_creation: bool,
+    authentication: Authentication,
+) -> Result<Router, Problem> {
+    let mut landing = landing(boundary)?;
+    if system_creation {
+        landing["description"] = json!("Initial discovery and enabled minimal System creation, documented through the linked API definition. Retrieval and completed conformance classes are not advertised.");
+    }
     let conformance = conformance(boundary)?;
     let mut schema: Value = serde_json::from_str(include_str!("../assets/discovery-schema.json"))
         .map_err(|_| Problem::internal())?;
     schema["$id"] = json!(boundary.link(SCHEMA.segments, &[])?);
-    let description = openapi(boundary, &schema)?;
+    let description = openapi(boundary, &schema, system_creation, authentication)?;
+    let mut documentation = documentation(boundary)?;
+    if system_creation {
+        documentation = documentation.replace(
+            "Discovery and operational health only. No resource families or conformance classes are advertised yet. No credentials or Try-it-out controls are enabled.",
+            "Discovery, health and minimal System creation. No retrieval or completed conformance class is advertised. Interactive submission remains disabled; creation requires the configured identity and source permissions.",
+        );
+    }
     let documents = [
         (LANDING, Payload::json(landing.clone())),
         (CONFORMANCE, Payload::json(conformance.clone())),
         (API, Payload::json(description)),
-        (DOCS, Payload::text(documentation(boundary)?)),
+        (DOCS, Payload::text(documentation)),
         (INIT, Payload::text(initializer(boundary)?)),
         (
             BUNDLE,
@@ -549,7 +662,7 @@ mod tests {
             "https://example.test/prefix/conformance"
         );
         let schema = serde_json::from_str(include_str!("../assets/discovery-schema.json")).unwrap();
-        let api = openapi(&boundary, &schema).unwrap();
+        let api = openapi(&boundary, &schema, false, Authentication::Disabled).unwrap();
         assert_eq!(api["servers"][0]["url"], "https://example.test/prefix");
         assert_eq!(api["paths"].as_object().unwrap().len(), 15);
         assert_eq!(
@@ -579,5 +692,37 @@ mod tests {
         assert!(init.contains("supportedSubmitMethods: []"));
         assert!(init.contains("queryConfigEnabled: false"));
         assert!(!init.contains("location.search"));
+    }
+
+    #[test]
+    fn system_creation_description_tracks_installation_and_authentication() {
+        let boundary =
+            HttpBoundary::new(Some("https://example.test/prefix"), Limits::default()).unwrap();
+        let schema = serde_json::from_str(include_str!("../assets/discovery-schema.json")).unwrap();
+        let disabled = openapi(&boundary, &schema, false, Authentication::Jwt).unwrap();
+        assert!(disabled["paths"].get("/systems").is_none());
+        for mode in [Authentication::Jwt, Authentication::Development] {
+            let api = openapi(&boundary, &schema, true, mode).unwrap();
+            assert_eq!(api["paths"].as_object().unwrap().len(), 16);
+            let methods = api["paths"]["/systems"].as_object().unwrap();
+            assert_eq!(methods.keys().map(String::as_str).collect::<Vec<_>>(), vec!["post"]);
+            assert!(api["paths"].get("/systems/{id}").is_none());
+            let post = &methods["post"];
+            assert!(post["responses"]["201"].get("content").is_none());
+            assert_eq!(post["responses"]["201"]["headers"]["Location"]["required"], true);
+            assert_eq!(post["requestBody"]["content"].as_object().unwrap().keys().collect::<Vec<_>>(), vec!["application/geo+json"]);
+            assert_eq!(post["requestBody"]["content"]["application/geo+json"]["example"], json!({
+                "type":"Feature", "geometry":null,
+                "properties":{"uid":"urn:glaux:example:thermometer","name":"Example thermometer","featureType":"sosa:Sensor"}
+            }));
+            if mode == Authentication::Jwt {
+                assert_eq!(post["security"], json!([{"bearerAuth":[]}]));
+                assert_eq!(api["components"]["securitySchemes"]["bearerAuth"]["scheme"], "bearer");
+            } else {
+                assert_eq!(post["security"], json!([]));
+                assert!(post["x-glaux-development-identity"].as_str().unwrap().contains("loopback"));
+            }
+            assert_eq!(conformance(&boundary).unwrap()["conformsTo"], json!([]));
+        }
     }
 }

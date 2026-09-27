@@ -6,12 +6,12 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial build, validation, System writes, HTTP, authentication, permissions and discovery — 27 September 2026 UTC.**
+**Initial foundations, discovery and minimal HTTP System creation — 27 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **302 implementation tasks**: the original 286 plus 16 experimental Protobuf tasks, each linked to its published issue. These are planned tasks, not completed software.
 - Apache-2.0 licensing and the contributor/review workflow are in place. The [active main-branch rule](https://github.com/DGIWG-P507/glaux-server/rules/23796335) requires a pull request and passing, up-to-date CI, with no bypass or mandatory human approval. [Issue #6](https://github.com/DGIWG-P507/glaux-server/issues/6) and [PR #314](https://github.com/DGIWG-P507/glaux-server/pull/314) record settings, failed/missing-check blocking proofs, actual runs and review.
-- The initial three-package Rust workspace and [CI suite](docs/ci.md) cover formatting, Clippy, build, executable regressions, real database/listener tests and controls against false-green results. The [dependency/licence inventory](docs/dependencies.md) records what those runs use. Internal System writes, health routes and opt-in discovery/documentation exist; this is not yet a runnable CSAPI resource service.
+- The initial three-package Rust workspace and [CI suite](docs/ci.md) cover formatting, Clippy, build, executable regressions, real database/listener tests and controls against false-green results. The [dependency/licence inventory](docs/dependencies.md) records what those runs use. Health, opt-in discovery and minimal authenticated System creation exist; this is not yet a complete CSAPI resource service.
 
 Use the [clean check instructions](docs/ci.md#reproduce-the-checks) and the [Build workflow](https://github.com/DGIWG-P507/glaux-server/actions/workflows/build.yml). Builds and disposable database tests run on GitHub-hosted Linux; no Rust/database installation on the company laptop or permanent cloud service is required. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records planning decisions; issues and PRs record execution.
 
@@ -29,7 +29,7 @@ locators, URI-form published UIDs and authority-qualified source identifiers.
 Strict parsing, fallible generation and type-boundary checks prevent accidental
 mixing; identifiers do not grant permission or establish observation time.
 The initial System repository now enforces database uniqueness; complete
-resource-family models and HTTP behavior remain later work.
+resource-family models and operations beyond minimal creation remain later work.
 
 [Exact numeric primitives](docs/exact-numbers.md) now preserve large Counts and
 decimal measured values without silent rounding, compare values exactly and keep
@@ -54,8 +54,8 @@ endpoints, a patch engine or complete resource semantics.
 authority-qualified source identifiers and typed parent relationships using
 SQLx/PostgreSQL. Conflicting identities and invalid parents roll back the entire
 creation. Packaged migrations run only through an explicit administrative command;
-schema checks do not upgrade a database. Full System descriptions and HTTP
-endpoints remain later work.
+schema checks do not upgrade a database. Full System descriptions and operations
+beyond minimal creation remain later work.
 
 [Initial revision/source storage](docs/revision-storage.md) retains original
 document bytes, media type and digest separately from generated representations.
@@ -68,8 +68,8 @@ application write, not a temporal view.
 original document and revision, the audit record and outgoing work in one
 database transaction. Failure cannot leave a partially accepted creation.
 Minimal denied-attempt metadata can be recorded separately without creating
-resources or outgoing work. This trusted internal boundary is not yet an HTTP
-permission check, dispatcher or public API.
+resources or outgoing work. The minimal HTTP creation route now calls this shared
+boundary through verified permissions; outgoing delivery remains later work.
 
 [Conditional System writes](docs/conditional-writes.md) reject an update
 based on an old supplied revision without leaving resource, audit or outgoing
@@ -81,15 +81,15 @@ This is an internal foundation, not yet an HTTP update endpoint.
 [Optional creation retries](docs/write-retries.md) recover the original committed
 System and its evidence after a repeated request or lost response. Keys are scoped
 to verified caller/source and target; changed content conflicts, replay disclosure
-is reauthorized, and expiry ends the duplicate-prevention guarantee. This remains
-an internal application capability, not yet a public HTTP extension.
+is reauthorized, and expiry ends the duplicate-prevention guarantee. Minimal
+HTTP creation exposes this through an optional documented Idempotency-Key header.
 
 [Runtime configuration and health](docs/runtime-configuration.md) now provide
 `check-config`, explicit `serve`, and separate `/health/live` and `/health/ready`
 routes. Startup rejects unsafe configuration and incompatible storage without
 migrating or resetting it. Health diagnostics omit secrets; database loss makes
-readiness fail while the process can still report liveness. CSAPI resource
-endpoints remain later tasks.
+readiness fail while the process can still report liveness. Resource operations
+are separately enabled and remain limited to the documented creation subset.
 
 [Initial discovery and API documents](docs/discovery.md) are explicitly enabled
 with `discovery: true` and a configured public API root. The landing page links
@@ -97,6 +97,13 @@ to an honest empty conformance declaration, an OpenAPI 3.1 description and local
 browser documentation, schemas and examples. The pinned renderer needs no CDN
 or external validation service. These documents describe the enabled routes;
 they do not claim that a CSAPI resource family or conformance class is complete.
+
+[Minimal System creation](docs/system-create.md) accepts an explicitly enabled
+`POST /systems` with one documented GeoJSON representation. To register that
+System, it validates the request, checks the verified caller's source permission,
+and commits identity, original bytes, revision, audit and outgoing work together.
+Only then does it return an empty 201 response with a canonical Location.
+System retrieval belongs to the next task; full CRUD and conformance remain later.
 
 The [shared HTTP boundary](docs/http-boundary.md) adds bounded requests, safe
 problem responses, media-preference selection and links built from an explicitly
@@ -120,9 +127,9 @@ Queries restrict records before counts and links; writes cannot gain authority
 from a submitted producer or source claim. Selected denied mutations retain safe
 audit information within explicit limits, and policy/audit failures never grant
 access. Independent two-source listener/database checks exercise this shared
-boundary. These are foundations for later resource routes: the production
-listener exposes public health and explicitly enabled discovery, not protected
-CSAPI resource operations.
+boundary. The production creation route uses these permissions; health and
+explicitly enabled discovery remain public, and other resource routes remain
+later work.
 
 ## Planned capabilities
 

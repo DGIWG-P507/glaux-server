@@ -620,8 +620,22 @@ impl Admission {
         connection: &mut PgConnection,
         ctx: &OperationContext,
         source: &str,
+        input: CreateSystem,
+        retry: Option<&RetryKey>,
+    ) -> Result<WriteReceipt, AccessError> {
+        self.create_system_if(connection, ctx, source, input, retry, true).await
+    }
+
+    /// HTTP conditions describe the request target, not the candidate identity.
+    /// Check only after authorizing the selected candidate or retained receipt.
+    pub(crate) async fn create_system_if(
+        &self,
+        connection: &mut PgConnection,
+        ctx: &OperationContext,
+        source: &str,
         mut input: CreateSystem,
         retry: Option<&RetryKey>,
+        precondition_satisfied: bool,
     ) -> Result<WriteReceipt, AccessError> {
         let create = self.permissions(ctx, Action::Create)?;
         // A fresh candidate ID is not part of retry intent. Only the callback
@@ -715,7 +729,7 @@ impl Admission {
                     callback_error = AccessKind::Unavailable;
                     return false;
                 };
-                create.allows(source, receipt.system_id)
+                let permitted = create.allows(source, receipt.system_id)
                     && (!replay || read.allows(source, receipt.system_id))
                     && parent.as_ref().is_none_or(|(id, owner, link)| {
                         (replay || create.allows(owner, *id))
@@ -723,12 +737,20 @@ impl Admission {
                             && link
                                 .as_ref()
                                 .is_none_or(|(id, owner)| read.allows(owner, *id))
-                    })
+                    });
+                if permitted && !precondition_satisfied {
+                    callback_error = AccessKind::Precondition;
+                    return false;
+                }
+                permitted
             },
         )
         .await;
         match result {
             Ok(receipt) => Ok(receipt),
+            Err(StorageError::Denied) if matches!(callback_error, AccessKind::Precondition) => {
+                Err(ctx.error(AccessKind::Precondition))
+            }
             Err(StorageError::Denied) if matches!(callback_error, AccessKind::Unavailable) => {
                 Err(ctx.error(AccessKind::Unavailable))
             }

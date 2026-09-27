@@ -47,15 +47,22 @@ behavior. The configured public root is the sole absolute-link authority; the
 backend router remains unprefixed, so a prefix deployment must strip its prefix
 before forwarding. No forwarded origin header is trusted.
 
-The first surface has no collections or CSAPI resource operations, no standards
+The original issue #23 surface has no collections or CSAPI resource operations, no standards
 conformance declarations, and no draft experiments. Health is described as an
 operational extension, not a collection or conformance class. The human page and
 machine document describe only this running surface.
 
+Issue #24 adds conditional description of [minimal System creation](system-create.md):
+when separately enabled, `/systems` has POST only, its bounded GeoJSON request,
+an empty 201 with Location, and its selected JWT or loopback-development identity
+contract. It does not advertise collection GET, canonical item GET or another
+conformance class. Disabled creation leaves the original discovery inventory
+unchanged. Browser mutation controls remain disabled.
+
 ## Runtime and renderer boundary
 
 Small typed route definitions sit with the handlers. The same definitions
-assemble GET/HEAD routes, discovery links and OpenAPI paths, while independently
+assemble GET/HEAD and the enabled POST route, discovery links and OpenAPI paths, while independently
 written tests check their claims. Parameters, representations, resource family
 and conformance dependencies are explicit; initial dependencies are empty because
 no class is yet complete. This is code metadata, not a registration service.
@@ -72,6 +79,8 @@ implementation's definition.
 
 JSON Schema and examples here are original Glaux discovery assets, not copies of
 the OGC/SensorML corpus. They make no resource-schema or conformance claim.
+The enabled POST's inline schema/example separately describe its documented
+bounded request; they are not a substitute for the pinned standards validator.
 
 ## Evidence
 

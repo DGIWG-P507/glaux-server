@@ -1,6 +1,7 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "discovery::tests::system_creation_description_tracks_installation_and_authentication",
     "discovery::tests::initial_route_definitions_are_unique_and_claim_no_classes",
     "discovery::tests::generated_documents_keep_configured_prefix_and_local_references",
     "discovery::tests::documentation_is_external_local_and_escapes_markup",
@@ -59,6 +60,10 @@ REQUIRED_RUST_TESTS = [
     "identity::tests::uid_preserves_absolute_uri_spelling_without_local_id_inference",
     "identity::tests::source_identity_requires_both_fields_and_preserves_text",
     "startup_requires_an_explicit_command",
+    "system_http::tests::system_creation_conditions_target_absent_collection_representation",
+    "system_http::tests::system_creation_projection_retains_supported_meaning_and_bounds",
+    "system_http::tests::system_creation_retry_header_is_optional_single_and_bounded",
+    "configuration::tests::runtime_system_creation_requires_explicit_source_authority_and_bounds",
     "configuration::tests::runtime_config_rejects_unsafe_development_and_unknown_fields",
     "configuration::tests::runtime_config_secrets_are_required_bounded_and_not_in_errors",
     "configuration::tests::runtime_http_config_is_explicit_strict_and_bounded",

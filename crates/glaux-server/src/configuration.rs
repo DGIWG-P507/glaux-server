@@ -2,6 +2,7 @@
 use crate::authentication::{Authenticator, DevelopmentConfig, JwtConfig, SystemClock};
 use crate::authorization::{Admission, ConfiguredPolicy, PolicyConfig, SystemRateClock};
 use crate::http_boundary::{HttpBoundary, Limits};
+use crate::system_http::SystemCreationConfig;
 use serde::Deserialize;
 use sqlx::ConnectOptions;
 use sqlx::postgres::{PgConnectOptions, PgSslMode};
@@ -40,6 +41,7 @@ struct Document {
     policy: Option<PolicyConfig>,
     #[serde(default)]
     discovery: bool,
+    system_creation: Option<SystemCreationConfig>,
     database: SecretReference,
     health_timeout_ms: u64,
     http: Option<HttpDocument>,
@@ -61,6 +63,7 @@ pub struct Configuration {
     authenticator: Authenticator,
     admission: Admission,
     discovery: bool,
+    system_creation: Option<SystemCreationConfig>,
     database: PgConnectOptions,
     timeout: Duration,
     http: HttpBoundary,
@@ -127,7 +130,13 @@ impl Configuration {
         let has_jwt = syntax.get("jwt").is_some();
         let has_development = syntax.get("development").is_some();
         let has_policy = syntax.get("policy").is_some();
+        let has_system_creation = syntax.get("system_creation").is_some();
         let document: Document = serde_json::from_slice(bytes).map_err(|_| ConfigError::Invalid)?;
+        let system_creation = match (has_system_creation, document.system_creation) {
+            (false, None) => None,
+            (true, Some(config)) if config.valid() && document.authentication != Authentication::Disabled => Some(config),
+            _ => return Err(ConfigError::Invalid),
+        };
         let policy = match (has_policy, document.policy) {
             (false, None) => ConfiguredPolicy::deny_all(),
             (true, Some(policy)) => {
@@ -142,7 +151,7 @@ impl Configuration {
         )
         .map_err(|_| ConfigError::Invalid)?;
         let http = document.http.unwrap_or_default();
-        if document.discovery && http.public_api_root.is_none() {
+        if (document.discovery || system_creation.is_some()) && http.public_api_root.is_none() {
             return Err(ConfigError::Invalid);
         }
         let http = HttpBoundary::new(http.public_api_root.as_deref(), http.limits)
@@ -213,6 +222,7 @@ impl Configuration {
             authenticator,
             admission,
             discovery: document.discovery,
+            system_creation,
             database: options,
             timeout: Duration::from_millis(document.health_timeout_ms),
             http,
@@ -234,6 +244,12 @@ impl Configuration {
     /// Discovery is an explicit deployment choice, never inferred from Host.
     pub fn discovery_enabled(&self) -> bool {
         self.discovery
+    }
+    pub fn system_creation_enabled(&self) -> bool {
+        self.system_creation.is_some()
+    }
+    pub(crate) fn system_creation(&self) -> Option<SystemCreationConfig> {
+        self.system_creation.clone()
     }
     /// Share the same validated policy and denial-rate state across route handlers.
     /// Authentication must supply a verified caller before using this boundary.
@@ -455,6 +471,33 @@ mod tests {
         assert!(!parse(&input.to_string()).unwrap().discovery_enabled());
         input.as_object_mut().unwrap().remove("http");
         assert!(!parse(&input.to_string()).unwrap().discovery_enabled());
+    }
+
+    #[test]
+    fn runtime_system_creation_requires_explicit_source_authority_and_bounds() {
+        use serde_json::{Value, json};
+        let mut input: Value = serde_json::from_str(&document("127.0.0.1:8080", "development")).unwrap();
+        assert!(!parse(&input.to_string()).unwrap().system_creation_enabled());
+        input["system_creation"] = json!({"source":"source-a", "retry_retention_seconds":3600});
+        assert!(parse(&input.to_string()).is_err());
+        input["http"] = json!({"public_api_root":"https://example.test/prefix"});
+        assert!(parse(&input.to_string()).unwrap().system_creation_enabled());
+        assert!(!parse(&input.to_string()).unwrap().discovery_enabled());
+        for config in [Value::Null, json!(true), json!({"source":"source-a"}),
+            json!({"source":"", "retry_retention_seconds":3600}),
+            json!({"source":"line\nbreak", "retry_retention_seconds":3600}),
+            json!({"source":"x".repeat(257), "retry_retention_seconds":3600}),
+            json!({"source":"source-a", "retry_retention_seconds":0}),
+            json!({"source":"source-a", "retry_retention_seconds":-1}),
+            json!({"source":"source-a", "retry_retention_seconds":4294967296u64}),
+            json!({"source":"source-a", "retry_retention_seconds":3600, "trust_body_source":true})] {
+            let mut invalid = input.clone();
+            invalid["system_creation"] = config;
+            assert!(parse(&invalid.to_string()).is_err());
+        }
+        input["authentication"] = json!("disabled");
+        input.as_object_mut().unwrap().remove("development");
+        assert!(parse(&input.to_string()).is_err());
     }
 
     #[test]

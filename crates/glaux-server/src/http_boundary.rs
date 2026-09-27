@@ -65,6 +65,7 @@ enum Kind {
     NotFound,
     Method,
     NotAcceptable,
+    Unprocessable,
     RequestTimeout,
     BodySize,
     UriSize,
@@ -117,6 +118,9 @@ impl Problem {
     }
     pub(crate) fn not_acceptable() -> Self {
         Self::new(Kind::NotAcceptable)
+    }
+    pub(crate) fn unprocessable() -> Self {
+        Self::new(Kind::Unprocessable)
     }
     pub(crate) fn unsupported_media_type(coding: bool) -> Self {
         Self {
@@ -179,6 +183,12 @@ impl Problem {
                 "not-acceptable",
                 "Not Acceptable",
                 "No offered representation is acceptable.",
+            ),
+            Kind::Unprocessable => (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                "unprocessable-content",
+                "Unprocessable Content",
+                "The request content is not supported by this operation.",
             ),
             Kind::RequestTimeout => (
                 StatusCode::REQUEST_TIMEOUT,
@@ -306,11 +316,30 @@ impl HttpBoundary {
     pub async fn read_json(&self, request: Request) -> Result<Value, Problem> {
         media::check_coding(request.headers())?;
         media::check_json_media(request.headers())?;
+        let bytes = self.read_bytes(request).await?;
+        Self::parse_json(&bytes)
+    }
+
+    /// Preserve exact JSON source octets after the same bounded parsing checks.
+    /// Only the route's explicitly selected input media types are accepted.
+    pub async fn read_json_bytes(&self, request: Request, offered: &[&str]) -> Result<Bytes, Problem> {
+        media::check_coding(request.headers())?;
+        media::check_media(request.headers(), offered)?;
+        let bytes = self.read_bytes(request).await?;
+        Self::parse_json(&bytes)?;
+        Ok(bytes)
+    }
+
+    async fn read_bytes(&self, request: Request) -> Result<Bytes, Problem> {
         let deadline = Instant::now() + Duration::from_millis(self.limits.timeout_ms);
         let bytes = timeout_at(deadline, collect(request.into_body(), self.limits))
             .await
             .map_err(|_| Problem::new(Kind::RequestTimeout))??;
-        validation::parse(&bytes).map_err(|failure| match failure {
+        Ok(bytes)
+    }
+
+    fn parse_json(bytes: &[u8]) -> Result<Value, Problem> {
+        validation::parse(bytes).map_err(|failure| match failure {
             Failure::Size => Problem::new(Kind::BodySize),
             _ => Problem::bad_request(),
         })
@@ -544,9 +573,13 @@ async fn boundary(State(state): State<HttpBoundary>, request: Request, next: Nex
     };
     if response.status() == StatusCode::METHOD_NOT_ALLOWED {
         let allow = response.headers().get(header::ALLOW).cloned();
+        let cache = response.headers().get(header::CACHE_CONTROL).cloned();
         response = Problem::new(Kind::Method).into_response();
         if let Some(value) = allow {
             response.headers_mut().insert(header::ALLOW, value);
+        }
+        if let Some(value) = cache {
+            response.headers_mut().insert(header::CACHE_CONTROL, value);
         }
     }
     if !response.headers().contains_key("x-request-id")
