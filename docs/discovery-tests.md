@@ -57,6 +57,29 @@ renderer asset bytes. Asset hashes are checked independently against their
 pinned manifest before execution. Browser execution is a separate hosted proof;
 the container proof does not claim that parsing HTML executes JavaScript.
 
+`python3 scripts/test-discovery-browser.py` separately uses the hosted runner's
+already-provisioned Chrome and records its actual version and runner image.
+It follows the root's documentation link and checks the actual initial rendered
+title, all 30 independently expected GET/HEAD operations, partial-implementation
+notice and absence of renderer errors and initial execution controls. Six
+known-bad DOM fixtures exercise these assertions. Same-origin and external
+specification/configuration query overrides must leave the rendered contract
+unchanged and must not request the test-controlled replacement targets.
+
+The browser uses fresh owned profiles, an owned deny-only proxy, disabled QUIC
+and non-loopback DNS resolution. An external canary first proves the proxy's
+rejection. Every subsequent proxy request is also denied; there is no external
+hostname exception list or upstream forwarding path. The evidence records all
+blocked attempts without attributing them to the page or the browser. Chrome
+can attempt external services despite its background-network disabling flags;
+successful rendering with those requests denied proves no successful external
+response is needed, not that the process attempted no telemetry. Unexpected
+proxy errors fail the check; a client disconnect while writing an already
+recorded denial is retained as such. Exact local request inventory checks,
+finite child-process deadlines and listener/profile/proxy cleanup remain
+required. This initial-DOM smoke does not click through collapsed operations;
+the initializer's disabled submit-method configuration is checked separately.
+
 The test-only `glaux-standards` example `discovery-schema-proof` compiles the
 actual downloaded discovery schema and validates both actual downloaded
 examples, for direct and prefixed deployments. It reuses the existing pinned

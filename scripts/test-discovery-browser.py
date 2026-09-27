@@ -148,26 +148,47 @@ class DenyProxy(BaseHTTPRequestHandler):
         self.connection.settimeout(5)
 
     def deny(self):
+        attempt = {"method": self.command, "target": self.path,
+                   "decision": "blocked; no upstream connection", "client_disconnected": False}
         with self.server.record_lock:
             require(len(self.server.attempts) < 200, "Browser proxy attempt budget exceeded")
-            self.server.attempts.append((self.command, self.path))
+            self.server.attempts.append(attempt)
         body = ("<!doctype html><title>" + DENIED + "</title><p>" + DENIED + "</p>").encode()
-        self.send_response(502)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Connection", "close")
-        self.end_headers()
-        if self.command != "HEAD":
-            self.wfile.write(body)
-        self.close_connection = True
+        try:
+            self.send_response(502)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Connection", "close")
+            self.end_headers()
+            if self.command != "HEAD":
+                self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError):
+            # Chrome may exit after rejecting a CONNECT response. The attempt
+            # was denied before this write; no upstream socket exists to leak.
+            with self.server.record_lock:
+                attempt["client_disconnected"] = True
+        finally:
+            self.close_connection = True
 
     do_GET = deny
     do_HEAD = deny
     do_POST = deny
     do_CONNECT = deny
+    do_PUT = deny
+    do_DELETE = deny
+    do_OPTIONS = deny
+    do_PATCH = deny
+    do_TRACE = deny
 
     def log_message(self, *_):
         pass
+
+
+class DenyServer(ThreadingHTTPServer):
+    def handle_error(self, *_):
+        # An exception in a request thread must not silently permit a pass.
+        with self.record_lock:
+            self.errors.append(type(sys.exc_info()[1]).__name__)
 
 
 def chrome_dom(chrome, url, profile, proxy, evidence, label):
@@ -235,23 +256,29 @@ def main():
     build = subprocess.run(["cargo", "build", "--locked", "--offline", "-p", "glaux-server", "--example",
                             "discovery-browser-fixture"], capture_output=True, text=True, timeout=30)
     require(build.returncode == 0, "Browser fixture failed to build: " + build.stdout + build.stderr)
-    proxy = ThreadingHTTPServer(("127.0.0.1", 0), DenyProxy)
-    proxy.daemon_threads = True
+    proxy = DenyServer(("127.0.0.1", 0), DenyProxy)
+    # server_close waits for bounded request threads before their errors/results
+    # are inspected, so a late handler failure cannot escape the final check.
+    proxy.daemon_threads = False
     proxy.attempts = []
+    proxy.errors = []
     proxy.record_lock = threading.Lock()
     thread = threading.Thread(target=proxy.serve_forever, daemon=True)
     thread.start()
     process = None
     fixture_output = ""
     root = None
+    canary_attempts = []
     try:
         with tempfile.TemporaryDirectory(prefix="glaux-discovery-browser-", dir=runner_temp) as directory:
             directory = Path(directory)
             canary = chrome_dom(chrome, CANARY, directory / "canary", proxy, evidence, "egress-canary")
-            require(DENIED in canary and ("GET", CANARY) in proxy.attempts,
+            require(DENIED in canary and any(row["method"] == "GET" and row["target"] == CANARY
+                                           for row in proxy.attempts),
                     "External-request canary did not reach the deny-only proxy")
             print("Discovery browser egress canary: request rejected by owned deny-only proxy.", flush=True)
             with proxy.record_lock:
+                canary_attempts = list(proxy.attempts)
                 proxy.attempts.clear()
             process = subprocess.Popen([str(ROOT / "target/debug/examples/discovery-browser-fixture")],
                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
@@ -285,9 +312,6 @@ def main():
                 document = chrome_dom(chrome, target, directory / label, proxy, evidence, label)
                 assert_rendered(document)
                 print("Discovery browser rendered: " + label, flush=True)
-            with proxy.record_lock:
-                require(not proxy.attempts, "Documentation browser attempted off-origin network access: "
-                        + repr(proxy.attempts))
     finally:
         try:
             if process is not None:
@@ -298,6 +322,21 @@ def main():
             proxy.server_close()
             thread.join(timeout=5)
             require(not thread.is_alive(), "Deny-only proxy did not stop")
+            with proxy.record_lock:
+                blocked_attempts = list(proxy.attempts)
+                proxy_errors = list(proxy.errors)
+            (evidence / "discovery-browser-proxy.json").write_text(json.dumps({
+                "canary_phase_blocked_attempts": canary_attempts,
+                "rendering_phase_blocked_attempts": blocked_attempts,
+                "unexpected_proxy_errors": proxy_errors,
+                "attribution": "Attempts are recorded without classifying browser or page origin.",
+            }, indent=2))
+    require(not proxy_errors, "Deny-only proxy encountered an unexpected error: " + repr(proxy_errors))
+    # Browser processes can attempt background services despite the disabling
+    # flags. Every proxy request is denied, without a hostname exception list.
+    # These test-controlled targets are unambiguously forbidden query overrides.
+    require(not any("glaux-browser-denial.invalid" in row["target"] for row in blocked_attempts),
+            "Browser attempted a query-supplied external specification/configuration/validator")
     requests = [json.loads(line.removeprefix("Discovery browser request: "))
                 for line in fixture_output.splitlines() if line.startswith("Discovery browser request: ")]
     require(requests and all(row["method"] == "GET" for row in requests),
@@ -318,7 +357,8 @@ def main():
     (evidence / "discovery-browser.json").write_text(json.dumps({
         "chrome": version, "runner": runner, "fixture": "production router; no database startup claim",
         "oracle_controls_detected": 6, "rendered_variants": list(attacks),
-        "external_canary_blocked": True, "documentation_external_attempts": [],
+        "external_canary_blocked": True, "rendering_phase_blocked_attempts": blocked_attempts,
+        "external_attempt_attribution": "Not established; all proxy requests are denied.",
         "requests": requests, "listener_stopped": True,
     }, indent=2))
     print(FINAL, flush=True)
