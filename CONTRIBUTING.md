@@ -48,6 +48,31 @@ Since 27 September 2026, implementation pauses for review at fifteen fixed point
 
 **Who runs and closes gates.** The review behind a gate runs only when the project lead authorises it, and only the project lead closes the gate. Implementation assistants never close, relabel or edit gates, and never work around one.
 
+### Changing the implementing assistant
+
+The project lead may hand implementation to a different AI assistant, for example while one is out of usage. The project lead first used this on 27 September 2026, assigning #24's closing record, #25 and #26 to Claude (Anthropic) while Codex (OpenAI) was out of usage.
+
+**The same rules apply to every assistant.** Everything in this file applies unchanged, including separate review, required checks and review gates. In addition:
+
+- **One implementer at a time: claims.**
+  - Every assistant posts to GitHub through the project lead's account. So a claim is a comment whose *text* names the assistant and provider, for example "In progress: Claude (Anthropic), 28 September 2026, on the project lead's instruction".
+  - A claim ends when its issue closes.
+  - **Before starting an issue,** look for another assistant's open claim, any open PR for the issue, and any task branch for it with commits not yet in `main`. Merged task branches are not deleted, so a branch alone does not count.
+  - If there are none, post your claim first.
+  - If there is one, do not start. Ask the project lead.
+- **Reassigning a claimed issue.** Only the project lead reassigns one, for example when the claiming assistant has run out of usage. The new assistant's claim says it is taking over on the lead's instruction, with the date. It continues the existing branch or PR rather than starting a parallel one.
+- **Stopping without finishing.** If you stop before finishing, edit your claim to say you stopped and where the work is.
+- **Record who did the work.** The PR review record and the issue's execution record name the implementing and reviewing assistants and their providers, with models when known.
+- **Keep a cross-provider check.** Sometimes the provider running a phase's gate review also implemented tasks in that phase. Then an assistant from a different provider, or a person, reviews those tasks before the project lead closes the gate. If that is not possible, the gate review states the limitation, and the project lead decides whether to close the gate anyway.
+- **Merging by the project lead.** Some assistants' tool permissions do not allow merging. Such an assistant, immediately before handing over, rechecks the live PR head and its checks, and gives the reviewed head SHA. The project lead merges only if GitHub shows that SHA with passing checks. After the merge, the implementing assistant confirms the merge and writes the issue's execution record. It then closes the issue, as the final step of the same authorised issue; this needs no new `proceed`.
+- **Handing back.** The returning assistant:
+  - pulls `main` in both repositories and re-reads these instructions;
+  - checks claims and gates;
+  - continues from the next ready task.
+  - It does not redo or re-review merged work unless a gate review asks it to.
+
+Each full gate review records which assistants implemented and reviewed the phase's tasks, and what switching taught us.
+
 ## Initial GitHub-hosted build and test path
 
 On 21 September 2026 the project lead selected GitHub-hosted Linux for initial builds/tests. The company laptop is an editing/Git interface, not a required Rust/database host. See [setup inspection and limits](docs/setup.md) and Roadmap v1.37. This does not remove the eventual native/Compose reference instructions.
