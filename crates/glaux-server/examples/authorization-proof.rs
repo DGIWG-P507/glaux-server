@@ -715,11 +715,7 @@ async fn assert_denial(connection: &mut PgConnection, correlation: &str) {
     );
 }
 
-async fn assert_update_denial(
-    connection: &mut PgConnection,
-    correlation: &str,
-    visible: bool,
-) {
+async fn assert_update_denial(connection: &mut PgConnection, correlation: &str, visible: bool) {
     let rows: Vec<String> = sqlx::query_scalar(
         "SELECT json_build_object('actor',actor,'source',source,'operation',operation,
          'target',target_id::text,'revision',revision_id::text,'time',time_source,
@@ -730,7 +726,11 @@ async fn assert_update_denial(
     .fetch_all(connection)
     .await
     .unwrap();
-    assert_eq!(rows.len(), 1, "eligible update denial was not retained exactly once");
+    assert_eq!(
+        rows.len(),
+        1,
+        "eligible update denial was not retained exactly once"
+    );
     let actual: Value = serde_json::from_str(&rows[0]).unwrap();
     assert_eq!(
         actual,
@@ -951,7 +951,10 @@ async fn accepted_and_cross_source(
     fresh_key["candidate_number"] = json!(152);
     fresh_key["retry_key"] = json!("new-key-without-candidate-permission");
     let fresh = request(a, "POST", "/create", Some(fresh_key), "").await;
-    assert_eq!(fresh.status, 403, "fresh retry key bypassed candidate permission");
+    assert_eq!(
+        fresh.status, 403,
+        "fresh retry key bypassed candidate permission"
+    );
     problem(&fresh, 403);
     assert_eq!(
         without_audit(snapshot(connection).await),
@@ -1132,7 +1135,10 @@ async fn unavailable_revocation(
         "",
     )
     .await;
-    assert_eq!(replay.status, 403, "revoked create permission leaked retry receipt");
+    assert_eq!(
+        replay.status, 403,
+        "revoked create permission leaked retry receipt"
+    );
     problem(&replay, 403);
     assert_eq!(
         without_audit(snapshot(connection).await),
