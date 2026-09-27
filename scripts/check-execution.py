@@ -57,6 +57,14 @@ def main():
         command = [sys.executable, "-u", "scripts/test_runtime_health.py"]
         markers = ["Runtime health: all required checks passed."]
         missing = "Required runtime health proof did not execute successfully"
+    elif sys.argv[1:] == ["discovery"]:
+        command = [sys.executable, "-u", "scripts/test_discovery.py"]
+        markers = ["Discovery: all required checks passed."]
+        missing = "Required discovery proof did not execute successfully"
+    elif sys.argv[1:] == ["discovery-browser"]:
+        command = [sys.executable, "-u", "scripts/test-discovery-browser.py"]
+        markers = ["Discovery browser: all required checks passed."]
+        missing = "Required discovery browser proof did not execute successfully"
     elif sys.argv[1:] == ["http-boundary"]:
         command = [sys.executable, "-u", "scripts/test_http_boundary.py"]
         markers = ["HTTP boundary: all required checks passed."]
@@ -74,7 +82,7 @@ def main():
         markers = ["Key refresh: all required checks passed."]
         missing = "Required key-refresh proof did not execute successfully"
     else:
-        sys.exit("Specify exactly rust, database, schema-fuzz, numeric-fuzz, time-fuzz, time-database, system-storage, revision-storage, atomic-write, conditional-write, retry-write, runtime-health, http-boundary, authentication, key-refresh or authorization; no test-selection override.")
+        sys.exit("Specify exactly rust, database, schema-fuzz, numeric-fuzz, time-fuzz, time-database, system-storage, revision-storage, atomic-write, conditional-write, retry-write, runtime-health, discovery, discovery-browser, http-boundary, authentication, key-refresh or authorization; no test-selection override.")
     print("Required command: " + " ".join(command), flush=True)
     try:
         result = subprocess.run(

@@ -1,11 +1,12 @@
-//! Health-only listener. Configured authentication is prepared at startup;
+//! Health and explicitly enabled discovery. Authentication is prepared at startup;
 //! no protected CSAPI resource operation is exposed yet.
 use crate::configuration::Configuration;
+use crate::discovery;
 use crate::storage::check_schema;
+use axum::Router;
 use axum::extract::State;
 use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
-use axum::{Router, routing::get};
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use std::fmt;
@@ -51,6 +52,7 @@ async fn ready(State(health): State<Health>) -> Response {
 #[derive(Clone, Copy, Debug)]
 pub enum RuntimeError {
     Storage,
+    Discovery,
     Listener,
     Signal,
     Serving,
@@ -61,10 +63,11 @@ impl fmt::Display for RuntimeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             Self::Storage => "required storage or schema unavailable",
-            Self::Listener => "health listener unavailable",
+            Self::Discovery => "configured discovery documents unavailable",
+            Self::Listener => "server listener unavailable",
             Self::Signal => "shutdown signal unavailable",
-            Self::Serving => "health listener failed",
-            Self::Shutdown => "bounded health shutdown did not complete",
+            Self::Serving => "server listener failed",
+            Self::Shutdown => "bounded server shutdown did not complete",
         })
     }
 }
@@ -86,14 +89,26 @@ pub async fn serve(config: Configuration) -> Result<(), RuntimeError> {
         pool.close().await;
         return Err(RuntimeError::Storage);
     }
+    let boundary = config.http_boundary();
+    let app = Router::new()
+        .route(
+            discovery::HEALTH_LIVE.path(),
+            discovery::HEALTH_LIVE.method(live),
+        )
+        .route(
+            discovery::HEALTH_READY.path(),
+            discovery::HEALTH_READY.method(ready),
+        )
+        .with_state(health);
+    let app = if config.discovery_enabled() {
+        app.merge(discovery::router(&boundary).map_err(|_| RuntimeError::Discovery)?)
+    } else {
+        app
+    };
+    let app = boundary.router(app);
     let listener = TcpListener::bind(config.listener())
         .await
         .map_err(|_| RuntimeError::Listener)?;
-    let app = Router::new()
-        .route("/health/live", get(live))
-        .route("/health/ready", get(ready))
-        .with_state(health);
-    let app = config.http_boundary().router(app);
     let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
     #[cfg(unix)]
     let mut terminate = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())

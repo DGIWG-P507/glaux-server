@@ -23,6 +23,7 @@ cargo clippy --workspace --all-targets --locked --offline -- -D warnings
 python3 -m compileall -q scripts
 cargo build --workspace --locked --offline
 python3 scripts/check-bootstrap.py
+python3 scripts/renderer_inventory.py
 python3 scripts/check_corpus.py
 python3 -u scripts/check-execution.py rust
 python3 -u scripts/check-execution.py schema-fuzz
@@ -55,6 +56,9 @@ python3 -u scripts/check-execution.py key-refresh
 python3 -u scripts/test-key-refresh-failures.py
 python3 -u scripts/check-execution.py authorization
 python3 -u scripts/test-authorization-failures.py
+python3 -u scripts/check-execution.py discovery
+python3 -u scripts/test-discovery-failures.py
+python3 -u scripts/check-execution.py discovery-browser
 python3 -u scripts/test-ci-failures.py
 python3 -u scripts/test-validation-failures.py
 python3 -u scripts/test-projection-failures.py
@@ -96,7 +100,7 @@ proof for this packaging task, not a claim that schema validation ran.
 [check-execution.py](../scripts/check-execution.py) preserves command failure and
 requires actual successful execution evidence. It accepts exactly `rust`,
 `schema-fuzz`, `numeric-fuzz`, `time-fuzz`, `database`, `time-database`,
-`system-storage`, `revision-storage`, `atomic-write`, `conditional-write`, `retry-write`, `runtime-health`, `http-boundary`, `authentication` or `key-refresh`,
+`system-storage`, `revision-storage`, `atomic-write`, `conditional-write`, `retry-write`, `runtime-health`, `discovery`, `discovery-browser`, `http-boundary`, `authentication`, `authorization` or `key-refresh`,
 not arbitrary selectors. Every named Rust test must execute successfully, and
 each fuzz campaign must emit its completed-invariant marker; the wrapper imposes
 a 180-second process timeout. Both the [lifecycle runner](../scripts/test_database.py)
@@ -189,6 +193,19 @@ inside the owned database. It checks paired action/source/resource scope,
 concealed reads and safe bounded denial records. Its compiled permission fault
 must fail the named cross-source assertion between passing baseline/restored
 runs; setup, compilation and timeout failures cannot satisfy that control.
+
+The [discovery checks](discovery-tests.md) start the actual server with and without
+discovery inside the isolated database harness. Independent requests follow root
+links, check every advertised GET/HEAD method and representation, exercise a
+prefix-stripping proxy and compare state before/after. A compiled false-declaration
+fault must produce its exact behavioral failure between passing baseline and
+restoration. The renderer byte inventory is checked offline. A separate browser
+smoke uses the hosted runner's already-provisioned Chrome (actual version recorded,
+not independently pinned) to render the production router on owned loopback
+listeners, with external browser traffic blocked. Missing Chrome, a missing
+render-completion marker, wrong operation inventory or ignored errors fails;
+HTTP downloads alone are not counted as browser execution. No npm/pip package
+or browser is installed by these checks.
 
 ## Main-branch rule
 

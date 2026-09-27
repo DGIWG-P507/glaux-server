@@ -4,6 +4,7 @@ pub mod authentication;
 pub mod authorization;
 mod authorization_storage;
 pub mod configuration;
+pub mod discovery;
 pub mod http_boundary;
 pub mod revisions;
 pub mod runtime;

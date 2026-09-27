@@ -57,6 +57,7 @@ jobs:
             exit 1
           fi
           python3 scripts/cargo_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/cargo-dependencies.json"
+          python3 scripts/renderer_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/renderer-inventory.json"
           git diff --exit-code -- Cargo.lock
       - name: Lint Rust and check Python syntax
         run: |
@@ -122,6 +123,14 @@ jobs:
         run: |
           python3 -u scripts/check-execution.py authorization | tee "$RUNNER_TEMP/glaux-ci-evidence/authorization.log"
           python3 -u scripts/test-authorization-failures.py
+      - name: Prove initial discovery and reject misleading declarations
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py discovery | tee "$RUNNER_TEMP/glaux-ci-evidence/discovery.log"
+          python3 -u scripts/test-discovery-failures.py
+      - name: Render local API documentation with external browser traffic blocked
+        shell: bash
+        run: python3 -u scripts/check-execution.py discovery-browser | tee "$RUNNER_TEMP/glaux-ci-evidence/discovery-browser.log"
       - name: Check original corpus and offline fault controls
         shell: bash
         run: |

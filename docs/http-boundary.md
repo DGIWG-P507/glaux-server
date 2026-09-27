@@ -3,7 +3,8 @@
 [Issue #19](https://github.com/DGIWG-P507/glaux-server/issues/19) implements
 Roadmap 1.4.2 and Guide §§4.1/4.3/6.2/6.4/7.2/8.1.1. This is reusable
 request/response handling, **not resource operations or a conformance claim**.
-The production listener still exposes only health routes. A separate example
+The production listener uses this boundary for health and opt-in
+[discovery](discovery.md). A separate example
 mounts synthetic fixture routes through the same production boundary for
 [independent real-listener checks](http-boundary-tests.md); those routes are
 not in the production binary.
@@ -94,7 +95,11 @@ they identify problems, not fetchable schema or policy resources.
 
 No API accepts arbitrary detail, SQL, schema paths, policy explanations, request
 targets or parser text for the catalog. 405 retains the route's Allow field;
-HEAD responses contain no body even on boundary failures. Error problems are
+HEAD responses contain no body even on boundary failures. The outer Axum route
+calculates Content-Length before removing that body; middleware must not empty
+it first and thereby advertise zero instead of the GET representation's length
+([RFC 9110 §8.6](https://www.rfc-editor.org/rfc/rfc9110.html#section-8.6)).
+Error problems are
 sent even if Accept omits problem+json, the fallback permitted by RFC 9457 §3,
 rather than replacing the real failure with recursive negotiation errors.
 The existing plain-text health responses retain their separate minimal contract.

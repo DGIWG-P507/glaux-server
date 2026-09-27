@@ -38,6 +38,8 @@ struct Document {
     jwt: Option<JwtConfig>,
     development: Option<DevelopmentConfig>,
     policy: Option<PolicyConfig>,
+    #[serde(default)]
+    discovery: bool,
     database: SecretReference,
     health_timeout_ms: u64,
     http: Option<HttpDocument>,
@@ -58,6 +60,7 @@ pub struct Configuration {
     authentication: Authentication,
     authenticator: Authenticator,
     admission: Admission,
+    discovery: bool,
     database: PgConnectOptions,
     timeout: Duration,
     http: HttpBoundary,
@@ -139,6 +142,9 @@ impl Configuration {
         )
         .map_err(|_| ConfigError::Invalid)?;
         let http = document.http.unwrap_or_default();
+        if document.discovery && http.public_api_root.is_none() {
+            return Err(ConfigError::Invalid);
+        }
         let http = HttpBoundary::new(http.public_api_root.as_deref(), http.limits)
             .map_err(|_| ConfigError::Invalid)?;
         if document.listener.port() == 0 || !(100..=10_000).contains(&document.health_timeout_ms) {
@@ -206,6 +212,7 @@ impl Configuration {
             authentication: document.authentication,
             authenticator,
             admission,
+            discovery: document.discovery,
             database: options,
             timeout: Duration::from_millis(document.health_timeout_ms),
             http,
@@ -223,6 +230,10 @@ impl Configuration {
     }
     pub fn http_boundary(&self) -> HttpBoundary {
         self.http.clone()
+    }
+    /// Discovery is an explicit deployment choice, never inferred from Host.
+    pub fn discovery_enabled(&self) -> bool {
+        self.discovery
     }
     /// Share the same validated policy and denial-rate state across route handlers.
     /// Authentication must supply a verified caller before using this boundary.
@@ -419,6 +430,31 @@ mod tests {
             "\"max_records\":100,\"max_records\":100",
         );
         assert!(parse(&duplicated).is_err());
+    }
+
+    #[test]
+    fn runtime_discovery_requires_explicit_public_root() {
+        use serde_json::{Value, json};
+        let mut input: Value =
+            serde_json::from_str(&document("127.0.0.1:8080", "disabled")).unwrap();
+        assert!(!parse(&input.to_string()).unwrap().discovery_enabled());
+        input["discovery"] = json!(true);
+        assert!(parse(&input.to_string()).is_err());
+        input["http"] = json!({"public_api_root":"https://example.test/prefix"});
+        assert!(parse(&input.to_string()).unwrap().discovery_enabled());
+        for invalid in [
+            Value::Null,
+            json!("true"),
+            json!(1),
+            json!({"enabled":true}),
+        ] {
+            input["discovery"] = invalid;
+            assert!(parse(&input.to_string()).is_err());
+        }
+        input["discovery"] = json!(false);
+        assert!(!parse(&input.to_string()).unwrap().discovery_enabled());
+        input.as_object_mut().unwrap().remove("http");
+        assert!(!parse(&input.to_string()).unwrap().discovery_enabled());
     }
 
     #[test]

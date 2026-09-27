@@ -589,6 +589,25 @@ fn problems(address: SocketAddr) {
         Some("application/problem+json")
     );
     assert!(missing_head.header("x-request-id").is_some());
+    // RFC 9110 section 8.6: a sent HEAD Content-Length is the GET byte count,
+    // not the length of the deliberately absent HEAD body. Include responses
+    // returned before a handler runs as well as success and router fallback.
+    for (path, headers, status) in [
+        ("/representation", "", 200),
+        ("/absent", "", 404),
+        ("/representation", "Content-Encoding: gzip\r\n", 415),
+    ] {
+        let get = request(address, "GET", path, headers, "");
+        let head = request(address, "HEAD", path, headers, "");
+        assert_eq!(get.status, status);
+        assert_eq!(head.status, status);
+        assert!(!get.body.is_empty());
+        assert!(head.body.is_empty());
+        let length = get.body.len().to_string();
+        assert_eq!(get.header("content-length"), Some(length.as_str()));
+        assert_eq!(head.header("content-length"), Some(length.as_str()));
+        assert_eq!(head.header("content-type"), get.header("content-type"));
+    }
     println!("HTTP boundary group passed: safe-problems-methods-and-head");
 }
 

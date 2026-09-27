@@ -8,7 +8,8 @@ Being authenticated, uploading a document, naming a producer, or having command
 submission permission never implicitly grants another action or reporting role.
 
 This is a library boundary exercised through synthetic HTTP routes and actual
-System storage. The production binary remains health-only. The route-owning
+System storage. The production binary exposes public health and opt-in
+[discovery](discovery.md), not protected resource operations. The route-owning
 tasks must use this admission boundary; the older application/repository
 functions are trusted internal persistence primitives, not request handlers.
 
