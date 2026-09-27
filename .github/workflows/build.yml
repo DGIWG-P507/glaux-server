@@ -8,15 +8,23 @@ on:
 permissions:
   contents: read
 
+env:
+  CARGO_TERM_COLOR: never
+  RUST_BACKTRACE: "1"
+  TESTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+
+# Every check lane runs on its own fresh runner in parallel. The ruleset requires
+# only the final `Rust bootstrap` job, which fails unless every lane listed in its
+# reviewed set ran and succeeded. GitHub accepts skipped required checks, so that
+# gate is unconditional and treats skipped, cancelled or missing lanes as failure.
+# Each lane repeats checkout, commit identity and pinned-toolchain setup, then
+# builds every target before its time-limited suites.
+
 jobs:
-  rust-bootstrap:
-    name: Rust bootstrap
+  static-checks:
+    name: "CI lane: formatting, lint, build and inventory"
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    env:
-      CARGO_TERM_COLOR: never
-      RUST_BACKTRACE: "1"
-      TESTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+    timeout-minutes: 30
     steps:
       - name: Check out the exact task commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1; MIT
@@ -65,81 +73,212 @@ jobs:
           python3 -m compileall -q scripts
       - name: Build all three packages
         run: cargo build --workspace --locked --offline
-      - name: Verify original corpus digests before projection execution
+      - name: Verify original corpus digests before this lane's checks
         shell: bash
         run: python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-before.log"
       - name: Check package boundaries and test discovery
         run: python3 scripts/check-bootstrap.py
-      - name: Run initial tests and applicable doctests
-        shell: bash
-        run: |
-          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
-          python3 -u scripts/check-execution.py rust | tee "$RUNNER_TEMP/glaux-ci-evidence/rust.log"
-      - name: Exercise the bounded schema-parser mutation campaign
-        shell: bash
-        run: python3 -u scripts/check-execution.py schema-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/schema-fuzz.log"
-      - name: Prove shared HTTP contracts with an independent listener client
-        shell: bash
-        run: |
-          python3 -u scripts/check-execution.py http-boundary | tee "$RUNNER_TEMP/glaux-ci-evidence/http-boundary.log"
-          python3 -u scripts/test-http-boundary-failures.py
-      - name: Prove public identity type boundaries and wrong-acceptance detection
-        shell: bash
-        run: |
-          python3 -u scripts/check_identity_boundary.py | tee "$RUNNER_TEMP/glaux-ci-evidence/identity-boundary.log"
-          python3 -u scripts/test-identity-failures.py
-      - name: Prove caller authentication through an independent listener
-        shell: bash
-        run: |
-          python3 -u scripts/check-execution.py authentication | tee "$RUNNER_TEMP/glaux-ci-evidence/authentication.log"
-          python3 -u scripts/test-authentication-failures.py
-      - name: Exercise exact numeric parsing and detect lossy numeric faults
-        shell: bash
-        run: |
-          python3 -u scripts/check-execution.py numeric-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/numeric-fuzz.log"
-          python3 -u scripts/test-numeric-failures.py
-      - name: Prove bounded signing-key refresh against an isolated HTTPS issuer
-        shell: bash
-        run: |
-          python3 -u scripts/check-execution.py key-refresh | tee "$RUNNER_TEMP/glaux-ci-evidence/key-refresh.log"
-          python3 -u scripts/test-key-refresh-failures.py
-      - name: Exercise exact time parsing and detect time faults
-        shell: bash
-        run: |
-          python3 -u scripts/check-execution.py time-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/time-fuzz.log"
-          python3 -u scripts/test-time-failures.py
       - name: Fetch the pinned disposable database image
         shell: bash
         run: |
           docker version
           python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness import PIN, docker; print(PIN); print(docker("pull", "--platform", PIN["platform"], PIN["image"], timeout=180))'
-      - name: Prove runtime configuration and live storage readiness
+      - name: Inventory resolved dependencies and licence evidence
+        run: python3 scripts/dependency_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/dependency-inventory.json"
+      - name: Verify original corpus digests after this lane's checks
+        shell: bash
+        run: python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-after.log"
+      - name: Preserve actual execution evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1; MIT
+        with:
+          name: ci-evidence-static-checks
+          path: ${{ runner.temp }}/glaux-ci-evidence/
+          if-no-files-found: error
+          retention-days: 14
+
+  rust-suites:
+    name: "CI lane: Rust tests, parser campaigns and value faults"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out the exact task commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1; MIT
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Identify the checked-out commit and runner
         shell: bash
         run: |
-          python3 -u scripts/check-execution.py runtime-health | tee "$RUNNER_TEMP/glaux-ci-evidence/runtime-health.log"
-          python3 -u scripts/test-runtime-health-failures.py
-      - name: Prove action source and resource permissions through a real listener and database
+          test "$(git rev-parse HEAD)" = "$TESTED_HEAD"
+          printf 'Tested commit: %s\nRunner image: %s %s\n' "$TESTED_HEAD" "$ImageOS" "$ImageVersion"
+          uname -a
+          cc --version
+          python3 --version
+      - name: Select the pinned toolchain on the hosted runner
         shell: bash
         run: |
-          python3 -u scripts/check-execution.py authorization | tee "$RUNNER_TEMP/glaux-ci-evidence/authorization.log"
-          python3 -u scripts/test-authorization-failures.py
-      - name: Prove initial discovery and reject misleading declarations
+          bootstrap_toolchain="$(python3 -c 'import tomllib; print(tomllib.load(open("rust-toolchain.toml", "rb"))["toolchain"]["channel"])')"
+          rustup toolchain install "$bootstrap_toolchain" --profile minimal --component rustfmt --component clippy
+          rustup show active-toolchain
+          rustc --version --verbose
+          cargo --version --verbose
+      - name: Fetch the locked dependency archives
         shell: bash
         run: |
-          python3 -u scripts/check-execution.py discovery | tee "$RUNNER_TEMP/glaux-ci-evidence/discovery.log"
-          python3 -u scripts/test-discovery-failures.py
-      - name: Render local API documentation with external browser traffic blocked
+          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
+          cargo fetch --locked
+          git diff --exit-code -- Cargo.lock
+      - name: Build every workspace target before time-limited suites
+        run: cargo build --workspace --all-targets --locked --offline
+      - name: Verify original corpus digests before projection execution
         shell: bash
-        run: python3 -u scripts/check-execution.py discovery-browser | tee "$RUNNER_TEMP/glaux-ci-evidence/discovery-browser.log"
+        run: python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-before.log"
+      - name: Run initial tests and applicable doctests
+        shell: bash
+        run: python3 -u scripts/check-execution.py rust | tee "$RUNNER_TEMP/glaux-ci-evidence/rust.log"
+      - name: Exercise the bounded schema-parser mutation campaign
+        shell: bash
+        run: python3 -u scripts/check-execution.py schema-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/schema-fuzz.log"
+      - name: Prove public identity type boundaries and wrong-acceptance detection
+        shell: bash
+        run: |
+          python3 -u scripts/check_identity_boundary.py | tee "$RUNNER_TEMP/glaux-ci-evidence/identity-boundary.log"
+          python3 -u scripts/test-identity-failures.py
+      - name: Exercise exact numeric parsing and detect lossy numeric faults
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py numeric-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/numeric-fuzz.log"
+          python3 -u scripts/test-numeric-failures.py
+      - name: Exercise exact time parsing and detect time faults
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py time-fuzz | tee "$RUNNER_TEMP/glaux-ci-evidence/time-fuzz.log"
+          python3 -u scripts/test-time-failures.py
       - name: Check original corpus and offline fault controls
         shell: bash
         run: |
           python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus.log"
           python3 -u scripts/test_corpus.py 2>&1 | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-controls.log"
-      - name: Exercise real database lifecycle and failure cases
+      - name: Verify validation assertions detect disposable faults
+        run: python3 -u scripts/test-validation-failures.py
+      - name: Verify directional projection assertions detect disposable faults
+        run: python3 -u scripts/test-projection-failures.py
+      - name: Verify original corpus digests after projection execution
+        shell: bash
+        run: python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-after.log"
+      - name: Preserve actual execution evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1; MIT
+        with:
+          name: ci-evidence-rust-suites
+          path: ${{ runner.temp }}/glaux-ci-evidence/
+          if-no-files-found: error
+          retention-days: 14
+
+  listener-proofs:
+    name: "CI lane: HTTP, authentication and key-refresh proofs"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out the exact task commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1; MIT
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Identify the checked-out commit and runner
         shell: bash
         run: |
-          python3 -u scripts/check-execution.py database | tee "$RUNNER_TEMP/glaux-ci-evidence/database.log"
+          test "$(git rev-parse HEAD)" = "$TESTED_HEAD"
+          printf 'Tested commit: %s\nRunner image: %s %s\n' "$TESTED_HEAD" "$ImageOS" "$ImageVersion"
+          uname -a
+          cc --version
+          python3 --version
+      - name: Select the pinned toolchain on the hosted runner
+        shell: bash
+        run: |
+          bootstrap_toolchain="$(python3 -c 'import tomllib; print(tomllib.load(open("rust-toolchain.toml", "rb"))["toolchain"]["channel"])')"
+          rustup toolchain install "$bootstrap_toolchain" --profile minimal --component rustfmt --component clippy
+          rustup show active-toolchain
+          rustc --version --verbose
+          cargo --version --verbose
+      - name: Fetch the locked dependency archives
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
+          cargo fetch --locked
+          git diff --exit-code -- Cargo.lock
+      - name: Build every workspace target before time-limited suites
+        run: cargo build --workspace --all-targets --locked --offline
+      - name: Prove shared HTTP contracts with an independent listener client
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py http-boundary | tee "$RUNNER_TEMP/glaux-ci-evidence/http-boundary.log"
+          python3 -u scripts/test-http-boundary-failures.py
+      - name: Prove caller authentication through an independent listener
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py authentication | tee "$RUNNER_TEMP/glaux-ci-evidence/authentication.log"
+          python3 -u scripts/test-authentication-failures.py
+      - name: Prove bounded signing-key refresh against an isolated HTTPS issuer
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py key-refresh | tee "$RUNNER_TEMP/glaux-ci-evidence/key-refresh.log"
+          python3 -u scripts/test-key-refresh-failures.py
+      - name: Verify original corpus digests after this lane's checks
+        shell: bash
+        run: python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-after.log"
+      - name: Preserve actual execution evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1; MIT
+        with:
+          name: ci-evidence-listener-proofs
+          path: ${{ runner.temp }}/glaux-ci-evidence/
+          if-no-files-found: error
+          retention-days: 14
+
+  database-storage:
+    name: "CI lane: database lifecycle, storage and write proofs"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out the exact task commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1; MIT
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Identify the checked-out commit and runner
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$TESTED_HEAD"
+          printf 'Tested commit: %s\nRunner image: %s %s\n' "$TESTED_HEAD" "$ImageOS" "$ImageVersion"
+          uname -a
+          cc --version
+          python3 --version
+      - name: Select the pinned toolchain on the hosted runner
+        shell: bash
+        run: |
+          bootstrap_toolchain="$(python3 -c 'import tomllib; print(tomllib.load(open("rust-toolchain.toml", "rb"))["toolchain"]["channel"])')"
+          rustup toolchain install "$bootstrap_toolchain" --profile minimal --component rustfmt --component clippy
+          rustup show active-toolchain
+          rustc --version --verbose
+          cargo --version --verbose
+      - name: Fetch the locked dependency archives
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
+          cargo fetch --locked
+          git diff --exit-code -- Cargo.lock
+      - name: Build every workspace target before time-limited suites
+        run: cargo build --workspace --all-targets --locked --offline
+      - name: Fetch the pinned disposable database image
+        shell: bash
+        run: |
+          docker version
+          python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness import PIN, docker; print(PIN); print(docker("pull", "--platform", PIN["platform"], PIN["image"], timeout=180))'
+      - name: Exercise real database lifecycle and failure cases
+        shell: bash
+        run: python3 -u scripts/check-execution.py database | tee "$RUNNER_TEMP/glaux-ci-evidence/database.log"
       - name: Prove exact time through the real isolated database
         shell: bash
         run: python3 -u scripts/check-execution.py time-database | tee "$RUNNER_TEMP/glaux-ci-evidence/time-database.log"
@@ -164,22 +303,181 @@ jobs:
         run: |
           python3 -u scripts/check-execution.py retry-write | tee "$RUNNER_TEMP/glaux-ci-evidence/retry-write.log"
           python3 -u scripts/test-retry-write-failures.py
-      - name: Verify required execution rejects disposable failures
-        run: python3 -u scripts/test-ci-failures.py
-      - name: Verify validation assertions detect disposable faults
-        run: python3 -u scripts/test-validation-failures.py
-      - name: Verify directional projection assertions detect disposable faults
-        run: python3 -u scripts/test-projection-failures.py
-      - name: Verify original corpus digests after projection execution
+      - name: Verify original corpus digests after this lane's checks
         shell: bash
         run: python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-after.log"
-      - name: Inventory resolved dependencies and licence evidence
-        run: python3 scripts/dependency_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/dependency-inventory.json"
       - name: Preserve actual execution evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1; MIT
         with:
-          name: initial-ci-evidence
+          name: ci-evidence-database-storage
           path: ${{ runner.temp }}/glaux-ci-evidence/
           if-no-files-found: error
           retention-days: 14
+
+  database-service:
+    name: "CI lane: runtime, permission and discovery proofs"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out the exact task commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1; MIT
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Identify the checked-out commit and runner
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$TESTED_HEAD"
+          printf 'Tested commit: %s\nRunner image: %s %s\n' "$TESTED_HEAD" "$ImageOS" "$ImageVersion"
+          uname -a
+          cc --version
+          python3 --version
+      - name: Select the pinned toolchain on the hosted runner
+        shell: bash
+        run: |
+          bootstrap_toolchain="$(python3 -c 'import tomllib; print(tomllib.load(open("rust-toolchain.toml", "rb"))["toolchain"]["channel"])')"
+          rustup toolchain install "$bootstrap_toolchain" --profile minimal --component rustfmt --component clippy
+          rustup show active-toolchain
+          rustc --version --verbose
+          cargo --version --verbose
+      - name: Fetch the locked dependency archives
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
+          cargo fetch --locked
+          git diff --exit-code -- Cargo.lock
+      - name: Build every workspace target before time-limited suites
+        run: cargo build --workspace --all-targets --locked --offline
+      - name: Fetch the pinned disposable database image
+        shell: bash
+        run: |
+          docker version
+          python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness import PIN, docker; print(PIN); print(docker("pull", "--platform", PIN["platform"], PIN["image"], timeout=180))'
+      - name: Prove runtime configuration and live storage readiness
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py runtime-health | tee "$RUNNER_TEMP/glaux-ci-evidence/runtime-health.log"
+          python3 -u scripts/test-runtime-health-failures.py
+      - name: Prove action source and resource permissions through a real listener and database
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py authorization | tee "$RUNNER_TEMP/glaux-ci-evidence/authorization.log"
+          python3 -u scripts/test-authorization-failures.py
+      - name: Prove initial discovery and reject misleading declarations
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py discovery | tee "$RUNNER_TEMP/glaux-ci-evidence/discovery.log"
+          python3 -u scripts/test-discovery-failures.py
+      - name: Render local API documentation with external browser traffic blocked
+        shell: bash
+        run: python3 -u scripts/check-execution.py discovery-browser | tee "$RUNNER_TEMP/glaux-ci-evidence/discovery-browser.log"
+      - name: Verify original corpus digests after this lane's checks
+        shell: bash
+        run: python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-after.log"
+      - name: Preserve actual execution evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1; MIT
+        with:
+          name: ci-evidence-database-service
+          path: ${{ runner.temp }}/glaux-ci-evidence/
+          if-no-files-found: error
+          retention-days: 14
+
+  ci-controls:
+    name: "CI lane: false-green controls after unmodified baselines"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out the exact task commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1; MIT
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Identify the checked-out commit and runner
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$TESTED_HEAD"
+          printf 'Tested commit: %s\nRunner image: %s %s\n' "$TESTED_HEAD" "$ImageOS" "$ImageVersion"
+          uname -a
+          cc --version
+          python3 --version
+      - name: Select the pinned toolchain on the hosted runner
+        shell: bash
+        run: |
+          bootstrap_toolchain="$(python3 -c 'import tomllib; print(tomllib.load(open("rust-toolchain.toml", "rb"))["toolchain"]["channel"])')"
+          rustup toolchain install "$bootstrap_toolchain" --profile minimal --component rustfmt --component clippy
+          rustup show active-toolchain
+          rustc --version --verbose
+          cargo --version --verbose
+      - name: Fetch the locked dependency archives
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
+          cargo fetch --locked
+          git diff --exit-code -- Cargo.lock
+      - name: Build every workspace target before time-limited suites
+        run: cargo build --workspace --all-targets --locked --offline
+      - name: Fetch the pinned disposable database image
+        shell: bash
+        run: |
+          docker version
+          python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness import PIN, docker; print(PIN); print(docker("pull", "--platform", PIN["platform"], PIN["image"], timeout=180))'
+      - name: Run unmodified Rust tests before the false-green controls
+        shell: bash
+        run: python3 -u scripts/check-execution.py rust | tee "$RUNNER_TEMP/glaux-ci-evidence/rust-baseline.log"
+      - name: Run unmodified database lifecycle tests before the false-green controls
+        shell: bash
+        run: python3 -u scripts/check-execution.py database | tee "$RUNNER_TEMP/glaux-ci-evidence/database-baseline.log"
+      - name: Verify required execution rejects disposable failures
+        run: python3 -u scripts/test-ci-failures.py
+      - name: Verify original corpus digests after this lane's checks
+        shell: bash
+        run: python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-after.log"
+      - name: Preserve actual execution evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1; MIT
+        with:
+          name: ci-evidence-ci-controls
+          path: ${{ runner.temp }}/glaux-ci-evidence/
+          if-no-files-found: error
+          retention-days: 14
+
+  rust-bootstrap:
+    # This job's name is the ruleset's required check. Keep it unconditional.
+    name: Rust bootstrap
+    if: ${{ always() }}
+    needs: [static-checks, rust-suites, listener-proofs, database-storage, database-service, ci-controls]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every reviewed check lane to have run and succeeded
+        env:
+          LANE_RESULTS: ${{ toJSON(needs) }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+
+          # Reviewed set of required lanes. Adding, removing or renaming a lane
+          # must update both this list and `needs`, or this gate fails.
+          expected = [
+              "static-checks", "rust-suites", "listener-proofs",
+              "database-storage", "database-service", "ci-controls",
+          ]
+          reported = json.loads(os.environ["LANE_RESULTS"])
+          results = {name: value.get("result") for name, value in reported.items()}
+          print(json.dumps(results, indent=2, sort_keys=True))
+          problems = [
+              name + ": " + str(results.get(name, "missing from needs"))
+              for name in expected if results.get(name) != "success"
+          ]
+          unexpected = sorted(set(results) - set(expected))
+          if unexpected:
+              problems.append("not in the reviewed lane list: " + ", ".join(unexpected))
+          if problems:
+              sys.exit("Required lanes did not all succeed: " + "; ".join(problems))
+          print("All " + str(len(expected)) + " required lanes succeeded.")
+          PY
