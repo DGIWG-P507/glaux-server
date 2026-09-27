@@ -4,6 +4,40 @@
 execution, rule application, failure/missing-check probes and separate review.
 The initial suite covers the code that exists now, not later CSAPI capabilities.
 
+## Workflow structure
+
+Task 1.1.5 restructured the single sequential job into six parallel **check lanes**
+and one final gate, so that elapsed time follows the longest lane rather than the
+sum of every check. Each lane has its own 30-minute limit, and every suite keeps
+its existing 180-second (`check-execution.py`) or 210-second (`test-ci-failures.py`)
+process limit.
+
+No check, fault control, inventory or exact-head verification was removed.
+
+| Lane (job ID) | Checks |
+|---|---|
+| `static-checks` | Formatting, dependency lock, Clippy, Python syntax, build, package boundaries and test discovery, Cargo/renderer/dependency/licence inventories |
+| `rust-suites` | Rust tests and doctests, schema/numeric/time campaigns and faults, identity boundary, corpus controls, validation and projection faults |
+| `listener-proofs` | HTTP boundary, authentication and key-refresh proofs with their faults |
+| `database-storage` | Database lifecycle, exact-time storage, System/revision storage, atomic/conditional/retry writes with their faults |
+| `database-service` | Runtime health, permissions, discovery and browser rendering, with their faults |
+| `ci-controls` | Unmodified Rust and database lifecycle baselines, then the nine false-green controls |
+
+Each lane runs on a fresh runner:
+- It checks out the exact tested head and verifies it.
+- It installs the pinned toolchain.
+- The five suite lanes build every workspace target before their time-limited suites. `static-checks` keeps the original build step; its test-discovery check compiles test targets as it did before.
+- It pulls the pinned database image when its suites need one.
+- It rechecks the original corpus digests after its own execution.
+
+The false-green controls run in the same lane as fresh unmodified Rust and database baselines. So "the normal checks pass first" still holds inside that runner.
+
+The final `rust-bootstrap` job, named **`Rust bootstrap`**, is the check the ruleset requires. It runs unconditionally and fails unless every lane in its reviewed list reports `success`. A failed, skipped or cancelled lane fails the gate, and so does a lane missing from `needs`. It also fails if `needs` contains a lane that is not in the reviewed list.
+
+**A job listed in neither place is not gated.** If it fails, `Rust bootstrap` can still pass. When adding checks, put them in an existing lane, or add the new lane to the reviewed list, `needs` and this table together. Review of workflow changes must confirm every check job is gated.
+
+Per-suite limits are unchanged by the lanes. The largest single step, the nine false-green controls, still takes about four minutes, and its first control compiles from scratch inside its own limit.
+
 ## Reproduce the checks
 
 Use a fresh checkout at the commit being reviewed on the selected GitHub-hosted
@@ -155,8 +189,10 @@ exit status and expected diagnostic are retained as ordinary artifacts. This is
 a small check of the current CI path, not a new general testing framework or a
 substitute for later independent standards/HTTP/broker tests.
 
-The `initial-ci-evidence` artifact includes suite logs, per-control logs/results
-and the [resolved dependency/licence inventory](dependencies.md). Retention is
+Each lane uploads its own `ci-evidence-<lane>` artifact with its suite logs and
+per-control logs/results. `ci-evidence-static-checks` holds the
+[resolved dependency/licence inventory](dependencies.md). Runs before task 1.1.5
+used a single `initial-ci-evidence` artifact. Retention is
 14 days; issue/PR summaries preserve durable run/commit links, limitations and
 outcomes. Rerunning the pinned scripts regenerates evidence, not the exact old
 run identity. Upload failure is itself a failed check; early failed setup may
@@ -178,7 +214,7 @@ The [retry-write proof](write-retries.md) checks retained original outcomes,
 content/scope conflicts, local disclosure denial, expiry and synchronized
 competing creation requests. A separate disposable content-comparison fault must
 fail the exact intended assertion between passing baseline/restored executions.
-Its required execution markers and logs remain part of the unconditional build.
+Its required execution markers and logs remain part of the required lanes behind the unconditional gate.
 
 The [shared HTTP proof](http-boundary-tests.md) adds seven required real-listener
 groups, raw/general-JSON oracle controls and 192 deterministic header/path cases.
@@ -213,8 +249,9 @@ The approved configuration is recorded in [main-ruleset.json](main-ruleset.json)
 main-only, active, no bypass actors (including no administrator exception),
 pull requests required, zero required human approvals, no deletion or history
 rewrite, and the actual `Rust bootstrap` check from GitHub Actions app `15368`.
-The historical name is retained, but that one job now includes all checks above.
-The branch must be up to date before merge.
+The historical name is retained. Since task 1.1.5 it belongs to the final gate
+job, which requires every check lane above to succeed; the ruleset itself did not
+change. The branch must be up to date before merge.
 
 The configuration was applied as [ruleset 23796335](https://github.com/DGIWG-P507/glaux-server/rules/23796335)
 on 21 September 2026 and authenticated readback confirmed it is effective on main,
@@ -228,8 +265,10 @@ GitHub's blocked merge state instead. Do not confuse a conflict or draft status
 with a required-check block.
 
 GitHub permits success, skipped or neutral conclusions for required checks.
-Consequently the required job itself is unconditional, and its executed scripts
-must reject skipped/empty work; a repository rule alone does not prove tests ran.
+Consequently the required gate job is unconditional (`if: always()`). It treats
+any non-success lane result, including `skipped` and `cancelled`, as failure,
+and each lane's executed scripts still reject skipped/empty work. A repository
+rule alone does not prove tests ran.
 Changing a workflow can still weaken its meaning, so the existing separate
 assistant review must inspect the actual current diff/evidence before any merge.
 That review remains session-triggered and procedural, not a GitHub human-approval
