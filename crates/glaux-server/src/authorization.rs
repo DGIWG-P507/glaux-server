@@ -125,17 +125,25 @@ impl PermissionSet {
     fn allows_source(&self, source: &str) -> bool {
         self.grants.iter().any(|grant| {
             grant.source == source
-                && grant.resources.as_ref().is_none_or(|resources| !resources.is_empty())
+                && grant
+                    .resources
+                    .as_ref()
+                    .is_none_or(|resources| !resources.is_empty())
         })
     }
 
     fn scope_json(&self) -> String {
-        json!(self.grants.iter().map(|grant| json!({
-            "source": grant.source,
-            "resources": grant.resources.as_ref().map(|resources| {
-                resources.iter().map(ToString::to_string).collect::<Vec<_>>()
-            }),
-        })).collect::<Vec<_>>())
+        json!(
+            self.grants
+                .iter()
+                .map(|grant| json!({
+                    "source": grant.source,
+                    "resources": grant.resources.as_ref().map(|resources| {
+                        resources.iter().map(ToString::to_string).collect::<Vec<_>>()
+                    }),
+                }))
+                .collect::<Vec<_>>()
+        )
         .to_string()
     }
 }
@@ -181,31 +189,42 @@ impl ConfiguredPolicy {
             if !bounded_text(&grant.issuer, 1024)
                 || !bounded_text(&grant.source, 256)
                 || grant.subject.is_some() == grant.group.is_some()
-                || grant.subject.as_deref().is_some_and(|v| !bounded_text(v, 1024))
-                || grant.group.as_deref().is_some_and(|v| !bounded_text(v, 256))
+                || grant
+                    .subject
+                    .as_deref()
+                    .is_some_and(|v| !bounded_text(v, 1024))
+                || grant
+                    .group
+                    .as_deref()
+                    .is_some_and(|v| !bounded_text(v, 256))
                 || grant.actions.is_empty()
                 || grant.actions.len() > 8
-                || grant.actions.iter().enumerate().any(|(index, action)| {
-                    grant.actions[..index].contains(action)
-                })
+                || grant
+                    .actions
+                    .iter()
+                    .enumerate()
+                    .any(|(index, action)| grant.actions[..index].contains(action))
             {
                 return Err(PolicyError);
             }
-            let resources = grant.resources.map(|values| {
-                total_resources = total_resources.saturating_add(values.len());
-                if values.len() > 1024 || total_resources > 4096 {
-                    return Err(PolicyError);
-                }
-                let mut ids = Vec::new();
-                for value in values {
-                    let id = value.parse::<LocalId>().map_err(|_| PolicyError)?;
-                    if ids.contains(&id) {
+            let resources = grant
+                .resources
+                .map(|values| {
+                    total_resources = total_resources.saturating_add(values.len());
+                    if values.len() > 1024 || total_resources > 4096 {
                         return Err(PolicyError);
                     }
-                    ids.push(id);
-                }
-                Ok(ids)
-            }).transpose()?;
+                    let mut ids = Vec::new();
+                    for value in values {
+                        let id = value.parse::<LocalId>().map_err(|_| PolicyError)?;
+                        if ids.contains(&id) {
+                            return Err(PolicyError);
+                        }
+                        ids.push(id);
+                    }
+                    Ok(ids)
+                })
+                .transpose()?;
             grants.push(PolicyGrant {
                 issuer: grant.issuer,
                 subject: grant.subject,
@@ -239,12 +258,20 @@ impl AccessPolicy for ConfiguredPolicy {
         action: Action,
     ) -> Result<PermissionSet, PolicyError> {
         let mut granted = PermissionSet {
-            grants: self.grants.iter().filter(|grant| {
-                grant.issuer == caller.issuer()
-                    && grant.actions.contains(&action)
-                    && (grant.subject.as_deref() == Some(caller.subject())
-                        || grant.group.as_ref().is_some_and(|group| caller.groups().contains(group)))
-            }).map(|grant| grant.scope.clone()).collect(),
+            grants: self
+                .grants
+                .iter()
+                .filter(|grant| {
+                    grant.issuer == caller.issuer()
+                        && grant.actions.contains(&action)
+                        && (grant.subject.as_deref() == Some(caller.subject())
+                            || grant
+                                .group
+                                .as_ref()
+                                .is_some_and(|group| caller.groups().contains(group)))
+                })
+                .map(|grant| grant.scope.clone())
+                .collect(),
         };
         // HOSTED_BEHAVIORAL_RED: remove only after the independent fixture fails
         // its intended authorized-result assertion against this deny-all stub.
@@ -262,7 +289,9 @@ pub struct SystemRateClock {
 }
 impl Default for SystemRateClock {
     fn default() -> Self {
-        Self { started: Instant::now() }
+        Self {
+            started: Instant::now(),
+        }
     }
 }
 impl RateClock for SystemRateClock {
@@ -366,7 +395,12 @@ impl OperationContext {
         // Never truncate or hash different identities into the same audit actor.
         // Oversized identities remain usable for reads; accepted writes fail.
         let actor = (actor.len() <= 256).then_some(actor);
-        Ok(Self { caller, actor, time, correlation })
+        Ok(Self {
+            caller,
+            actor,
+            time,
+            correlation,
+        })
     }
 
     pub fn caller(&self) -> &CallerContext {
@@ -409,7 +443,10 @@ pub struct AccessError {
 
 impl AccessError {
     fn new(kind: AccessKind, correlation: &str) -> Self {
-        Self { kind, correlation: correlation.to_owned() }
+        Self {
+            kind,
+            correlation: correlation.to_owned(),
+        }
     }
 
     pub fn status(&self) -> StatusCode {
@@ -491,8 +528,13 @@ impl Admission {
         }
     }
 
-    fn permissions(&self, ctx: &OperationContext, action: Action) -> Result<PermissionSet, AccessError> {
-        self.policy.permissions(&ctx.caller, action)
+    fn permissions(
+        &self,
+        ctx: &OperationContext,
+        action: Action,
+    ) -> Result<PermissionSet, AccessError> {
+        self.policy
+            .permissions(&ctx.caller, action)
             .map_err(|_| ctx.error(AccessKind::Unavailable))
     }
 
@@ -516,7 +558,8 @@ impl Admission {
     ) -> Result<SystemPage, AccessError> {
         let scope = self.permissions(ctx, Action::Read)?;
         authorization_storage::list_systems(connection, &scope.scope_json(), None, limit)
-            .await.map_err(|error| Self::storage_error(ctx, error))
+            .await
+            .map_err(|error| Self::storage_error(ctx, error))
     }
 
     pub async fn get_system(
@@ -526,9 +569,13 @@ impl Admission {
         id: LocalId,
     ) -> Result<SystemRecord, AccessError> {
         let scope = self.permissions(ctx, Action::Read)?;
-        let mut page = authorization_storage::list_systems(connection, &scope.scope_json(), Some(id), 1)
-            .await.map_err(|error| Self::storage_error(ctx, error))?;
-        page.items.pop().ok_or_else(|| ctx.error(AccessKind::NotFound))
+        let mut page =
+            authorization_storage::list_systems(connection, &scope.scope_json(), Some(id), 1)
+                .await
+                .map_err(|error| Self::storage_error(ctx, error))?;
+        page.items
+            .pop()
+            .ok_or_else(|| ctx.error(AccessKind::NotFound))
     }
 
     async fn deny(
@@ -556,8 +603,12 @@ impl Admission {
             operation,
         };
         let counter = match application::record_denied_mutation_bounded(
-            connection, &denial, self.denial.limits.max_records,
-        ).await {
+            connection,
+            &denial,
+            self.denial.limits.max_records,
+        )
+        .await
+        {
             Ok(DenialStorage::Retained) => &self.denial.counts.retained,
             Ok(DenialStorage::Capacity) => &self.denial.counts.storage_limited,
             Ok(DenialStorage::Busy) => &self.denial.counts.storage_busy,
@@ -585,24 +636,51 @@ impl Admission {
             create.allows(source, input.system.id)
         };
         if !bounded_text(source, 256) || !permitted_scope {
-            return Err(self.deny(connection, ctx, DeniedOperation::Create, AccessKind::Denied, None).await);
+            return Err(self
+                .deny(
+                    connection,
+                    ctx,
+                    DeniedOperation::Create,
+                    AccessKind::Denied,
+                    None,
+                )
+                .await);
         }
         if ctx.actor.is_none() {
             return Err(ctx.error(AccessKind::Unavailable));
         }
         let read = self.permissions(ctx, Action::Read)?;
         let parent = if let Some(parent) = input.system.parent {
-            let page = authorization_storage::list_systems(connection, &read.scope_json(), Some(parent), 1)
-                .await.map_err(|error| Self::storage_error(ctx, error))?;
+            let page = authorization_storage::list_systems(
+                connection,
+                &read.scope_json(),
+                Some(parent),
+                1,
+            )
+            .await
+            .map_err(|error| Self::storage_error(ctx, error))?;
             let parent_source = authorization_storage::system_source(connection, parent)
-                .await.map_err(|error| Self::storage_error(ctx, error))?;
+                .await
+                .map_err(|error| Self::storage_error(ctx, error))?;
             match (parent_source, page.items.first()) {
                 (Some(parent_source), Some(record))
-                    if retry.is_some() || create.allows(&parent_source, parent) => {
+                    if retry.is_some() || create.allows(&parent_source, parent) =>
+                {
                     let parent_link = if let Some(link) = record.parent {
-                        let Some(link_source) = authorization_storage::system_source(connection, link)
-                            .await.map_err(|error| Self::storage_error(ctx, error))? else {
-                            return Err(self.deny(connection, ctx, DeniedOperation::Create, AccessKind::Denied, None).await);
+                        let Some(link_source) =
+                            authorization_storage::system_source(connection, link)
+                                .await
+                                .map_err(|error| Self::storage_error(ctx, error))?
+                        else {
+                            return Err(self
+                                .deny(
+                                    connection,
+                                    ctx,
+                                    DeniedOperation::Create,
+                                    AccessKind::Denied,
+                                    None,
+                                )
+                                .await);
                         };
                         Some((link, link_source))
                     } else {
@@ -610,7 +688,17 @@ impl Admission {
                     };
                     Some((parent, parent_source, parent_link))
                 }
-                _ => return Err(self.deny(connection, ctx, DeniedOperation::Create, AccessKind::Denied, None).await),
+                _ => {
+                    return Err(self
+                        .deny(
+                            connection,
+                            ctx,
+                            DeniedOperation::Create,
+                            AccessKind::Denied,
+                            None,
+                        )
+                        .await);
+                }
             }
         } else {
             None
@@ -619,7 +707,10 @@ impl Admission {
         input.revision.receipt_time = ctx.time.clone();
         let mut callback_error = AccessKind::Denied;
         let result = application::create_system_with_retry_admission(
-            connection, &input, retry, |receipt, replay| {
+            connection,
+            &input,
+            retry,
+            |receipt, replay| {
                 let (Ok(create), Ok(read)) = (
                     self.policy.permissions(&ctx.caller, Action::Create),
                     self.policy.permissions(&ctx.caller, Action::Read),
@@ -630,19 +721,29 @@ impl Admission {
                 create.allows(source, receipt.system_id)
                     && (!replay || read.allows(source, receipt.system_id))
                     && parent.as_ref().is_none_or(|(id, owner, link)| {
-                        (replay || create.allows(owner, *id)) && read.allows(owner, *id)
-                            && link.as_ref().is_none_or(|(id, owner)| read.allows(owner, *id))
+                        (replay || create.allows(owner, *id))
+                            && read.allows(owner, *id)
+                            && link
+                                .as_ref()
+                                .is_none_or(|(id, owner)| read.allows(owner, *id))
                     })
             },
-        ).await;
+        )
+        .await;
         match result {
             Ok(receipt) => Ok(receipt),
             Err(StorageError::Denied) if matches!(callback_error, AccessKind::Unavailable) => {
                 Err(ctx.error(AccessKind::Unavailable))
             }
-            Err(StorageError::Denied) => {
-                Err(self.deny(connection, ctx, DeniedOperation::Create, AccessKind::Denied, None).await)
-            }
+            Err(StorageError::Denied) => Err(self
+                .deny(
+                    connection,
+                    ctx,
+                    DeniedOperation::Create,
+                    AccessKind::Denied,
+                    None,
+                )
+                .await),
             Err(error) => Err(Self::storage_error(ctx, error)),
         }
     }
@@ -660,24 +761,61 @@ impl Admission {
         let update = self.permissions(ctx, Action::Update)?;
         let id = input.system_id;
         let page = authorization_storage::list_systems(connection, &read.scope_json(), Some(id), 1)
-            .await.map_err(|error| Self::storage_error(ctx, error))?;
+            .await
+            .map_err(|error| Self::storage_error(ctx, error))?;
         if page.items.is_empty() {
-            return Err(self.deny(connection, ctx, DeniedOperation::Update, AccessKind::NotFound, None).await);
+            return Err(self
+                .deny(
+                    connection,
+                    ctx,
+                    DeniedOperation::Update,
+                    AccessKind::NotFound,
+                    None,
+                )
+                .await);
         }
         let Some(source) = authorization_storage::system_source(connection, id)
-            .await.map_err(|error| Self::storage_error(ctx, error))? else {
-            return Err(self.deny(connection, ctx, DeniedOperation::Update, AccessKind::NotFound, None).await);
+            .await
+            .map_err(|error| Self::storage_error(ctx, error))?
+        else {
+            return Err(self
+                .deny(
+                    connection,
+                    ctx,
+                    DeniedOperation::Update,
+                    AccessKind::NotFound,
+                    None,
+                )
+                .await);
         };
         if !update.allows(&source, id) {
-            return Err(self.deny(connection, ctx, DeniedOperation::Update, AccessKind::Denied, Some((id, &source))).await);
+            return Err(self
+                .deny(
+                    connection,
+                    ctx,
+                    DeniedOperation::Update,
+                    AccessKind::Denied,
+                    Some((id, &source)),
+                )
+                .await);
         }
         if ctx.actor.is_none() {
             return Err(ctx.error(AccessKind::Unavailable));
         }
         let parent = if let Some(parent_id) = page.items.first().and_then(|record| record.parent) {
             let Some(parent_source) = authorization_storage::system_source(connection, parent_id)
-                .await.map_err(|error| Self::storage_error(ctx, error))? else {
-                return Err(self.deny(connection, ctx, DeniedOperation::Update, AccessKind::NotFound, None).await);
+                .await
+                .map_err(|error| Self::storage_error(ctx, error))?
+            else {
+                return Err(self
+                    .deny(
+                        connection,
+                        ctx,
+                        DeniedOperation::Update,
+                        AccessKind::NotFound,
+                        None,
+                    )
+                    .await);
             };
             Some((parent_id, parent_source))
         } else {
@@ -695,22 +833,33 @@ impl Admission {
                 return false;
             };
             if !read.allows(&source, id)
-                || parent.as_ref().is_some_and(|(id, owner)| !read.allows(owner, *id))
+                || parent
+                    .as_ref()
+                    .is_some_and(|(id, owner)| !read.allows(owner, *id))
             {
                 callback_error = AccessKind::NotFound;
                 return false;
             }
             update.allows(&source, id)
-        }).await;
+        })
+        .await;
         match result {
             Ok(receipt) => Ok(receipt),
             Err(StorageError::Denied) if matches!(callback_error, AccessKind::Unavailable) => {
                 Err(ctx.error(AccessKind::Unavailable))
             }
             Err(StorageError::Denied) => {
-                let safe_target = matches!(callback_error, AccessKind::Denied)
-                    .then_some((id, source.as_str()));
-                Err(self.deny(connection, ctx, DeniedOperation::Update, callback_error, safe_target).await)
+                let safe_target =
+                    matches!(callback_error, AccessKind::Denied).then_some((id, source.as_str()));
+                Err(self
+                    .deny(
+                        connection,
+                        ctx,
+                        DeniedOperation::Update,
+                        callback_error,
+                        safe_target,
+                    )
+                    .await)
             }
             Err(error) => Err(Self::storage_error(ctx, error)),
         }
