@@ -591,7 +591,7 @@ impl Drop for Proxy {
     }
 }
 
-async fn execute(connection: &mut PgConnection, sql: &str) {
+async fn execute(connection: &mut PgConnection, sql: &'static str) {
     sqlx::query(sql).execute(connection).await.unwrap();
 }
 
@@ -767,6 +767,10 @@ fn routes(root: &str, api: &Value) {
         // fixed probe contract; discovery routes must enforce their offered type.
         if !path.starts_with("/health/") {
             problem(
+                &request(&url(root, path), "GET", Some("application/json;q=banana"), false),
+                400,
+            );
+            problem(
                 &request(
                     &url(root, path),
                     "GET",
@@ -824,7 +828,25 @@ fn hrefs(html: &str, attribute: &str) -> Vec<String> {
         .collect()
 }
 
-fn downloads(root: &str, landing: &Value, conformance: &Value) {
+fn validate_downloads(fixture: &mut Fixture, schema: Value, examples: Vec<Value>) {
+    const MARKER: &str = "Downloaded discovery schema: 2 valid examples; missing links, unfinished class, invalid schema and retrieval controls detected.\n";
+    let input = serde_json::to_vec(&json!({"schema":schema,"examples":examples})).unwrap();
+    assert!(input.len() <= 32_768, "downloaded schema fixture bound exceeded");
+    let input = fixture.file(&input);
+    let stdout = fixture.file(b"");
+    let stderr = fixture.file(b"");
+    let child = Command::new("/tmp/glaux-discovery-schema-proof")
+        .stdin(File::open(input).unwrap())
+        .stdout(File::create(&stdout).unwrap())
+        .stderr(File::create(&stderr).unwrap())
+        .spawn().expect("owned schema proof binary unavailable");
+    let mut process = Process { child, stdout, stderr, pump:None };
+    assert!(process.wait().success(), "downloaded schema/example compilation proof failed: {}", process.output());
+    assert_eq!(process.output(), MARKER, "schema proof execution marker missing or unexpected output");
+    print!("{MARKER}");
+}
+
+fn downloads(fixture: &mut Fixture, root: &str, landing: &Value, conformance: &Value) {
     let page = request(
         &linked(landing, "service-doc", "text/html").unwrap(),
         "GET",
@@ -859,14 +881,10 @@ fn downloads(root: &str, landing: &Value, conformance: &Value) {
             "local documentation target unavailable"
         );
     }
-    assert_eq!(
-        request(&url(root, "/examples/landing.json"), "GET", None, false).json(),
-        *landing
-    );
-    assert_eq!(
-        request(&url(root, "/examples/conformance.json"), "GET", None, false).json(),
-        *conformance
-    );
+    let landing_example = request(&url(root, "/examples/landing.json"), "GET", None, false).json();
+    let conformance_example = request(&url(root, "/examples/conformance.json"), "GET", None, false).json();
+    assert_eq!(landing_example, *landing);
+    assert_eq!(conformance_example, *conformance);
     let schema = request(&url(root, "/schemas/discovery.json"), "GET", None, false).json();
     assert_eq!(
         schema["$schema"],
@@ -879,6 +897,7 @@ fn downloads(root: &str, landing: &Value, conformance: &Value) {
             "offline schema lacks {definition}"
         );
     }
+    validate_downloads(fixture, schema, vec![landing_example, conformance_example]);
     let initializer = request(&url(root, "/docs/init.js"), "GET", None, false);
     let initializer = std::str::from_utf8(&initializer.body).unwrap();
     assert!(
@@ -1011,7 +1030,7 @@ async fn proof() {
         "forged origin changed API server root"
     );
     passed("actual-method-media-and-origin-contract");
-    downloads(DIRECT_ROOT, &landing, &conformance);
+    downloads(&mut fixture, DIRECT_ROOT, &landing, &conformance);
     assert_eq!(
         snapshot(&mut connection).await,
         before,
@@ -1024,7 +1043,7 @@ async fn proof() {
     let proxy = Proxy::start();
     let (landing, conformance, api) = discover(PREFIX_ROOT);
     routes(PREFIX_ROOT, &api);
-    downloads(PREFIX_ROOT, &landing, &conformance);
+    downloads(&mut fixture, PREFIX_ROOT, &landing, &conformance);
     assert_eq!(
         request(&url(PREFIX_ROOT, "/"), "GET", None, true).json(),
         landing,

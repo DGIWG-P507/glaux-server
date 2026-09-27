@@ -71,7 +71,8 @@ def main():
             require((ROOT / SOURCE).read_bytes() == original, "Real discovery source was modified")
             build_proof(ROOT, target)
         output = run_binary(target / "debug/glaux-server",
-                            target / "debug/examples/discovery-proof")
+                            target / "debug/examples/discovery-proof",
+                            target / "debug/examples/discovery-schema-proof")
         validate_output(output)
         record("restored", output, passed=True)
     print("Discovery failure control: 1 detected; 0 escaped.", flush=True)

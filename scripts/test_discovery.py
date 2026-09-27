@@ -59,14 +59,24 @@ def build_proof(source_root, target_directory):
     proof = target_directory / "debug/examples/discovery-proof"
     require(result.returncode == 0 and server.is_file() and proof.is_file(),
             "Required discovery server/proof did not build")
-    return server, proof
+    schema_result = subprocess.run(
+        ["cargo", "build", "--locked", "--offline", "-p", "glaux-standards",
+         "--example", "discovery-schema-proof", "--target-dir", str(target_directory)],
+        cwd=source_root, capture_output=True, text=True, timeout=180, check=False,
+    )
+    print(schema_result.stdout + schema_result.stderr, end="", flush=True)
+    schema_proof = target_directory / "debug/examples/discovery-schema-proof"
+    require(schema_result.returncode == 0 and schema_proof.is_file(),
+            "Required downloaded-schema proof did not build")
+    return server, proof, schema_proof
 
 
-def run_binary(server, proof):
+def run_binary(server, proof, schema_proof):
     with DisposablePostgis() as db:
         db.setup()
         for binary, name in ((server, "glaux-discovery-server"),
-                             (proof, "glaux-discovery-proof")):
+                             (proof, "glaux-discovery-proof"),
+                             (schema_proof, "glaux-discovery-schema-proof")):
             db.validate_target()
             docker("cp", str(binary), db.container_id + ":/tmp/" + name)
         db.validate_target()
@@ -81,6 +91,10 @@ def validate_output(output):
             "Required discovery groups missing, duplicated or reordered")
     require(output.splitlines().count(FINAL) == 1,
             "Discovery final marker missing/duplicated")
+    schema_marker = ("Downloaded discovery schema: 2 valid examples; missing links, "
+                     "unfinished class, invalid schema and retrieval controls detected.")
+    require(output.splitlines().count(schema_marker) == 2,
+            "Direct and prefixed downloaded-schema compilation did not both execute")
 
 
 def main():

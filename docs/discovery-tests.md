@@ -51,11 +51,20 @@ and after discovery, rather than checking only row counts.
 The client uses raw HTTP and general JSON values, never production discovery
 types or route metadata. Known-bad wire fixtures exercise exact link and
 declaration assertions. Actual requests cover every advertised method/media,
-negative methods and negotiation, unknown/unfinished paths, disabled discovery,
+negative methods, unsupported and malformed Accept negotiation, unknown/unfinished paths, disabled discovery,
 forged origins, prefix proxy navigation, schema/example downloads and exact local
 renderer asset bytes. Asset hashes are checked independently against their
 pinned manifest before execution. Browser execution is a separate hosted proof;
 the container proof does not claim that parsing HTML executes JavaScript.
+
+The test-only `glaux-standards` example `discovery-schema-proof` compiles the
+actual downloaded discovery schema and validates both actual downloaded
+examples, for direct and prefixed deployments. It reuses the existing pinned
+JSON Schema validator dependency without widening the production validator API.
+Bounded stdin, local-reference preflight and a denying retriever prohibit remote
+schema access. Missing-link and nonempty-conformance examples must fail; an
+invalid schema type must fail compilation; a deliberately remote reference must
+be refused. Both complete executions have an exact required output marker.
 
 `python3 scripts/test-discovery-failures.py` starts from a passing disposable
 source-copy baseline, advertises an unfinished class in a compiled server,
