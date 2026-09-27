@@ -322,7 +322,11 @@ impl HttpBoundary {
 
     /// Preserve exact JSON source octets after the same bounded parsing checks.
     /// Only the route's explicitly selected input media types are accepted.
-    pub async fn read_json_bytes(&self, request: Request, offered: &[&str]) -> Result<Bytes, Problem> {
+    pub async fn read_json_bytes(
+        &self,
+        request: Request,
+        offered: &[&str],
+    ) -> Result<Bytes, Problem> {
         media::check_coding(request.headers())?;
         media::check_media(request.headers(), offered)?;
         let bytes = self.read_bytes(request).await?;

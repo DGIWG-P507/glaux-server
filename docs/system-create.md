@@ -49,7 +49,9 @@ the existing issuer/audience/key checks. Development callers remain explicit,
 loopback-only test identities: never publish or proxy that listener externally.
 
 The serving role needs the existing atomic-write tables' required read/insert
-permissions and retry-row update permission, not schema/migration ownership.
+permissions, retry-row update permission and the existing parent-write-guard
+read/update permission, not schema/migration ownership. The proof enumerates
+these grants separately from its administrative inspection connection.
 Run migrations separately with the administrative role. No permanent database,
 cloud service or company-laptop installation is required for the hosted tests.
 

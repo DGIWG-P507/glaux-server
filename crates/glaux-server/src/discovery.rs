@@ -396,8 +396,11 @@ fn openapi(
         }}
     });
     if system_creation {
-        api["info"]["description"] = json!("Initial discovery, health and explicitly enabled minimal System creation. Retrieval, other resource operations and complete conformance classes are not advertised. OpenAPI 3.1 availability does not declare the separate OAS 3.0 class.");
-        api["paths"][SYSTEM_CREATE.path()] = json!({"post": system_creation_operation(authentication)});
+        api["info"]["description"] = json!(
+            "Initial discovery, health and explicitly enabled minimal System creation. Retrieval, other resource operations and complete conformance classes are not advertised. OpenAPI 3.1 availability does not declare the separate OAS 3.0 class."
+        );
+        api["paths"][SYSTEM_CREATE.path()] =
+            json!({"post": system_creation_operation(authentication)});
     }
     if system_creation && authentication == Authentication::Jwt {
         api["components"]["securitySchemes"] = json!({
@@ -459,7 +462,9 @@ fn system_creation_operation(authentication: Authentication) -> Value {
     operation["security"] = if authentication == Authentication::Jwt {
         json!([{"bearerAuth":[]}])
     } else {
-        operation["x-glaux-development-identity"] = json!("Explicit loopback-only configured identity; no caller credential header. Configured source/action permissions are still mandatory, and anonymous/disabled authentication cannot enable this operation.");
+        operation["x-glaux-development-identity"] = json!(
+            "Explicit loopback-only configured identity; no caller credential header. Configured source/action permissions are still mandatory, and anonymous/disabled authentication cannot enable this operation."
+        );
         json!([])
     };
     operation
@@ -569,7 +574,9 @@ pub fn router_with_system_creation(
 ) -> Result<Router, Problem> {
     let mut landing = landing(boundary)?;
     if system_creation {
-        landing["description"] = json!("Initial discovery and enabled minimal System creation, documented through the linked API definition. Retrieval and completed conformance classes are not advertised.");
+        landing["description"] = json!(
+            "Initial discovery and enabled minimal System creation, documented through the linked API definition. Retrieval and completed conformance classes are not advertised."
+        );
     }
     let conformance = conformance(boundary)?;
     let mut schema: Value = serde_json::from_str(include_str!("../assets/discovery-schema.json"))
@@ -705,22 +712,46 @@ mod tests {
             let api = openapi(&boundary, &schema, true, mode).unwrap();
             assert_eq!(api["paths"].as_object().unwrap().len(), 16);
             let methods = api["paths"]["/systems"].as_object().unwrap();
-            assert_eq!(methods.keys().map(String::as_str).collect::<Vec<_>>(), vec!["post"]);
+            assert_eq!(
+                methods.keys().map(String::as_str).collect::<Vec<_>>(),
+                vec!["post"]
+            );
             assert!(api["paths"].get("/systems/{id}").is_none());
             let post = &methods["post"];
             assert!(post["responses"]["201"].get("content").is_none());
-            assert_eq!(post["responses"]["201"]["headers"]["Location"]["required"], true);
-            assert_eq!(post["requestBody"]["content"].as_object().unwrap().keys().collect::<Vec<_>>(), vec!["application/geo+json"]);
-            assert_eq!(post["requestBody"]["content"]["application/geo+json"]["example"], json!({
-                "type":"Feature", "geometry":null,
-                "properties":{"uid":"urn:glaux:example:thermometer","name":"Example thermometer","featureType":"sosa:Sensor"}
-            }));
+            assert_eq!(
+                post["responses"]["201"]["headers"]["Location"]["required"],
+                true
+            );
+            assert_eq!(
+                post["requestBody"]["content"]
+                    .as_object()
+                    .unwrap()
+                    .keys()
+                    .collect::<Vec<_>>(),
+                vec!["application/geo+json"]
+            );
+            assert_eq!(
+                post["requestBody"]["content"]["application/geo+json"]["example"],
+                json!({
+                    "type":"Feature", "geometry":null,
+                    "properties":{"uid":"urn:glaux:example:thermometer","name":"Example thermometer","featureType":"sosa:Sensor"}
+                })
+            );
             if mode == Authentication::Jwt {
                 assert_eq!(post["security"], json!([{"bearerAuth":[]}]));
-                assert_eq!(api["components"]["securitySchemes"]["bearerAuth"]["scheme"], "bearer");
+                assert_eq!(
+                    api["components"]["securitySchemes"]["bearerAuth"]["scheme"],
+                    "bearer"
+                );
             } else {
                 assert_eq!(post["security"], json!([]));
-                assert!(post["x-glaux-development-identity"].as_str().unwrap().contains("loopback"));
+                assert!(
+                    post["x-glaux-development-identity"]
+                        .as_str()
+                        .unwrap()
+                        .contains("loopback")
+                );
             }
             assert_eq!(conformance(&boundary).unwrap()["conformsTo"], json!([]));
         }

@@ -24,7 +24,11 @@ directories and database targets must clean up; cleanup failure is fatal.
 The client uses raw HTTP and general JSON, not production request/response
 types. A success has empty body, status 201, no promised ETag, and a canonical
 configured-origin/prefix Location carrying a generated lowercase UUIDv7.
-Wrong status/body/origin/identifier/validator fixtures must fail the wire oracle.
+Wrong status/body/origin/identifier/validator/cache/correlation fixtures must fail
+the wire oracle. Authenticated handler results, including errors, require exactly
+`private, no-store`. Public fallback, failed authentication and early outer
+boundary rejection require exactly `no-store`; the proof does not interchange
+those expectations.
 
 A minimal Feature has null geometry and properties uid, name and featureType.
 Published SOSA short/full primary-type forms are preserved, not replaced with
@@ -42,7 +46,7 @@ reveal a different result. If-Modified-Since does not make POST conditional.
 
 | Ordered group | Evidence |
 | --- | --- |
-| independent-wire-oracle-controls | Five known-bad success responses cannot satisfy the independently specified creation response. |
+| independent-wire-oracle-controls | Seven known-bad success responses cannot satisfy the independently specified creation response. |
 | empty201-canonical-location-and-atomic-records | Actual POST and canonical Location; exact UID/label, source bytes/digest, revision, audit actor/source/time/correlation, outgoing work and write-head joins; discovery advertises POST only, not future GET or conformance. |
 | malformed-media-and-no-partial-writes | Duplicate UID, malformed/duplicate-key JSON, missing/wrong tag, invalid ID, unsupported geometry/relationship/forged source, wrong media and coding. Full ordered snapshots remain unchanged. |
 | verified-callers-source-scope-and-safe-denials | Two development callers/groups and configured sources, plus an independently OpenSSL-signed JWT through the actual binary. Missing/bad credentials fail before a condition; accepted audit matches verified JWT context. Cross-source denial adds only safe denial audit, not resource/revision/retry/outgoing state. |

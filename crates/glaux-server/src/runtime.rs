@@ -103,12 +103,21 @@ pub async fn serve(config: Configuration) -> Result<(), RuntimeError> {
         )
         .with_state(health);
     let app = if config.discovery_enabled() {
-        app.merge(discovery::router_with_system_creation(&boundary, config.system_creation_enabled(), config.authentication()).map_err(|_| RuntimeError::Discovery)?)
+        app.merge(
+            discovery::router_with_system_creation(
+                &boundary,
+                config.system_creation_enabled(),
+                config.authentication(),
+            )
+            .map_err(|_| RuntimeError::Discovery)?,
+        )
     } else {
         app
     };
     let app = if config.system_creation_enabled() {
-        app.merge(system_http::router(&config, pool.clone()).map_err(|_| RuntimeError::SystemCreation)?)
+        app.merge(
+            system_http::router(&config, pool.clone()).map_err(|_| RuntimeError::SystemCreation)?,
+        )
     } else {
         app
     };

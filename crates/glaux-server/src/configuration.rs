@@ -134,7 +134,11 @@ impl Configuration {
         let document: Document = serde_json::from_slice(bytes).map_err(|_| ConfigError::Invalid)?;
         let system_creation = match (has_system_creation, document.system_creation) {
             (false, None) => None,
-            (true, Some(config)) if config.valid() && document.authentication != Authentication::Disabled => Some(config),
+            (true, Some(config))
+                if config.valid() && document.authentication != Authentication::Disabled =>
+            {
+                Some(config)
+            }
             _ => return Err(ConfigError::Invalid),
         };
         let policy = match (has_policy, document.policy) {
@@ -476,21 +480,26 @@ mod tests {
     #[test]
     fn runtime_system_creation_requires_explicit_source_authority_and_bounds() {
         use serde_json::{Value, json};
-        let mut input: Value = serde_json::from_str(&document("127.0.0.1:8080", "development")).unwrap();
+        let mut input: Value =
+            serde_json::from_str(&document("127.0.0.1:8080", "development")).unwrap();
         assert!(!parse(&input.to_string()).unwrap().system_creation_enabled());
         input["system_creation"] = json!({"source":"source-a", "retry_retention_seconds":3600});
         assert!(parse(&input.to_string()).is_err());
         input["http"] = json!({"public_api_root":"https://example.test/prefix"});
         assert!(parse(&input.to_string()).unwrap().system_creation_enabled());
         assert!(!parse(&input.to_string()).unwrap().discovery_enabled());
-        for config in [Value::Null, json!(true), json!({"source":"source-a"}),
+        for config in [
+            Value::Null,
+            json!(true),
+            json!({"source":"source-a"}),
             json!({"source":"", "retry_retention_seconds":3600}),
             json!({"source":"line\nbreak", "retry_retention_seconds":3600}),
             json!({"source":"x".repeat(257), "retry_retention_seconds":3600}),
             json!({"source":"source-a", "retry_retention_seconds":0}),
             json!({"source":"source-a", "retry_retention_seconds":-1}),
             json!({"source":"source-a", "retry_retention_seconds":4294967296u64}),
-            json!({"source":"source-a", "retry_retention_seconds":3600, "trust_body_source":true})] {
+            json!({"source":"source-a", "retry_retention_seconds":3600, "trust_body_source":true}),
+        ] {
             let mut invalid = input.clone();
             invalid["system_creation"] = config;
             assert!(parse(&invalid.to_string()).is_err());

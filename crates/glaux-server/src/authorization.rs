@@ -623,7 +623,8 @@ impl Admission {
         input: CreateSystem,
         retry: Option<&RetryKey>,
     ) -> Result<WriteReceipt, AccessError> {
-        self.create_system_if(connection, ctx, source, input, retry, true).await
+        self.create_system_if(connection, ctx, source, input, retry, true)
+            .await
     }
 
     /// HTTP conditions describe the request target, not the candidate identity.
