@@ -4,7 +4,7 @@ mod media;
 use axum::Router;
 use axum::body::{Body, Bytes, HttpBody};
 use axum::extract::{Request, State};
-use axum::http::{HeaderMap, HeaderValue, Method, StatusCode, Uri, header};
+use axum::http::{HeaderMap, HeaderValue, StatusCode, Uri, header};
 use axum::middleware::{self, Next};
 use axum::response::{IntoResponse, Response};
 use glaux_domain::identity::LocalId;
@@ -531,7 +531,6 @@ async fn dispatch(state: &HttpBoundary, request: Request, next: Next) -> Result<
 }
 
 async fn boundary(State(state): State<HttpBoundary>, request: Request, next: Next) -> Response {
-    let head = request.method() == Method::HEAD;
     let mut response = match dispatch(&state, request, next).await {
         Ok(response) => response,
         Err(problem) => {
@@ -555,9 +554,9 @@ async fn boundary(State(state): State<HttpBoundary>, request: Request, next: Nex
     {
         response.headers_mut().insert("x-request-id", value);
     }
-    if head {
-        *response.body_mut() = Body::empty();
-    }
+    // The outer Axum route calculates Content-Length before stripping HEAD
+    // bodies, including fallback and early boundary errors. Do not empty the
+    // body here: doing so would advertise zero instead of the GET length.
     response
 }
 
