@@ -53,6 +53,8 @@ python3 -u scripts/check-execution.py authentication
 python3 -u scripts/test-authentication-failures.py
 python3 -u scripts/check-execution.py key-refresh
 python3 -u scripts/test-key-refresh-failures.py
+python3 -u scripts/check-execution.py authorization
+python3 -u scripts/test-authorization-failures.py
 python3 -u scripts/test-ci-failures.py
 python3 -u scripts/test-validation-failures.py
 python3 -u scripts/test-projection-failures.py
@@ -180,6 +182,13 @@ A compiled wrong-origin fault must fail the exact independent link assertion
 between passing baseline/restored runs. Configuration/root/media unit tests are
 required by name. The actual CLI/database health proof also checks the shared
 fallback and a configured URI limit, without changing stored data.
+
+The [permission proof](authorization-tests.md) combines verified synthetic
+callers, independent HTTP assertions and actual least-privilege System writes
+inside the owned database. It checks paired action/source/resource scope,
+concealed reads and safe bounded denial records. Its compiled permission fault
+must fail the named cross-source assertion between passing baseline/restored
+runs; setup, compilation and timeout failures cannot satisfy that control.
 
 ## Main-branch rule
 

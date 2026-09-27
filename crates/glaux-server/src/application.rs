@@ -102,10 +102,25 @@ pub async fn create_system_with_retry<F>(
     connection: &mut PgConnection,
     input: &CreateSystem,
     retry: Option<&RetryKey>,
-    authorize: F,
+    mut authorize: F,
 ) -> Result<WriteReceipt, StorageError>
 where
     F: FnMut(&WriteReceipt) -> bool,
+{
+    create_system_inner(connection, input, retry, |receipt, _| authorize(receipt)).await
+}
+
+/// Internal policy wiring distinguishes initial admission from disclosure of
+/// a retained replay outcome. The callback stays synchronous and local; it is
+/// evaluated after any retry lock and before digest comparison or mutation.
+pub(crate) async fn create_system_with_retry_admission<F>(
+    connection: &mut PgConnection,
+    input: &CreateSystem,
+    retry: Option<&RetryKey>,
+    authorize: F,
+) -> Result<WriteReceipt, StorageError>
+where
+    F: FnMut(&WriteReceipt, bool) -> bool,
 {
     create_system_inner(connection, input, retry, authorize).await
 }
@@ -176,7 +191,7 @@ impl PreparedRetry<'_> {
         authorize: &mut F,
     ) -> Result<Option<WriteReceipt>, StorageError>
     where
-        F: FnMut(&WriteReceipt) -> bool,
+        F: FnMut(&WriteReceipt, bool) -> bool,
     {
         // Acquire before any resource/parent lock. Hash collisions only serialize;
         // exact fields below, not the hash, decide identity. Transaction release
@@ -234,7 +249,7 @@ impl PreparedRetry<'_> {
                 .map_err(|_| StorageError::InvalidStoredValue)?,
         };
         // Revoke disclosure before distinguishing equal from conflicting intent.
-        if !authorize(&receipt) {
+        if !authorize(&receipt, true) {
             return Err(StorageError::Denied);
         }
         let stored_digest: Vec<u8> = row.try_get("digest")?;
@@ -294,6 +309,36 @@ pub struct DeniedSystemCreate {
     /// Safe requested identifier only, not a lookup or disclosure of existence.
     pub target: Option<LocalId>,
     pub audit: AuditContext,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DeniedOperation {
+    Create,
+    Update,
+}
+
+impl DeniedOperation {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Create => "system.create",
+            Self::Update => "system.update",
+        }
+    }
+}
+
+/// Safe fields prepared by the policy boundary, never a deserialized request.
+pub struct DeniedMutation {
+    pub audit_id: AuditId,
+    pub target: Option<LocalId>,
+    pub audit: AuditContext,
+    pub operation: DeniedOperation,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DenialStorage {
+    Retained,
+    Capacity,
+    Busy,
 }
 
 fn valid_metadata(value: &str) -> bool {
@@ -386,7 +431,7 @@ pub async fn create_system(
     connection: &mut PgConnection,
     input: &CreateSystem,
 ) -> Result<WriteReceipt, StorageError> {
-    create_system_inner(connection, input, None, |_| true).await
+    create_system_inner(connection, input, None, |_, _| true).await
 }
 
 async fn create_system_inner<F>(
@@ -396,7 +441,7 @@ async fn create_system_inner<F>(
     mut authorize: F,
 ) -> Result<WriteReceipt, StorageError>
 where
-    F: FnMut(&WriteReceipt) -> bool,
+    F: FnMut(&WriteReceipt, bool) -> bool,
 {
     if connection.is_in_transaction()
         || input.system.id != input.revision.system_id
@@ -450,7 +495,7 @@ where
         {
             return Ok(recorded);
         }
-        if !authorize(&receipt) {
+        if !authorize(&receipt, false) {
             return Err(StorageError::Denied);
         }
         insert_system(&mut transaction, &input.system).await?;
@@ -529,6 +574,81 @@ pub async fn record_denied_system_create(
     }
 }
 
+/// Append one eligible denial under a database-wide cap. The policy boundary
+/// performs its process-local rate check before calling this function. Accepted
+/// mutation audit is never sampled or limited through this separate path.
+///
+/// A transaction-scoped try-lock never waits behind another denial recorder;
+/// statement/lock timeouts bound the remaining work. The cap query stops after
+/// `max_rows` matches. No purge, spool or promise of a row under failure exists.
+pub async fn record_denied_mutation_bounded(
+    connection: &mut PgConnection,
+    input: &DeniedMutation,
+    max_rows: u32,
+) -> Result<DenialStorage, StorageError> {
+    if connection.is_in_transaction()
+        || !valid_context(&input.audit)
+        || !(1..=100_000).contains(&max_rows)
+    {
+        return Err(StorageError::InvalidInput);
+    }
+    let mut transaction = connection
+        .begin_with("BEGIN ISOLATION LEVEL READ COMMITTED")
+        .await?;
+    let result = async {
+        sqlx::query("SET LOCAL statement_timeout = '1000ms'")
+            .execute(&mut *transaction)
+            .await?;
+        sqlx::query("SET LOCAL lock_timeout = '100ms'")
+            .execute(&mut *transaction)
+            .await?;
+        check_schema(&mut transaction).await?;
+        // Fixed namespace shared by every caller of this bounded path. Using a
+        // different client source, actor or operation cannot obtain another cap.
+        let acquired: bool = sqlx::query_scalar("SELECT pg_try_advisory_xact_lock(1196183896, 22)")
+            .fetch_one(&mut *transaction)
+            .await?;
+        if !acquired {
+            return Ok(DenialStorage::Busy);
+        }
+        // READ COMMITTED takes a fresh statement snapshot after lock acquisition,
+        // including a preceding recorder that committed before this try-lock.
+        let count: i64 = sqlx::query_scalar(
+            "SELECT count(*) FROM (
+               SELECT 1 FROM public.server_audit WHERE outcome='denied' LIMIT $1
+             ) AS bounded_denials",
+        )
+        .bind(i64::from(max_rows))
+        .fetch_one(&mut *transaction)
+        .await?;
+        if count >= i64::from(max_rows) {
+            return Ok(DenialStorage::Capacity);
+        }
+        insert_audit(
+            &mut transaction,
+            input.audit_id,
+            input.target,
+            None,
+            &input.audit,
+            "denied",
+            input.operation.as_str(),
+        )
+        .await?;
+        Ok::<_, StorageError>(DenialStorage::Retained)
+    }
+    .await;
+    match result {
+        Ok(outcome) => {
+            transaction.commit().await?;
+            Ok(outcome)
+        }
+        Err(error) => {
+            transaction.rollback().await?;
+            Err(error)
+        }
+    }
+}
+
 fn check_revision(expected: Option<RevisionId>, current: RevisionId) -> Result<(), StorageError> {
     if expected.is_some_and(|expected| expected != current) {
         return Err(StorageError::PreconditionFailed);
@@ -544,6 +664,19 @@ pub async fn update_system(
     connection: &mut PgConnection,
     input: &UpdateSystem,
 ) -> Result<WriteReceipt, StorageError> {
+    update_system_admission(connection, input, || true).await
+}
+
+/// Local policy recheck after locking the resource, before exposing the current
+/// revision or changing state. Trusted low-level callers keep their old API.
+pub(crate) async fn update_system_admission<F>(
+    connection: &mut PgConnection,
+    input: &UpdateSystem,
+    mut authorize: F,
+) -> Result<WriteReceipt, StorageError>
+where
+    F: FnMut() -> bool,
+{
     if connection.is_in_transaction()
         || input.system_id != input.revision.system_id
         || input.artifact.id != input.revision.artifact_id
@@ -572,6 +705,9 @@ pub async fn update_system(
         .bind(input.system_id.to_string())
         .fetch_optional(&mut *transaction)
         .await?;
+        if !authorize() {
+            return Err(StorageError::Denied);
+        }
         if locked.is_none() {
             return Err(StorageError::NotFound);
         }

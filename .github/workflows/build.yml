@@ -117,6 +117,11 @@ jobs:
         run: |
           python3 -u scripts/check-execution.py runtime-health | tee "$RUNNER_TEMP/glaux-ci-evidence/runtime-health.log"
           python3 -u scripts/test-runtime-health-failures.py
+      - name: Prove action source and resource permissions through a real listener and database
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py authorization | tee "$RUNNER_TEMP/glaux-ci-evidence/authorization.log"
+          python3 -u scripts/test-authorization-failures.py
       - name: Check original corpus and offline fault controls
         shell: bash
         run: |

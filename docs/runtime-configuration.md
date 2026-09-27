@@ -17,7 +17,7 @@ glaux-server check-config /protected/glaux.json
 glaux-server serve /protected/glaux.json
 ```
 
-`check-config` reads, validates, constructs the selected authenticator and resolves
+`check-config` reads, validates, constructs the selected authenticator/policy and resolves
 secrets without opening a database connection or HTTP listener, fetching issuer
 keys, or issuing tokens. Success prints only `Configuration valid; secrets
 redacted.` It does not prove database reachability, schema compatibility, ownership
@@ -60,8 +60,14 @@ Omission keeps safe default limits without guessing a public origin.
 
 Unknown fields, duplicate members (including inside public keys), missing required values, unsupported
 authentication modes and wrong types fail without quoting the input. Future
-policy, adapter and resource-specific settings are not
+adapter and resource-specific settings are not
 silently accepted placeholders: their owning tasks will add validated fields.
+
+The optional [local permission policy](authorization.md) adds strict `policy`
+grants and finite denial-audit limits. Omission denies all protected resource
+operations; authentication alone never grants them. The configured admission
+object is available for resource handlers without adding routes to this
+health-only binary.
 
 ## Authentication selection
 

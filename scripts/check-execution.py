@@ -65,12 +65,16 @@ def main():
         command = [sys.executable, "-u", "scripts/test_authentication.py"]
         markers = ["Authentication: all required checks passed."]
         missing = "Required authentication proof did not execute successfully"
+    elif sys.argv[1:] == ["authorization"]:
+        command = [sys.executable, "-u", "scripts/test_authorization.py"]
+        markers = ["Authorization: all required checks passed."]
+        missing = "Required authorization proof did not execute successfully"
     elif sys.argv[1:] == ["key-refresh"]:
         command = [sys.executable, "-u", "scripts/test_key_refresh.py"]
         markers = ["Key refresh: all required checks passed."]
         missing = "Required key-refresh proof did not execute successfully"
     else:
-        sys.exit("Specify exactly rust, database, schema-fuzz, numeric-fuzz, time-fuzz, time-database, system-storage, revision-storage, atomic-write, conditional-write, retry-write, runtime-health, http-boundary, authentication or key-refresh; no test-selection override.")
+        sys.exit("Specify exactly rust, database, schema-fuzz, numeric-fuzz, time-fuzz, time-database, system-storage, revision-storage, atomic-write, conditional-write, retry-write, runtime-health, http-boundary, authentication, key-refresh or authorization; no test-selection override.")
     print("Required command: " + " ".join(command), flush=True)
     try:
         result = subprocess.run(
