@@ -121,7 +121,8 @@ from a submitted producer or source claim. Selected denied mutations retain safe
 audit information within explicit limits, and policy/audit failures never grant
 access. Independent two-source listener/database checks exercise this shared
 boundary. These are foundations for later resource routes: the production
-listener still exposes only minimal public health.
+listener exposes public health and explicitly enabled discovery, not protected
+CSAPI resource operations.
 
 ## Planned capabilities
 

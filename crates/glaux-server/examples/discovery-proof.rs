@@ -767,7 +767,12 @@ fn routes(root: &str, api: &Value) {
         // fixed probe contract; discovery routes must enforce their offered type.
         if !path.starts_with("/health/") {
             problem(
-                &request(&url(root, path), "GET", Some("application/json;q=banana"), false),
+                &request(
+                    &url(root, path),
+                    "GET",
+                    Some("application/json;q=banana"),
+                    false,
+                ),
                 400,
             );
             problem(
@@ -831,7 +836,10 @@ fn hrefs(html: &str, attribute: &str) -> Vec<String> {
 fn validate_downloads(fixture: &mut Fixture, schema: Value, examples: Vec<Value>) {
     const MARKER: &str = "Downloaded discovery schema: 2 valid examples; missing links, unfinished class, invalid schema and retrieval controls detected.\n";
     let input = serde_json::to_vec(&json!({"schema":schema,"examples":examples})).unwrap();
-    assert!(input.len() <= 32_768, "downloaded schema fixture bound exceeded");
+    assert!(
+        input.len() <= 32_768,
+        "downloaded schema fixture bound exceeded"
+    );
     let input = fixture.file(&input);
     let stdout = fixture.file(b"");
     let stderr = fixture.file(b"");
@@ -839,10 +847,24 @@ fn validate_downloads(fixture: &mut Fixture, schema: Value, examples: Vec<Value>
         .stdin(File::open(input).unwrap())
         .stdout(File::create(&stdout).unwrap())
         .stderr(File::create(&stderr).unwrap())
-        .spawn().expect("owned schema proof binary unavailable");
-    let mut process = Process { child, stdout, stderr, pump:None };
-    assert!(process.wait().success(), "downloaded schema/example compilation proof failed: {}", process.output());
-    assert_eq!(process.output(), MARKER, "schema proof execution marker missing or unexpected output");
+        .spawn()
+        .expect("owned schema proof binary unavailable");
+    let mut process = Process {
+        child,
+        stdout,
+        stderr,
+        pump: None,
+    };
+    assert!(
+        process.wait().success(),
+        "downloaded schema/example compilation proof failed: {}",
+        process.output()
+    );
+    assert_eq!(
+        process.output(),
+        MARKER,
+        "schema proof execution marker missing or unexpected output"
+    );
     print!("{MARKER}");
 }
 
@@ -882,7 +904,8 @@ fn downloads(fixture: &mut Fixture, root: &str, landing: &Value, conformance: &V
         );
     }
     let landing_example = request(&url(root, "/examples/landing.json"), "GET", None, false).json();
-    let conformance_example = request(&url(root, "/examples/conformance.json"), "GET", None, false).json();
+    let conformance_example =
+        request(&url(root, "/examples/conformance.json"), "GET", None, false).json();
     assert_eq!(landing_example, *landing);
     assert_eq!(conformance_example, *conformance);
     let schema = request(&url(root, "/schemas/discovery.json"), "GET", None, false).json();

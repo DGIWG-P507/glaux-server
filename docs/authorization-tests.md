@@ -199,8 +199,8 @@ authorized-query group. No build, service or cleanup failure counts as detection
 ## Limits
 
 This is shared admission and System-storage fixture coverage, not new public
-CSAPI routes. The production listener remains health-only until its route-owning
-tasks. It does not establish coverage for unimplemented observations, commands,
+CSAPI routes. The production listener has public health and opt-in discovery;
+resource operations remain later tasks. This proof does not establish coverage for unimplemented observations, commands,
 status reporting, exports, provenance graphs, streaming or diagnostic endpoints.
 Those owners reuse and extend the same permission boundaries. No enterprise
 policy administration, national/NATO labeling adapter, real identity provider,

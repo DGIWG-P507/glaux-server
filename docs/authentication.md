@@ -122,7 +122,8 @@ Authorization before the protected handler. Successful protected responses are
 shared HTTP boundary outside protected routes for correlation, safe errors,
 request bounds and timeouts.
 
-The production binary still serves only minimal public health routes. Its
+The production binary serves public health and explicitly enabled
+[discovery](discovery.md), not protected CSAPI resource routes. Its
 validated configuration exposes the authenticator for future resource groups;
 the synthetic protected route exists only in the proof executable. There is no
 identity-inspection endpoint or anonymous write path in the server. Deployment
