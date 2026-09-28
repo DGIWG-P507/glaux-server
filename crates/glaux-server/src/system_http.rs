@@ -1,22 +1,22 @@
-//! First, explicitly configured System POST. No retrieval or full CRUD claim.
+//! Explicitly configured minimal System POST and canonical GET. No full CRUD claim.
 use crate::application::{AuditContext, AuditId, CreateSystem, EventId, RetryKey};
 use crate::authentication::CallerContext;
-use crate::authorization::{AccessError, Admission, OperationContext};
+use crate::authorization::{AccessError, Admission, CurrentSystem, OperationContext};
 use crate::configuration::Configuration;
 use crate::discovery;
-use crate::http_boundary::{HttpBoundary, Problem};
+use crate::http_boundary::{HttpBoundary, Problem, negotiate};
 use crate::revisions::{ArtifactId, NewSourceArtifact, RevisionId, SystemRevision};
 use crate::storage::SystemRecord;
 use axum::Router;
-use axum::extract::{Request, State};
+use axum::extract::{Path, Request, State, rejection::PathRejection};
 use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use glaux_domain::identity::{LocalId, Uid};
 use glaux_domain::temporal::ExactInstant;
 use glaux_standards::projection::{Projection, ProjectionValidator, RequestContext, Resource};
 use serde::Deserialize;
-use serde_json::Value;
-use sqlx::PgPool;
+use serde_json::{Value, json};
+use sqlx::{PgConnection, PgPool};
 use std::sync::Arc;
 
 const INPUT_MEDIA: &str = "application/geo+json";
@@ -38,7 +38,7 @@ impl SystemCreationConfig {
 }
 
 #[derive(Clone)]
-struct CreateState {
+struct SystemState {
     pool: PgPool,
     boundary: HttpBoundary,
     admission: Admission,
@@ -75,7 +75,7 @@ impl IntoResponse for Error {
 /// Compile pinned schemas offline before exposing the route. No fetch, migration
 /// or write occurs here. Call only for an explicitly enabled configuration.
 pub fn router(config: &Configuration, pool: PgPool) -> Result<Router, Problem> {
-    let state = CreateState {
+    let state = SystemState {
         pool,
         boundary: config.http_boundary(),
         admission: config.admission(),
@@ -86,6 +86,10 @@ pub fn router(config: &Configuration, pool: PgPool) -> Result<Router, Problem> {
         .route(
             discovery::SYSTEM_CREATE.path(),
             discovery::SYSTEM_CREATE.method(create),
+        )
+        .route(
+            discovery::SYSTEM_READ.path(),
+            discovery::SYSTEM_READ.method(read),
         )
         .with_state(state);
     Ok(config.authenticator().protect(routes))
@@ -252,7 +256,7 @@ fn minimal(validator: &ProjectionValidator, bytes: &[u8]) -> Result<(Uid, String
     Ok((uid, label.to_owned()))
 }
 
-async fn create(State(state): State<CreateState>, request: Request) -> Result<Response, Error> {
+async fn create(State(state): State<SystemState>, request: Request) -> Result<Response, Error> {
     let caller = request
         .extensions()
         .get::<CallerContext>()
@@ -264,15 +268,7 @@ async fn create(State(state): State<CreateState>, request: Request) -> Result<Re
         .await
         .map_err(|_| Problem::unavailable())?;
     // One explicit trusted operation-receipt sample, before the write transaction.
-    // No request timestamp, UUID timestamp, implicit column default or exact
-    // network-arrival/commit-time claim is substituted for this observation.
-    let receipt_lexeme: String = sqlx::query_scalar(
-        "SELECT to_char(clock_timestamp() AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"')",
-    )
-    .fetch_one(&mut *connection)
-    .await
-    .map_err(|_| Problem::unavailable())?;
-    let time = ExactInstant::parse_rfc3339(&receipt_lexeme).map_err(|_| Problem::unavailable())?;
+    let time = receipt_time(&mut connection).await?;
     let context = OperationContext::new(caller, time.clone())?;
     state
         .admission
@@ -331,14 +327,12 @@ async fn create(State(state): State<CreateState>, request: Request) -> Result<Re
             precondition,
         )
         .await?;
-    let location = state
-        .boundary
-        .link(&["systems", &receipt.system_id.to_string()], &[])?;
+    let location = canonical(&state.boundary, receipt.system_id)?;
     let location = HeaderValue::from_str(&location).map_err(|_| Problem::internal())?;
     let correlation =
         HeaderValue::from_str(context.correlation()).map_err(|_| Problem::internal())?;
     // The empty creation receipt negotiates no resource representation. No ETag,
-    // body or internal revision is disclosed; canonical GET belongs to #25.
+    // body or internal revision is disclosed; GET on Location returns the System.
     Ok((
         StatusCode::CREATED,
         [
@@ -353,10 +347,124 @@ async fn create(State(state): State<CreateState>, request: Request) -> Result<Re
         .into_response())
 }
 
+/// No request timestamp, UUID timestamp, implicit column default or exact
+/// network-arrival/commit-time claim is substituted for this observation.
+async fn receipt_time(connection: &mut PgConnection) -> Result<ExactInstant, Problem> {
+    let lexeme: String = sqlx::query_scalar(
+        "SELECT to_char(clock_timestamp() AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS.US\"Z\"')",
+    )
+    .fetch_one(connection)
+    .await
+    .map_err(|_| Problem::unavailable())?;
+    ExactInstant::parse_rfc3339(&lexeme).map_err(|_| Problem::unavailable())
+}
+
+/// The one canonical member URL: the creation Location and the GET self link.
+fn canonical(boundary: &HttpBoundary, id: LocalId) -> Result<String, Problem> {
+    boundary.link(&["systems", &id.to_string()], &[])
+}
+
+/// Canonical GET/HEAD. The authentication layer marks every authenticated
+/// outcome, including problems, `private, no-store`. Missing, concealed and
+/// non-canonical IDs share one 404.
+async fn read(
+    State(state): State<SystemState>,
+    id: Result<Path<String>, PathRejection>,
+    request: Request,
+) -> Result<Response, Error> {
+    let caller = request
+        .extensions()
+        .get::<CallerContext>()
+        .cloned()
+        .ok_or_else(Problem::unauthorized)?;
+    // Absent Accept selects the only offered representation.
+    negotiate(request.headers(), &[INPUT_MEDIA])?;
+    // LocalId accepts only the canonical lowercase UUIDv7 spelling. Any other
+    // path value names no stored System and gets the same safe 404.
+    let id = id
+        .ok()
+        .and_then(|Path(text)| text.parse::<LocalId>().ok())
+        .ok_or_else(Problem::not_found)?;
+    let mut connection = state
+        .pool
+        .acquire()
+        .await
+        .map_err(|_| Problem::unavailable())?;
+    let time = receipt_time(&mut connection).await?;
+    let context = OperationContext::new(caller, time)?;
+    // SYSTEM_READ_STORAGE: the persisted, authorized source of the response.
+    let system = state
+        .admission
+        .current_system(&mut connection, &context, id)
+        .await?;
+    let value = representation(&state.boundary, &system)?;
+    let bytes = serde_json::to_vec(&value).map_err(|_| Problem::internal())?;
+    // Never emit a System that the pinned response projection rejects.
+    state
+        .validator
+        .validate(Resource::SystemGeoJson, Projection::Response, &bytes)
+        .map_err(|_| Problem::internal())?;
+    let correlation =
+        HeaderValue::from_str(context.correlation()).map_err(|_| Problem::internal())?;
+    // No ETag or conditional GET in this increment (Roadmap 2.4.9 owns them).
+    Ok((
+        [
+            (header::CONTENT_TYPE, HeaderValue::from_static(INPUT_MEDIA)),
+            (header::VARY, HeaderValue::from_static("Accept")),
+            (HeaderName::from_static("x-request-id"), correlation),
+        ],
+        bytes,
+    )
+        .into_response())
+}
+
+/// Stored identity and label, the exact featureType spelling retained in the
+/// current accepted source, and generated canonical links. Nothing else from
+/// the retained source (such as a supplied id or links) is echoed.
+fn representation(boundary: &HttpBoundary, system: &CurrentSystem) -> Result<Value, Problem> {
+    if system.media_type != INPUT_MEDIA {
+        return Err(Problem::internal());
+    }
+    let source: Value = serde_json::from_slice(&system.bytes).map_err(|_| Problem::internal())?;
+    let feature_type = source
+        .pointer("/properties/featureType")
+        .and_then(Value::as_str)
+        .ok_or_else(Problem::internal)?;
+    // SYSTEM_READ_IDENTITY: the body id is the stored canonical local ID.
+    let id = system.id.to_string();
+    let self_link = json!({
+        "href": canonical(boundary, system.id)?,
+        "rel": "self",
+        "type": INPUT_MEDIA,
+        "title": "This System"
+    });
+    let mut links = vec![self_link];
+    // The authorized statement returns a child only when its parent is visible.
+    if let Some(parent) = system.parent {
+        links.push(json!({
+            "href": canonical(boundary, parent)?,
+            "rel": "ogc-rel:parentSystem",
+            "type": INPUT_MEDIA,
+            "title": "Parent System"
+        }));
+    }
+    Ok(json!({
+        "type": "Feature",
+        "id": id,
+        "geometry": null,
+        "properties": {
+            "uid": system.uid.as_str(),
+            "name": system.label,
+            "featureType": feature_type
+        },
+        "links": links
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
+    use crate::http_boundary::Limits;
 
     #[test]
     fn system_creation_conditions_target_absent_collection_representation() {
@@ -521,5 +629,63 @@ mod tests {
             HeaderValue::from_str(&"x".repeat(256)).unwrap(),
         );
         assert!(retry(&headers, 3600).is_ok());
+    }
+
+    #[test]
+    fn system_read_representation_uses_stored_identity_and_retained_type() {
+        let boundary =
+            HttpBoundary::new(Some("https://example.test/prefix"), Limits::default()).unwrap();
+        let validator = ProjectionValidator::new().unwrap();
+        // The retained source carries a client id/link and a different name; only
+        // featureType's exact spelling may come from it.
+        let source = json!({"type":"Feature", "id":"client-selected-id", "geometry":null, "links":[{"href":"https://example.test/untrusted-link", "rel":"related"}], "properties":{"uid":"urn:glaux:test:source-uid", "name":"Source name", "featureType":"http://www.w3.org/ns/sosa/Platform"}});
+        let mut system = CurrentSystem {
+            id: "0190f5c2-7b5a-7cc3-98c4-dc0c0c220001".parse().unwrap(),
+            uid: "urn:glaux:test:stored-uid".parse().unwrap(),
+            label: "Stored label".to_owned(),
+            parent: None,
+            media_type: INPUT_MEDIA.to_owned(),
+            bytes: source.to_string().into_bytes(),
+        };
+        let own = json!({"href":"https://example.test/prefix/systems/0190f5c2-7b5a-7cc3-98c4-dc0c0c220001", "rel":"self", "type":"application/geo+json", "title":"This System"});
+        let value = representation(&boundary, &system).unwrap();
+        assert_eq!(
+            value,
+            json!({"type":"Feature", "id":"0190f5c2-7b5a-7cc3-98c4-dc0c0c220001", "geometry":null,
+                "properties":{"uid":"urn:glaux:test:stored-uid", "name":"Stored label", "featureType":"http://www.w3.org/ns/sosa/Platform"},
+                "links":[own]})
+        );
+        let (geo, response) = (Resource::SystemGeoJson, Projection::Response);
+        let bytes = value.to_string().into_bytes();
+        assert!(validator.validate(geo, response, &bytes).is_ok());
+        system.parent = Some("0190f5c2-7b5a-7cc3-98c4-dc0c0c220002".parse().unwrap());
+        let value = representation(&boundary, &system).unwrap();
+        assert_eq!(
+            value["links"],
+            json!([own, {"href":"https://example.test/prefix/systems/0190f5c2-7b5a-7cc3-98c4-dc0c0c220002", "rel":"ogc-rel:parentSystem", "type":"application/geo+json", "title":"Parent System"}])
+        );
+        let bytes = value.to_string().into_bytes();
+        assert!(validator.validate(geo, response, &bytes).is_ok());
+        let mut wrong = value;
+        wrong.as_object_mut().unwrap().remove("links");
+        let bytes = wrong.to_string().into_bytes();
+        assert!(validator.validate(geo, response, &bytes).is_err());
+        system.media_type = "application/json".to_owned();
+        assert_eq!(
+            representation(&boundary, &system)
+                .unwrap_err()
+                .into_response()
+                .status(),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+        system.media_type = INPUT_MEDIA.to_owned();
+        system.bytes = br#"{"type":"Feature","geometry":null,"properties":{}}"#.to_vec();
+        assert_eq!(
+            representation(&boundary, &system)
+                .unwrap_err()
+                .into_response()
+                .status(),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
     }
 }

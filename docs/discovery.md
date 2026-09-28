@@ -55,9 +55,15 @@ machine document describe only this running surface.
 Issue #24 adds conditional description of [minimal System creation](system-create.md):
 when separately enabled, `/systems` has POST only, its bounded GeoJSON request,
 an empty 201 with Location, and its selected JWT or loopback-development identity
-contract. It does not advertise collection GET, canonical item GET or another
-conformance class. Disabled creation leaves the original discovery inventory
-unchanged. Browser mutation controls remain disabled.
+contract. It does not advertise collection GET or another conformance class.
+Disabled creation leaves the original discovery inventory unchanged. Browser
+mutation controls remain disabled.
+
+Issue #25 adds, under the same switch, [canonical retrieval](system-read.md):
+`/systems/{id}` with `get` and `head`, one path parameter, the GeoJSON
+representation with an example, `private, no-store` and `Vary` headers, and
+safe 401/404/406 problems. Root navigation reaches it through `service-desc`
+and the creation Location; the landing page does not link a `/systems` list.
 
 ## Runtime and renderer boundary
 

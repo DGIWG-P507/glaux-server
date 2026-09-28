@@ -75,7 +75,8 @@ that root must strip `/prefix` before forwarding to the unprefixed listener.
 Supplying a public root alone does not enable discovery. Public discovery and
 health do not expose data or grant resource access.
 
-The optional `system_creation` object separately enables only `POST /systems`.
+The optional `system_creation` object separately enables only `POST /systems`
+and its [canonical item `GET`/`HEAD`](system-read.md).
 It requires an explicit public root, non-disabled authentication, a trusted
 configured `source` (1–256 UTF-8 bytes without control characters) and positive
 `retry_retention_seconds` (an unsigned 32-bit integer). Omission disables

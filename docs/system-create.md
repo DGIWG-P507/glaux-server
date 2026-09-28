@@ -3,7 +3,8 @@
 [Issue #24](https://github.com/DGIWG-P507/glaux-server/issues/24) connects the
 existing validation, caller permissions and atomic transaction to `POST /systems`.
 This is one explicitly enabled creation slice, not complete System CRUD or an
-OGC conformance-class claim. Canonical retrieval/restart is issue #25.
+OGC conformance-class claim. [Canonical retrieval](system-read.md) (#25) reads the
+created System back.
 
 ## Enable the bounded example
 
@@ -95,7 +96,7 @@ After a successful commit, return **`201 Created` with an empty body** and
 has `Cache-Control: private, no-store` and safe correlation metadata. It does not
 emit an ETag or claim a generated GeoJSON response. `Accept` does not select a
 resource representation for this empty success. The canonical URL identifies
-the created resource; dereferencing it is not implemented until #25. A configured
+the created resource; [GET on it](system-read.md) returns the System. A configured
 path prefix is retained, and the deployment proxy must strip it before forwarding.
 Host/forwarding headers never choose the canonical origin.
 
@@ -137,8 +138,9 @@ explicit representation state when the collection representation is implemented.
 ## Discovery, sources and verification
 
 If discovery is enabled, its API description includes the actual POST request,
-empty success, errors and authentication mode. It advertises no list/item GET,
-complete class or experimental capability. Root navigation reaches this
+empty success, errors and authentication mode. It advertises no list GET,
+complete class or experimental capability; the [item GET](system-read.md) is
+described with retrieval. Root navigation reaches this
 description without pretending that a POST-only endpoint is a browsable list.
 The locally served renderer remains read-only; interactive submission is disabled.
 

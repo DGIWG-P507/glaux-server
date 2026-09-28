@@ -103,7 +103,9 @@ they do not claim that a CSAPI resource family or conformance class is complete.
 System, it validates the request, checks the verified caller's source permission,
 and commits identity, original bytes, revision, audit and outgoing work together.
 Only then does it return an empty 201 response with a canonical Location.
-System retrieval belongs to the next task; full CRUD and conformance remain later.
+[Canonical retrieval](docs/system-read.md) reads that Location back as the same
+GeoJSON System, after restarts too, and hides Systems the caller may not read
+behind the same 404 as a missing one. Full CRUD and conformance remain later.
 
 The [shared HTTP boundary](docs/http-boundary.md) adds bounded requests, safe
 problem responses, media-preference selection and links built from an explicitly

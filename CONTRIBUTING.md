@@ -138,7 +138,11 @@ an OpenAPI document does not by itself close a standards conformance class.
 The [System creation proof](docs/system-create-tests.md) exercises that actual
 protected route with independent wire and database oracles. Retain exact
 original-byte, identity, audit/outgoing, source authority, optional retry and
-pre-commit rollback assertions; full CRUD and canonical GET are later tasks.
+pre-commit rollback assertions; full CRUD is a later task. The
+[System retrieval proof](docs/system-read-tests.md) adds exact root-to-resource
+retrieval across a real server restart and indistinguishable missing/concealed
+responses. Its compiled wrong-identity and process-memory controls must each
+fail their own intended assertion.
 Its compiled authority-bypass control must detect the intended wrong behavior,
 not merely fail setup.
 

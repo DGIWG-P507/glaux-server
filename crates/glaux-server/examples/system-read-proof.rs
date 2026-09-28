@@ -513,10 +513,14 @@ fn oracle_controls() {
         variants.push(wrong);
     }
     let mut wrong = base.clone();
-    wrong.headers.push(("location".into(), format!("{PUBLIC}/systems/x")));
+    wrong
+        .headers
+        .push(("location".into(), format!("{PUBLIC}/systems/x")));
     variants.push(wrong);
     let mut wrong = base.clone();
-    wrong.headers.push(("x-glaux-reason".into(), "denied".into()));
+    wrong
+        .headers
+        .push(("x-glaux-reason".into(), "denied".into()));
     variants.push(wrong);
     let mut wrong = base.clone();
     wrong.headers[2].1 = "01890f20-7b5a-7cc3-98c4-dc0c0c220998".into();
@@ -618,7 +622,11 @@ async fn proof() {
     let before = snapshot(&mut connection).await;
     let (a_id, a_path) = create(
         &collection,
-        &body("urn:glaux:test:read-a", "First retrieved System", "sosa:Sensor"),
+        &body(
+            "urn:glaux:test:read-a",
+            "First retrieved System",
+            "sosa:Sensor",
+        ),
     );
     let a_expected = expected(
         &a_id,
@@ -750,8 +758,7 @@ async fn proof() {
     }
     let list = get(&collection, "");
     assert_eq!(
-        list.status,
-        405,
+        list.status, 405,
         "undocumented System collection GET was served"
     );
     assert_eq!(allowed(&list), BTreeSet::from(["POST".to_owned()]));
@@ -771,15 +778,13 @@ async fn proof() {
     let a_after = get(&a_path, "");
     retrieved(&a_after, &a_expected, "after server restart");
     assert_eq!(
-        a_after.body,
-        a_first.body,
+        a_after.body, a_first.body,
         "restart changed representation bytes"
     );
     let s_after = get(&s_path, "");
     retrieved(&s_after, &s_expected, "after server restart");
     assert_eq!(
-        s_after.body,
-        s_first.body,
+        s_after.body, s_first.body,
         "restart changed representation bytes"
     );
     assert_eq!(
@@ -828,7 +833,11 @@ async fn proof() {
     // The same caller reads its own source, so the 404 is authorization.
     let (b_id, b_path) = create(
         &collection,
-        &body("urn:glaux:test:read-b", "Second source System", "sosa:Actuator"),
+        &body(
+            "urn:glaux:test:read-b",
+            "Second source System",
+            "sosa:Actuator",
+        ),
     );
     let b_expected = expected(
         &b_id,

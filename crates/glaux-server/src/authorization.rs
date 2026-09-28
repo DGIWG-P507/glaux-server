@@ -10,7 +10,7 @@ use crate::application::{
 };
 use crate::authentication::{CallerContext, CallerKind};
 use crate::authorization_storage;
-pub use crate::authorization_storage::SystemPage;
+pub use crate::authorization_storage::{CurrentSystem, SystemPage};
 use crate::http_boundary::Problem;
 use crate::storage::{StorageError, SystemRecord};
 use axum::http::StatusCode;
@@ -573,6 +573,21 @@ impl Admission {
                 .map_err(|error| Self::storage_error(ctx, error))?;
         page.items
             .pop()
+            .ok_or_else(|| ctx.error(AccessKind::NotFound))
+    }
+
+    /// Authorize Read before one statement selects the visible System and its
+    /// current head artifact. Missing and concealed IDs are both NotFound.
+    pub async fn current_system(
+        &self,
+        connection: &mut PgConnection,
+        ctx: &OperationContext,
+        id: LocalId,
+    ) -> Result<CurrentSystem, AccessError> {
+        let scope = self.permissions(ctx, Action::Read)?;
+        authorization_storage::current_system(connection, &scope.scope_json(), id)
+            .await
+            .map_err(|error| Self::storage_error(ctx, error))?
             .ok_or_else(|| ctx.error(AccessKind::NotFound))
     }
 
