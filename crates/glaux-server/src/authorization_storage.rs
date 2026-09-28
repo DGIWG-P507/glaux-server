@@ -4,7 +4,7 @@
 //! producer assertions are descriptive data, never the ownership predicate.
 
 use crate::storage::{StorageError, SystemRecord, check_schema};
-use glaux_domain::identity::{LocalId, SourceIdentity};
+use glaux_domain::identity::{LocalId, SourceIdentity, Uid};
 use sqlx::{Connection, PgConnection, Row};
 
 #[derive(Debug)]
@@ -38,21 +38,24 @@ pub(crate) async fn system_source(
     Ok(source)
 }
 
-/// One statement authorizes rows and parent links before counting and limiting,
-/// then hydrates only selected records. The statement snapshot keeps the count,
-/// aliases, label and links consistent without independent follow-up reads.
+/// The authorized source of one visible System's current representation.
+/// Source aliases are not part of that representation and are not read.
+#[derive(Debug)]
+pub struct CurrentSystem {
+    pub id: LocalId,
+    pub uid: Uid,
+    pub label: String,
+    pub parent: Option<LocalId>,
+    pub media_type: String,
+    pub bytes: Vec<u8>,
+}
+
+/// Shared authorization prefix for every System read. It authorizes rows and
+/// parent links before any count, limit, identity or artifact is selected.
+/// `$1` is the policy scope JSON and `$2` an optional exact local ID.
 /// `resources: null` grants that source's records; an empty array grants none.
-pub(crate) async fn list_systems(
-    connection: &mut PgConnection,
-    scope_json: &str,
-    id: Option<LocalId>,
-    limit: u16,
-) -> Result<SystemPage, StorageError> {
-    if connection.is_in_transaction() || !(1..=100).contains(&limit) {
-        return Err(StorageError::InvalidInput);
-    }
-    check_schema(connection).await?;
-    let rows = sqlx::query(
+macro_rules! visible_systems {
+    () => {
         "WITH origins AS MATERIALIZED (
            SELECT w.system_id, min(a.source COLLATE \"C\") AS source
            FROM public.outgoing_work w JOIN public.server_audit a
@@ -81,7 +84,26 @@ pub(crate) async fn list_systems(
                  SELECT 1 FROM readable parent WHERE parent.system_id=p.parent_id
                )
            ) AND ($2::text IS NULL OR r.system_id=$2::text::uuid)
-         ), selected AS MATERIALIZED (
+         )"
+    };
+}
+
+/// One statement authorizes rows and parent links before counting and limiting,
+/// then hydrates only selected records. The statement snapshot keeps the count,
+/// aliases, label and links consistent without independent follow-up reads.
+pub(crate) async fn list_systems(
+    connection: &mut PgConnection,
+    scope_json: &str,
+    id: Option<LocalId>,
+    limit: u16,
+) -> Result<SystemPage, StorageError> {
+    if connection.is_in_transaction() || !(1..=100).contains(&limit) {
+        return Err(StorageError::InvalidInput);
+    }
+    check_schema(connection).await?;
+    let rows = sqlx::query(concat!(
+        visible_systems!(),
+        ", selected AS MATERIALIZED (
            SELECT system_id FROM visible ORDER BY system_id LIMIT $3
          ), counted AS (
            SELECT count(*) AS number_matched FROM visible
@@ -94,7 +116,7 @@ pub(crate) async fn list_systems(
          LEFT JOIN public.system_parent p ON p.child_id=selected.system_id
          LEFT JOIN public.source_identity a ON a.resource_id=selected.system_id
          ORDER BY selected.system_id, a.authority COLLATE \"C\", a.identifier COLLATE \"C\"",
-    )
+    ))
     .bind(scope_json)
     .bind(id.map(|id| id.to_string()))
     .bind(i64::from(limit))
@@ -143,4 +165,61 @@ pub(crate) async fn list_systems(
         items,
         number_matched,
     })
+}
+
+/// One statement authorizes the exact ID, then reads its identity, direct
+/// parent and authoritative write-head artifact from the same snapshot. An
+/// update commits label and head together, so this read cannot mix revisions.
+pub(crate) async fn current_system(
+    connection: &mut PgConnection,
+    scope_json: &str,
+    id: LocalId,
+) -> Result<Option<CurrentSystem>, StorageError> {
+    if connection.is_in_transaction() {
+        return Err(StorageError::InvalidInput);
+    }
+    check_schema(connection).await?;
+    let row = sqlx::query(concat!(
+        visible_systems!(),
+        "
+         SELECT r.id::text AS id, r.uid, s.label, p.parent_id::text AS parent,
+                a.media_type, a.bytes
+         FROM visible v
+         JOIN public.resource_identity r ON r.id=v.system_id
+         JOIN public.system_identity s ON s.id=v.system_id
+         LEFT JOIN public.system_parent p ON p.child_id=v.system_id
+         LEFT JOIN public.system_write_head h ON h.system_id=v.system_id
+         LEFT JOIN public.source_artifact a ON a.id=h.artifact_id",
+    ))
+    .bind(scope_json)
+    .bind(id.to_string())
+    .fetch_optional(connection)
+    .await?;
+    let Some(row) = row else {
+        return Ok(None);
+    };
+    let (Some(media_type), Some(bytes)) = (
+        row.try_get::<Option<String>, _>("media_type")?,
+        row.try_get::<Option<Vec<u8>>, _>("bytes")?,
+    ) else {
+        return Err(StorageError::UninitializedRevision);
+    };
+    Ok(Some(CurrentSystem {
+        id: row
+            .try_get::<String, _>("id")?
+            .parse()
+            .map_err(|_| StorageError::InvalidStoredValue)?,
+        uid: row
+            .try_get::<String, _>("uid")?
+            .parse()
+            .map_err(|_| StorageError::InvalidStoredValue)?,
+        label: row.try_get("label")?,
+        parent: row
+            .try_get::<Option<String>, _>("parent")?
+            .map(|value| value.parse())
+            .transpose()
+            .map_err(|_| StorageError::InvalidStoredValue)?,
+        media_type,
+        bytes,
+    }))
 }

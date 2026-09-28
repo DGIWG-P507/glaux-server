@@ -553,11 +553,7 @@ async fn proof() {
         before["retry"],
         "unkeyed POST manufactured retry state"
     );
-    // Creation does not silently implement the next issue's canonical retrieval.
-    problem(
-        &request("GET", &format!("/systems/{first_id}"), "", ""),
-        404,
-    );
+    // Canonical member GET (#25) has its own proof; no collection GET is added.
     let api = request("GET", "/api", "", "").json();
     assert!(api["paths"]["/systems"]["post"].is_object());
     assert!(api["paths"]["/systems"].get("get").is_none());

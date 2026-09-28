@@ -123,8 +123,9 @@ shared HTTP boundary outside protected routes for correlation, safe errors,
 request bounds and timeouts.
 
 The production binary serves public health and explicitly enabled
-[discovery](discovery.md), plus explicitly enabled [minimal System creation](system-create.md).
-Its validated authenticator protects that resource route;
+[discovery](discovery.md), plus explicitly enabled [minimal System creation](system-create.md) and its
+[canonical retrieval](system-read.md). Its validated authenticator protects those
+resource routes;
 the synthetic protected route exists only in the proof executable. There is no
 identity-inspection endpoint or anonymous write path in the server. Deployment
 TLS, proxy trust and resource policy are not implemented by this task.

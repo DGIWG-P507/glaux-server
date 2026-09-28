@@ -63,6 +63,7 @@ REQUIRED_RUST_TESTS = [
     "system_http::tests::system_creation_conditions_target_absent_collection_representation",
     "system_http::tests::system_creation_projection_retains_supported_meaning_and_bounds",
     "system_http::tests::system_creation_retry_header_is_optional_single_and_bounded",
+    "system_http::tests::system_read_representation_uses_stored_identity_and_retained_type",
     "configuration::tests::runtime_system_creation_requires_explicit_source_authority_and_bounds",
     "configuration::tests::runtime_config_rejects_unsafe_development_and_unknown_fields",
     "configuration::tests::runtime_config_secrets_are_required_bounded_and_not_in_errors",

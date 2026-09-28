@@ -6,12 +6,12 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial foundations, discovery and minimal HTTP System creation — 27 September 2026 UTC.**
+**Initial foundations, discovery and minimal HTTP System creation and retrieval — 28 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **303 implementation tasks**, each linked to its published issue: the original 286, 16 experimental Protobuf tasks, and CI task 1.1.5 added from the Phase 1 implementation review. These are planned tasks, not completed software.
 - Apache-2.0 licensing and the contributor/review workflow are in place. The [active main-branch rule](https://github.com/DGIWG-P507/glaux-server/rules/23796335) requires a pull request and passing, up-to-date CI, with no bypass or mandatory human approval. [Issue #6](https://github.com/DGIWG-P507/glaux-server/issues/6) and [PR #314](https://github.com/DGIWG-P507/glaux-server/pull/314) record settings, failed/missing-check blocking proofs, actual runs and review.
-- The initial three-package Rust workspace and [CI suite](docs/ci.md) cover formatting, Clippy, build, executable regressions, real database/listener tests and controls against false-green results. They run in parallel lanes behind one required `Rust bootstrap` gate. The [dependency/licence inventory](docs/dependencies.md) records what those runs use. Health, opt-in discovery and minimal authenticated System creation exist; this is not yet a complete CSAPI resource service.
+- The initial three-package Rust workspace and [CI suite](docs/ci.md) cover formatting, Clippy, build, executable regressions, real database/listener tests and controls against false-green results. They run in parallel lanes behind one required `Rust bootstrap` gate. The [dependency/licence inventory](docs/dependencies.md) records what those runs use. Health, opt-in discovery and minimal authenticated System creation and retrieval exist; this is not yet a complete CSAPI resource service.
 
 Use the [clean check instructions](docs/ci.md#reproduce-the-checks) and the [Build workflow](https://github.com/DGIWG-P507/glaux-server/actions/workflows/build.yml). Builds and disposable database tests run on GitHub-hosted Linux; no Rust/database installation on the company laptop or permanent cloud service is required. The [follow-up action list](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/Review/action-list.md) records planning decisions; issues and PRs record execution.
 
@@ -103,7 +103,9 @@ they do not claim that a CSAPI resource family or conformance class is complete.
 System, it validates the request, checks the verified caller's source permission,
 and commits identity, original bytes, revision, audit and outgoing work together.
 Only then does it return an empty 201 response with a canonical Location.
-System retrieval belongs to the next task; full CRUD and conformance remain later.
+[Canonical retrieval](docs/system-read.md) reads that Location back as the same
+GeoJSON System, after restarts too, and hides Systems the caller may not read
+behind the same 404 as a missing one. Full CRUD and conformance remain later.
 
 The [shared HTTP boundary](docs/http-boundary.md) adds bounded requests, safe
 problem responses, media-preference selection and links built from an explicitly

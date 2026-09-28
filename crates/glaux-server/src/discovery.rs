@@ -30,7 +30,7 @@ impl Family {
             Self::Documentation => "Documentation",
             Self::Download => "Offline downloads",
             Self::Health => "Operational health (Glaux extension)",
-            Self::Registration => "Initial System registration",
+            Self::Registration => "Initial System registration and retrieval",
         }
     }
 }
@@ -246,6 +246,34 @@ pub const SYSTEM_CREATE: RouteDefinition = RouteDefinition {
     )
 };
 
+/// Canonical member read, installed with creation. The handler appends the
+/// server-generated local ID to these segments; there is no collection GET.
+pub const SYSTEM_READ: RouteDefinition = RouteDefinition {
+    parameters: Parameters::None,
+    ..route(
+        "/systems/{id}",
+        &["systems"],
+        "getSystem",
+        "Retrieve a minimal System",
+        Family::Registration,
+        "application/geo+json",
+    )
+};
+
+const SYSTEM_TYPES: [&str; 10] = [
+    "sosa:Sensor",
+    "sosa:Actuator",
+    "sosa:Sampler",
+    "sosa:Platform",
+    "sosa:System",
+    "http://www.w3.org/ns/sosa/Sensor",
+    "http://www.w3.org/ns/sosa/Actuator",
+    "http://www.w3.org/ns/sosa/Sampler",
+    "http://www.w3.org/ns/sosa/Platform",
+    "http://www.w3.org/ns/sosa/System",
+];
+const EXAMPLE_SYSTEM_ID: &str = "0190f5c2-7b5a-7cc3-98c4-dc0c0c220001";
+
 const ROUTES: [RouteDefinition; 15] = [
     LANDING,
     CONFORMANCE,
@@ -397,10 +425,14 @@ fn openapi(
     });
     if system_creation {
         api["info"]["description"] = json!(
-            "Initial discovery, health and explicitly enabled minimal System creation. Retrieval, other resource operations and complete conformance classes are not advertised. OpenAPI 3.1 availability does not declare the separate OAS 3.0 class."
+            "Initial discovery, health and explicitly enabled minimal System creation and canonical retrieval. Collections, other resource operations and complete conformance classes are not advertised. OpenAPI 3.1 availability does not declare the separate OAS 3.0 class."
         );
         api["paths"][SYSTEM_CREATE.path()] =
             json!({"post": system_creation_operation(authentication)});
+        api["paths"][SYSTEM_READ.path()] = json!({
+            "get": system_read_operation(boundary, authentication, false)?,
+            "head": system_read_operation(boundary, authentication, true)?
+        });
     }
     if system_creation && authentication == Authentication::Jwt {
         api["components"]["securitySchemes"] = json!({
@@ -416,7 +448,7 @@ fn system_creation_operation(authentication: Authentication) -> Value {
         "operationId": SYSTEM_CREATE.operation,
         "summary": SYSTEM_CREATE.title,
         "tags": [SYSTEM_CREATE.family.name()],
-        "description": "Partial creation contract: one non-spatial GeoJSON System with uid, name and featureType. The configured ingestion source and verified caller determine authority, never body attribution. Optional content outside this documented subset is rejected, not silently discarded. Success is an empty 201; Accept does not select a resource body. Location identifies the new canonical resource, whose GET is not implemented in this increment. This POST-only collection target currently has no representation or validator: If-Match fails, If-None-Match passes after authorization. Supplied local id and generated links are structurally checked then ignored as authority; original bytes remain restricted evidence.",
+        "description": "Partial creation contract: one non-spatial GeoJSON System with uid, name and featureType. The configured ingestion source and verified caller determine authority, never body attribution. Optional content outside this documented subset is rejected, not silently discarded. Success is an empty 201; Accept does not select a resource body. Location identifies the new canonical resource, retrievable by GET under the same identity and permissions. This POST-only collection target currently has no representation or validator: If-Match fails, If-None-Match passes after authorization. Supplied local id and generated links are structurally checked then ignored as authority; original bytes remain restricted evidence.",
         "x-glaux-conformance-dependencies": [],
         "parameters": [{
             "name":"Idempotency-Key", "in":"header", "required":false,
@@ -443,7 +475,7 @@ fn system_creation_operation(authentication: Authentication) -> Value {
                             "properties":{
                                 "uid":{"type":"string","format":"uri","description":"Absolute URI, byte-preserved; Glaux limit 4096 UTF-8 bytes."},
                                 "name":{"type":"string","minLength":1,"description":"Glaux limit 4096 UTF-8 bytes."},
-                                "featureType":{"type":"string","enum":["sosa:Sensor","sosa:Actuator","sosa:Sampler","sosa:Platform","sosa:System","http://www.w3.org/ns/sosa/Sensor","http://www.w3.org/ns/sosa/Actuator","http://www.w3.org/ns/sosa/Sampler","http://www.w3.org/ns/sosa/Platform","http://www.w3.org/ns/sosa/System"]}
+                                "featureType":{"type":"string","enum":SYSTEM_TYPES}
                             }
                         }
                     }
@@ -468,6 +500,78 @@ fn system_creation_operation(authentication: Authentication) -> Value {
         json!([])
     };
     operation
+}
+
+fn system_read_operation(
+    boundary: &HttpBoundary,
+    authentication: Authentication,
+    head: bool,
+) -> Result<Value, Problem> {
+    let example = json!({
+        "type":"Feature", "id":EXAMPLE_SYSTEM_ID, "geometry":null,
+        "properties":{"uid":"urn:glaux:example:thermometer","name":"Example thermometer","featureType":"sosa:Sensor"},
+        "links":[{"href":boundary.link(&["systems", EXAMPLE_SYSTEM_ID], &[])?, "rel":"self", "type":"application/geo+json", "title":"This System"}]
+    });
+    let mut success = json!({
+        "description":"The caller-visible current System. HEAD returns the GET headers without a body.",
+        "headers":{
+            "Cache-Control":{"schema":{"type":"string","const":"private, no-store"}},
+            "Vary":{"schema":{"type":"string","const":"Accept"}}
+        }
+    });
+    if !head {
+        success["content"] = json!({"application/geo+json":{
+            "schema":{
+                "type":"object", "required":["type","id","geometry","properties","links"],
+                "additionalProperties":false,
+                "properties":{
+                    "type":{"const":"Feature"},
+                    "id":{"type":"string","description":"Server-generated UUIDv7 local identifier; the final segment of the creation Location."},
+                    "geometry":{"type":"null"},
+                    "properties":{
+                        "type":"object", "required":["uid","name","featureType"], "additionalProperties":false,
+                        "properties":{
+                            "uid":{"type":"string","format":"uri"},
+                            "name":{"type":"string","minLength":1},
+                            "featureType":{"type":"string","enum":SYSTEM_TYPES,"description":"The exact spelling retained from the current accepted source."}
+                        }
+                    },
+                    "links":{"type":"array","minItems":1,"items":{"$ref":"#/components/schemas/Link"},
+                        "description":"A self link to the canonical URL, plus ogc-rel:parentSystem when the direct parent is readable. No collection or alternate-format link is offered."}
+                }
+            },
+            "example":example
+        }});
+    }
+    let mut error = json!({
+        "description":"Problem Details: 401 missing or invalid credentials (Cache-Control no-store); otherwise Cache-Control private, no-store with 404 for a missing, concealed or non-canonical identifier (identical apart from correlation), 406 when application/geo+json is not acceptable, 500 when the representation cannot be built or fails its projection check, 503 when a required dependency or stored value is unavailable or unusable."
+    });
+    if !head {
+        error["content"] =
+            json!({"application/problem+json":{"schema":{"$ref":"#/components/schemas/Problem"}}});
+    }
+    let mut operation = json!({
+        "operationId": if head { "headSystem" } else { SYSTEM_READ.operation },
+        "summary": SYSTEM_READ.title,
+        "tags": [SYSTEM_READ.family.name()],
+        "description": "Canonical retrieval of a System created through the minimal POST: exact identity, UID, name and retained featureType, with generated links. Requires Read permission for the System's creating source; a missing or concealed System returns the same 404. Standard HTTP Accept negotiation offers only application/geo+json, the default when Accept is absent. No ETag or conditional GET, SensorML, collection or alternate representation is offered in this increment.",
+        "x-glaux-conformance-dependencies": [],
+        "parameters": [{
+            "name":"id", "in":"path", "required":true,
+            "description":"Server-generated local identifier from the creation Location, in canonical lowercase form.",
+            "schema":{"type":"string"}
+        }],
+        "responses": {"200": success, "default": error}
+    });
+    operation["security"] = if authentication == Authentication::Jwt {
+        json!([{"bearerAuth":[]}])
+    } else {
+        operation["x-glaux-development-identity"] = json!(
+            "Explicit loopback-only configured identity; no caller credential header. Configured source/action permissions are still mandatory."
+        );
+        json!([])
+    };
+    Ok(operation)
 }
 
 fn html(text: &str) -> String {
@@ -575,7 +679,7 @@ pub fn router_with_system_creation(
     let mut landing = landing(boundary)?;
     if system_creation {
         landing["description"] = json!(
-            "Initial discovery and enabled minimal System creation, documented through the linked API definition. Retrieval and completed conformance classes are not advertised."
+            "Initial discovery and enabled minimal System creation and canonical retrieval, documented through the linked API definition. Collections and completed conformance classes are not advertised."
         );
     }
     let conformance = conformance(boundary)?;
@@ -587,7 +691,7 @@ pub fn router_with_system_creation(
     if system_creation {
         documentation = documentation.replace(
             "Discovery and operational health only. No resource families or conformance classes are advertised yet. No credentials or Try-it-out controls are enabled.",
-            "Discovery, health and minimal System creation. No retrieval or completed conformance class is advertised. Interactive submission remains disabled; creation requires the configured identity and source permissions.",
+            "Discovery, health and minimal System creation and canonical retrieval. No collection or completed conformance class is advertised. Interactive submission remains disabled; both operations require the configured identity and source permissions.",
         );
     }
     let documents = [
@@ -708,16 +812,43 @@ mod tests {
         let schema = serde_json::from_str(include_str!("../assets/discovery-schema.json")).unwrap();
         let disabled = openapi(&boundary, &schema, false, Authentication::Jwt).unwrap();
         assert!(disabled["paths"].get("/systems").is_none());
+        assert!(disabled["paths"].get("/systems/{id}").is_none());
         for mode in [Authentication::Jwt, Authentication::Development] {
             let api = openapi(&boundary, &schema, true, mode).unwrap();
-            assert_eq!(api["paths"].as_object().unwrap().len(), 16);
+            assert_eq!(api["paths"].as_object().unwrap().len(), 17);
             let methods = api["paths"]["/systems"].as_object().unwrap();
             assert_eq!(
                 methods.keys().map(String::as_str).collect::<Vec<_>>(),
                 vec!["post"]
             );
-            assert!(api["paths"].get("/systems/{id}").is_none());
+            let member = api["paths"]["/systems/{id}"].as_object().unwrap();
+            assert_eq!(
+                member.keys().map(String::as_str).collect::<Vec<_>>(),
+                vec!["get", "head"]
+            );
+            let get = &member["get"];
+            assert_eq!(get["operationId"], "getSystem");
+            assert_eq!(member["head"]["operationId"], "headSystem");
+            assert_eq!(get["parameters"][0]["name"], "id");
+            assert_eq!(get["parameters"][0]["in"], "path");
+            let ok = &get["responses"]["200"];
+            assert_eq!(
+                ok["headers"]["Cache-Control"]["schema"]["const"],
+                "private, no-store"
+            );
+            let content = ok["content"].as_object().unwrap();
+            assert_eq!(
+                content.keys().collect::<Vec<_>>(),
+                vec!["application/geo+json"]
+            );
+            assert_eq!(
+                content["application/geo+json"]["example"]["links"][0]["href"],
+                "https://example.test/prefix/systems/0190f5c2-7b5a-7cc3-98c4-dc0c0c220001"
+            );
+            let head = &member["head"]["responses"]["200"];
+            assert!(head.get("content").is_none());
             let post = &methods["post"];
+            assert_eq!(get["security"], post["security"]);
             assert!(post["responses"]["201"].get("content").is_none());
             assert_eq!(
                 post["responses"]["201"]["headers"]["Location"]["required"],

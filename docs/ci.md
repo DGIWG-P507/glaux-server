@@ -20,7 +20,7 @@ No check, fault control, inventory or exact-head verification was removed.
 | `rust-suites` | Rust tests and doctests, schema/numeric/time campaigns and faults, identity boundary, corpus controls, validation and projection faults |
 | `listener-proofs` | HTTP boundary, authentication and key-refresh proofs with their faults |
 | `database-storage` | Database lifecycle, exact-time storage, System/revision storage, atomic/conditional/retry writes with their faults |
-| `database-service` | Runtime health, System creation, permissions, discovery and browser rendering, with their faults |
+| `database-service` | Runtime health, System creation and retrieval, permissions, discovery and browser rendering, with their faults |
 | `ci-controls` | Unmodified Rust and database lifecycle baselines, then the nine false-green controls |
 
 Each lane runs on a fresh runner:
@@ -84,6 +84,8 @@ python3 -u scripts/check-execution.py runtime-health
 python3 -u scripts/test-runtime-health-failures.py
 python3 -u scripts/check-execution.py system-create
 python3 -u scripts/test-system-create-failures.py
+python3 -u scripts/check-execution.py system-read
+python3 -u scripts/test-system-read-failures.py
 python3 -u scripts/check-execution.py http-boundary
 python3 -u scripts/test-http-boundary-failures.py
 python3 -u scripts/check-execution.py authentication
@@ -136,7 +138,7 @@ proof for this packaging task, not a claim that schema validation ran.
 [check-execution.py](../scripts/check-execution.py) preserves command failure and
 requires actual successful execution evidence. It accepts exactly `rust`,
 `schema-fuzz`, `numeric-fuzz`, `time-fuzz`, `database`, `time-database`,
-`system-storage`, `revision-storage`, `atomic-write`, `conditional-write`, `retry-write`, `runtime-health`, `system-create`, `discovery`, `discovery-browser`, `http-boundary`, `authentication`, `authorization` or `key-refresh`,
+`system-storage`, `revision-storage`, `atomic-write`, `conditional-write`, `retry-write`, `runtime-health`, `system-create`, `system-read`, `discovery`, `discovery-browser`, `http-boundary`, `authentication`, `authorization` or `key-refresh`,
 not arbitrary selectors. Every named Rust test must execute successfully, and
 each fuzz campaign must emit its completed-invariant marker; the wrapper imposes
 a 180-second process timeout. Both the [lifecycle runner](../scripts/test_database.py)
@@ -148,6 +150,11 @@ The [System creation proof](system-create-tests.md) exercises the actual binary,
 independent HTTP/JSON and complete before/after database facts. Its separate
 compiled source-authority fault must fail the intended assertion after a passing
 baseline, then pass after restoration. Setup/compiler failure is not detection.
+The [System retrieval proof](system-read-tests.md) creates Systems through the
+public path, reads them with an independent raw client before and after a real
+server restart, and compares missing and concealed answers. Its two compiled
+faults, a wrong body identity and process-memory storage, must each fail their
+own assertion after a passing baseline.
 These checks run inside the existing `database-service` lane and are therefore
 covered by the required final gate. No lane or gate dependency is added.
 Lane and individual command timeouts and all retained checks are unchanged.

@@ -366,6 +366,11 @@ jobs:
         run: |
           python3 -u scripts/check-execution.py system-create | tee "$RUNNER_TEMP/glaux-ci-evidence/system-create.log"
           python3 -u scripts/test-system-create-failures.py
+      - name: Prove canonical System retrieval across a real server restart
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py system-read | tee "$RUNNER_TEMP/glaux-ci-evidence/system-read.log"
+          python3 -u scripts/test-system-read-failures.py
       - name: Prove action source and resource permissions through a real listener and database
         shell: bash
         run: |

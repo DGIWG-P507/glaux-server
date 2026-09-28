@@ -3,7 +3,8 @@
 Issue #24 / Roadmap 1.5.1 exercises the actual binary's initial POST /systems.
 Guide §§4.2–4.3, 4.6, 6.2 and 6.4 govern the minimal GeoJSON contract; §8.1.1
 requires independent expected results and demonstrated failure sensitivity.
-This is not complete System CRUD or retrieval/restart evidence (#25).
+This is not complete System CRUD; [retrieval and restart](system-read-tests.md)
+have their own proof (#25).
 
 Run on the authorised GitHub-hosted Linux runner:
 
@@ -50,7 +51,7 @@ If-Modified-Since does not make POST conditional.
 | Ordered group | Evidence |
 | --- | --- |
 | independent-wire-oracle-controls | Seven known-bad success responses cannot satisfy the independently specified creation response. |
-| empty201-canonical-location-and-atomic-records | Actual POST and canonical Location; exact UID/label, source bytes/digest, revision, audit actor/source/time/correlation, outgoing work and write-head joins; discovery advertises POST only, not future GET or conformance. |
+| empty201-canonical-location-and-atomic-records | Actual POST and canonical Location; exact UID/label, source bytes/digest, revision, audit actor/source/time/correlation, outgoing work and write-head joins; discovery advertises POST only for `/systems` (no collection GET) and no conformance. |
 | malformed-media-and-no-partial-writes | Duplicate UID, malformed/duplicate-key JSON, missing/wrong tag, invalid ID, unsupported geometry/relationship/forged source, wrong media and coding. Full ordered snapshots remain unchanged. |
 | verified-callers-source-scope-and-safe-denials | Two development callers/groups and configured sources, plus an independently OpenSSL-signed JWT through the actual binary. Missing/bad credentials fail before a condition; accepted audit matches verified JWT context. Cross-source denial adds only safe denial audit, not resource/revision/retry/outgoing state. |
 | optional-retry-and-forged-context | Unkeyed creation, exact same-key recovery without additional facts, retained-member resource authorization and revoked retry permission, changed-intent conflict, invalid key, generated identity despite supplied ID, all ten published primary-tag spellings. |
