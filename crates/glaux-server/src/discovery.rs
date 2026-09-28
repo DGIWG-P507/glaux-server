@@ -537,14 +537,14 @@ fn system_read_operation(
                         }
                     },
                     "links":{"type":"array","minItems":1,"items":{"$ref":"#/components/schemas/Link"},
-                        "description":"A self link to the canonical URL, plus ogc-rel:parentSystem only for a visible parent. No collection or alternate-format link is offered."}
+                        "description":"A self link to the canonical URL, plus ogc-rel:parentSystem when the direct parent is readable. No collection or alternate-format link is offered."}
                 }
             },
             "example":example
         }});
     }
     let mut error = json!({
-        "description":"Problem Details: 401 missing or invalid credentials (Cache-Control no-store); otherwise Cache-Control private, no-store with 404 for a missing, concealed or non-canonical identifier (identical apart from correlation), 406 when application/geo+json is not acceptable, 500 when a stored System cannot be represented, 503 when a required dependency is unavailable."
+        "description":"Problem Details: 401 missing or invalid credentials (Cache-Control no-store); otherwise Cache-Control private, no-store with 404 for a missing, concealed or non-canonical identifier (identical apart from correlation), 406 when application/geo+json is not acceptable, 500 when the representation cannot be built or fails its projection check, 503 when a required dependency or stored value is unavailable or unusable."
     });
     if !head {
         error["content"] =

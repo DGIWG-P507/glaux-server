@@ -439,7 +439,7 @@ fn representation(boundary: &HttpBoundary, system: &CurrentSystem) -> Result<Val
         "title": "This System"
     });
     let mut links = vec![self_link];
-    // The authorized statement returns a child only when its parent is visible.
+    // The shared rule returns a child only when its direct parent is readable.
     if let Some(parent) = system.parent {
         links.push(json!({
             "href": canonical(boundary, parent)?,

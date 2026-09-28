@@ -576,6 +576,34 @@ fn allowed(wire: &Wire) -> BTreeSet<String> {
         .map(|method| method.trim().to_owned())
         .collect()
 }
+/// Whether an OpenAPI path template matches an actual request path.
+fn matches_template(template: &str, path: &str) -> bool {
+    let actual: Vec<&str> = path.split('/').collect();
+    let pattern: Vec<&str> = template.split('/').collect();
+    pattern.len() == actual.len()
+        && pattern.iter().zip(&actual).all(|(want, got)| {
+            want == got || (want.starts_with('{') && want.ends_with('}') && !got.is_empty())
+        })
+}
+/// HEAD has no body to compare, so compare its status and header facts.
+fn head_facts(wire: &Wire) -> Value {
+    assert!(wire.body.is_empty(), "HEAD returned entity bytes");
+    let names: BTreeSet<&str> = wire
+        .headers
+        .iter()
+        .map(|(name, _)| name.as_str())
+        .filter(|name| *name != "date")
+        .collect();
+    let fixed = [
+        "content-type",
+        "cache-control",
+        "content-length",
+        "etag",
+        "location",
+    ];
+    let values: Vec<Option<&str>> = fixed.iter().map(|name| wire.header(name)).collect();
+    json!({"status":wire.status, "headers":names, "values":values})
+}
 async fn proof() {
     oracle_controls();
     let mut fixture = Fixture::new();
@@ -660,6 +688,11 @@ async fn proof() {
         head.header("content-length"),
         Some(a_first.body.len().to_string().as_str())
     );
+    assert!(
+        head.header("etag").is_none(),
+        "HEAD emitted an unbound validator"
+    );
+    assert!(head.header("x-request-id").is_some_and(uuid_v7));
     // A second System keeps its exact full-URI spelling; supplied id and links
     // are neither identity nor representation.
     let supplied = json!({
@@ -704,10 +737,19 @@ async fn proof() {
     assert_eq!(parameters[0]["name"], "id");
     assert_eq!(parameters[0]["in"], "path");
     assert_eq!(parameters[0]["required"], true);
+    // The Location path matches exactly one documented template, whose single
+    // placeholder is the documented `id` path parameter.
+    let templates: Vec<&str> = api["paths"]
+        .as_object()
+        .unwrap()
+        .keys()
+        .map(String::as_str)
+        .filter(|template| matches_template(template, &a_path))
+        .collect();
     assert_eq!(
-        format!("{root}/systems/{a_id}"),
-        format!("{PUBLIC}{a_path}"),
-        "documented template does not produce the Location"
+        templates,
+        ["/systems/{id}"],
+        "Location matches no single documented template"
     );
     let success = &get_doc["responses"]["200"];
     let content = success["content"].as_object().unwrap();
@@ -814,6 +856,18 @@ async fn proof() {
         .map(|wire| wire.header("x-request-id").unwrap().to_owned())
         .collect();
     assert_eq!(correlations.len(), 4, "problem correlation was reused");
+    let head_missing = request("HEAD", &format!("/systems/{MISSING_ID}"), "", "");
+    let head_hidden = request("HEAD", &a_path, "", "");
+    assert_eq!(head_missing.status, 404, "missing HEAD is not a 404");
+    assert_eq!(
+        head_missing.header("cache-control"),
+        Some("private, no-store")
+    );
+    assert_eq!(
+        head_facts(&head_hidden),
+        head_facts(&head_missing),
+        "concealed HEAD is distinguishable from a missing one"
+    );
     // Negotiation fails identically before any lookup can reveal existence.
     let hidden = get(&a_path, "Accept: application/json\r\n");
     let absent = get(

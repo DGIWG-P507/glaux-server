@@ -167,7 +167,7 @@ pub(crate) async fn list_systems(
     })
 }
 
-/// One statement authorizes the exact ID, then reads its identity, visible
+/// One statement authorizes the exact ID, then reads its identity, direct
 /// parent and authoritative write-head artifact from the same snapshot. An
 /// update commits label and head together, so this read cannot mix revisions.
 pub(crate) async fn current_system(

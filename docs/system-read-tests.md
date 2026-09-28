@@ -39,9 +39,9 @@ hidden System's ID, UID or name.
 | Ordered group | Evidence |
 | --- | --- |
 | independent-wire-oracle-controls | Ten wrong bodies (wrong ID, name, UID case, type spelling, geometry, self link or relation; extra field or link; missing links) and six wrong status or header cases fail the retrieval oracle. Eight wrong 404 variants (leaked detail, different title, extra member, Location, extra header, correlation not matching `x-request-id`, wrong cache directive, wrong status) fail the concealment oracle, while a different correlation alone passes. |
-| root-navigation-create-and-exact-retrieval | From `/` only: `service-desc` → API root → POST path → Location → exact GET. Absent, exact and `*/*` Accept agree; `application/json` and `application/sml+json` give a safe 406. HEAD repeats the headers and length without a body. A second System keeps its full-URI type and ignores its supplied ID and link. The API description matches the listener: GET/HEAD only, one `id` path parameter, the Location template, media, cache and `Vary` headers, an example of the same shape, and 405 for undocumented methods and collection GET. |
+| root-navigation-create-and-exact-retrieval | From `/` only: `service-desc` → API root → POST path → Location → exact GET. Absent, exact and `*/*` Accept agree; `application/json` and `application/sml+json` give a safe 406. HEAD repeats the headers and length without a body or validator. A second System keeps its full-URI type and ignores its supplied ID and link. The API description matches the listener: GET/HEAD only, one `id` path parameter, a Location that matches exactly one documented template, media, cache and `Vary` headers, an example of the same shape, and 405 for undocumented methods and collection GET. |
 | restart-retains-identity-and-meaning | The server process is stopped and started again on the same database. Both Systems return the same exact JSON and byte-identical bodies. The database snapshot is unchanged by the reads. |
-| missing-and-concealed-are-indistinguishable | A caller of the other source gets identical 404s for a missing ID, the other source's System, an upper-case ID and a malformed ID, and identical 406s before lookup. None of these reads changes the database. The same caller reads its own new System, so the 404 is authorization. A resource-scoped grant and a create-only grant each conceal the first System. |
+| missing-and-concealed-are-indistinguishable | A caller of the other source gets identical 404s for a missing ID, the other source's System, an upper-case ID and a malformed ID, and identical 406s before lookup. HEAD for the missing and concealed IDs is identical too. None of these reads changes the database. The same caller reads its own new System, so the 404 is authorization. A resource-scoped grant and a create-only grant each conceal the first System. |
 | verified-token-callers-and-unauthenticated-requests | With JWT authentication, missing and bad tokens give identical 401s for existing and missing IDs. A verified token returns the first System's exact bytes and conceals the other source's System. A forged subject header has no effect. |
 | disabled-creation-removes-retrieval | Without `system_creation` the item route is absent (public 404) and the API description has no `/systems` paths. The database is unchanged. |
 
@@ -64,3 +64,8 @@ afterwards, and a final restored build must pass completely. Compilation or setu
 failure, an unrelated assertion, timeout or missing output does not count as
 detection. Actual red/green execution and remaining limits are recorded in the
 issue and PR delivery record, not here.
+
+Known limit: no database fixture creates parent edges, because the public write
+path cannot. The `ogc-rel:parentSystem` link is covered by a unit test, and
+parent concealment by the shared visibility SQL that the authorization proofs
+exercise. Multi-level parents are left to the association owner (#56).

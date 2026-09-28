@@ -77,16 +77,22 @@ Vary: Accept
 - `uid` and `name` come from the stored identity and label.
 - `featureType` is the exact spelling retained in the current accepted source,
   so `sosa:Sensor` and `http://www.w3.org/ns/sosa/Sensor` stay distinct.
-- `links` has one `self` link to the canonical URL. A System with a parent that
-  the caller can see also gets an `ogc-rel:parentSystem` link (Guide §4.1.1).
-  The public write path cannot create parents yet, and a child with a hidden
-  parent is concealed entirely rather than shown with a missing link.
+- `links` has one `self` link to the canonical URL. A System whose direct parent
+  the caller can read also gets an `ogc-rel:parentSystem` link (Guide §4.1.1).
+  A child whose direct parent is not readable is concealed entirely, not shown
+  with a missing link. This is the existing one-level rule in
+  [authorization](authorization.md): the parent's own ancestors are not checked,
+  so with three levels a link could name a parent that itself returns 404. The
+  public write path cannot create parents yet; the association owner (#56)
+  decides whether visibility must be transitive.
 
 One database statement authorizes the ID and reads the identity, label, parent
 and authoritative write-head artifact together. A later update commits the label
 and head together, so a read cannot mix two revisions. Before sending, the
 server checks the body against the pinned CSAPI GeoJSON System response
-projection; a stored value it cannot represent gives `500`, not a partial body.
+projection. A body that cannot be built or fails that check gives `500`; stored
+data that cannot be read as typed values gives `503`. Neither sends a partial
+body.
 
 ## Negotiation, caching and validators
 

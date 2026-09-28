@@ -5,7 +5,7 @@ Roadmap 1.4.2 and Guide §§4.1/4.3/6.2/6.4/7.2/8.1.1. This is reusable
 request/response handling, **not resource operations or a conformance claim**.
 The production listener uses this boundary for health and opt-in
 [discovery](discovery.md), and the explicitly enabled
-[minimal System POST](system-create.md). A separate example
+[minimal System POST](system-create.md) and [canonical GET](system-read.md). A separate example
 mounts synthetic fixture routes through the same production boundary for
 [independent real-listener checks](http-boundary-tests.md); those routes are
 not in the production binary.
