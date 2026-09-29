@@ -537,10 +537,25 @@ fn clone_error(
     if let Some(error) = manifest_error(clone, created, denied) {
         return Some(error);
     }
-    TABLES
+    let table = TABLES
         .iter()
-        .find(|table| clone[**table] != inventory[**table])
-        .map(|table| format!("{table}: differs from the backup inventory"))
+        .find(|table| clone[**table] != inventory[**table])?;
+    // Name the differing entries so that a failure can be diagnosed from logs.
+    let (restored, captured) = (&clone[*table], &inventory[*table]);
+    eprintln!("{table} only in clone: {}", only(restored, captured));
+    eprintln!("{table} only in inventory: {}", only(captured, restored));
+    Some(format!("{table}: differs from the backup inventory"))
+}
+/// Entries of one captured array that the other lacks.
+fn only(left: &Value, right: &Value) -> String {
+    let others = right.as_array().cloned().unwrap_or_default();
+    let items = left.as_array().cloned().unwrap_or_default();
+    let missing: Vec<String> = items
+        .iter()
+        .filter(|item| !others.contains(item))
+        .map(Value::to_string)
+        .collect();
+    missing.join("; ")
 }
 fn procedure(arguments: &[&str]) -> (bool, String) {
     let output = Command::new("/bin/sh")
