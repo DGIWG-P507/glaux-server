@@ -162,8 +162,8 @@ covered by the required final gate. No lane or gate dependency is added.
 Lane and individual command timeouts and all retained checks are unchanged.
 
 The [System restore proof](system-restore-tests.md) checks an isolated clone against
-an independent pre-backup manifest. Its three procedure faults (writable clone, open clone, dropped retry
-data) use disposable script copies with the same binaries, so they need no
+an independent pre-backup manifest. Its four procedure faults (revoked writes, read-only default, open clone,
+dropped retry data) use disposable script copies with the same binaries, so they need no
 rebuild; each must fail its own assertion after a passing baseline.
 The restore step is in the gated `database-storage` lane; no lane, gate or
 timeout changed.

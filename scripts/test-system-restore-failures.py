@@ -1,4 +1,4 @@
-"""Prove that the restore proof rejects a writable, open or incomplete clone procedure."""
+"""Prove that the restore proof rejects writable, open or incomplete clone procedures."""
 import json
 import os
 from pathlib import Path
@@ -13,10 +13,10 @@ PASSED = "System restore group passed: "
 BACKUP = 'pg_dump --host="$host" --no-password --format=custom --file="$dump" "$source_db"\n'
 
 
-def without(marker):
+def without(marker, count):
     def mutate(text):
         lines = [line for line in text.splitlines(keepends=True) if line.rstrip().endswith(marker)]
-        require(len(lines) == 2, "Restore fault target changed: " + marker)
+        require(len(lines) == count, "Restore fault target changed: " + marker)
         return "".join(line for line in text.splitlines(keepends=True) if line not in lines)
     return mutate
 
@@ -29,14 +29,17 @@ def dropped_retry_state(text):
 
 # Each fault must fail its own intended assertion after the earlier groups pass.
 CONTROLS = (
-    ("writable-clone", without("# CLONE_READ_ONLY"),
-     "restored clone accepted a write",
+    ("writable-privileges", without("# CLONE_REVOKE", 3),
+     ["inspection role can modify the clone"],
      "restored-workflow-matches-manifest", "clone-refuses-effects-and-outside-access"),
-    ("open-clone", without("# CLONE_CONNECT"),
-     "outside role connected to the isolated clone",
+    ("read-write-default", without("# CLONE_DEFAULT", 1),
+     ["clone does not default to read-only"],
+     "restored-workflow-matches-manifest", "clone-refuses-effects-and-outside-access"),
+    ("open-clone", without("# CLONE_CONNECT", 4),
+     ["outside role connected to the isolated clone"],
      "restored-workflow-matches-manifest", "clone-refuses-effects-and-outside-access"),
     ("dropped-retry-state", dropped_retry_state,
-     "restored clone differs from the manifest or backup inventory",
+     ["restored clone differs from the manifest or backup inventory", "retry: expected 1 rows"],
      "source-workflow-and-independent-manifest", "guarded-backup-and-isolated-restore"),
 )
 
@@ -64,7 +67,7 @@ def main():
     record("baseline", output, passed=True)
     # The faults change only disposable copies of the procedure; no rebuild.
     with tempfile.TemporaryDirectory(prefix="glaux-system-restore-controls-", dir=runner_temp) as directory:
-        for name, mutate, message, last_passed, first_failed in CONTROLS:
+        for name, mutate, messages, last_passed, first_failed in CONTROLS:
             faulty = Path(directory) / (name + ".sh")
             faulty.write_text(mutate(original.decode()))
             try:
@@ -73,7 +76,7 @@ def main():
                 output = str(error)
                 detected = (
                     "Docker exec failed (101)" in output
-                    and message in output
+                    and all(message in output for message in messages)
                     and "panicked at" in output
                     and PASSED + last_passed in output
                     and PASSED + first_failed not in output
@@ -84,7 +87,7 @@ def main():
             record(name, output, detected=detected)
             require(detected, name + " escaped or failed for another reason: " + output)
     require(PROCEDURE.read_bytes() == original, "Real restore procedure was modified")
-    print("System restore failure controls: 3 detected; 0 escaped.", flush=True)
+    print("System restore failure controls: 4 detected; 0 escaped.", flush=True)
 
 if __name__ == "__main__":
     main()

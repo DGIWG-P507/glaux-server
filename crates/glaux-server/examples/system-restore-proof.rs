@@ -29,7 +29,7 @@ const SOURCE_A: &str = "urn:glaux:test:source-a";
 const SOURCE_B: &str = "urn:glaux:test:source-b";
 const GEOJSON: &str = "application/geo+json";
 const SUPPLIED_ID: &str = "01890f20-7b5a-7cc3-98c4-dc0c0c220999";
-const TABLES: [&str; 11] = [
+const TABLES: [&str; 13] = [
     "migrations",
     "identity",
     "system",
@@ -41,6 +41,8 @@ const TABLES: [&str; 11] = [
     "work",
     "head",
     "retry",
+    "guard",
+    "catalog",
 ];
 
 fn passed(name: &str) {
@@ -407,7 +409,15 @@ async fn snapshot(database: &str) -> Value {
       'audit',(SELECT coalesce(json_agg(t ORDER BY id),'[]') FROM public.server_audit t),
       'work',(SELECT coalesce(json_agg(t ORDER BY id),'[]') FROM public.outgoing_work t),
       'head',(SELECT coalesce(json_agg(t ORDER BY system_id),'[]') FROM public.system_write_head t),
-      'retry',(SELECT coalesce(json_agg(t ORDER BY actor,source,operation,target,key),'[]') FROM public.system_create_retry t))::text")
+      'retry',(SELECT coalesce(json_agg(t ORDER BY actor,source,operation,target,key),'[]') FROM public.system_create_retry t),
+      'guard',(SELECT coalesce(json_agg(t ORDER BY singleton),'[]') FROM public.system_parent_write_guard t),
+      'catalog',(SELECT json_agg(v ORDER BY v) FROM (
+        SELECT 'table ' || relname FROM pg_class WHERE relnamespace = 'public'::regnamespace AND relkind = 'r'
+        UNION ALL SELECT 'extension ' || extname || ' ' || extversion FROM pg_extension
+        UNION ALL SELECT 'constraint ' || conrelid::regclass::text || ' ' || conname || ' ' || pg_get_constraintdef(oid)
+          FROM pg_constraint WHERE connamespace = 'public'::regnamespace
+        UNION ALL SELECT 'trigger ' || pg_get_triggerdef(oid) FROM pg_trigger WHERE NOT tgisinternal
+        UNION ALL SELECT 'index ' || indexdef FROM pg_indexes WHERE schemaname = 'public') s(v)))::text")
         .fetch_one(&mut connection).await.unwrap();
     connection.close().await.unwrap();
     serde_json::from_str(&text).unwrap()
@@ -547,6 +557,15 @@ fn procedure(arguments: &[&str]) -> (bool, String) {
 fn restore(dump: &str, target: &str) {
     let (succeeded, output) = procedure(&["restore", dump, SOURCE_DB, target, ROLE]);
     assert!(succeeded, "isolated restore failed: {output}");
+}
+/// SQLSTATE of one write attempted in an explicitly read-write transaction.
+async fn write_error(connection: &mut PgConnection, sql: &'static str) -> Option<String> {
+    execute(connection, "BEGIN READ WRITE").await;
+    let result = sqlx::query(sql).execute(&mut *connection).await;
+    execute(connection, "ROLLBACK").await;
+    let error = result.err()?;
+    let code = error.as_database_error()?.code()?;
+    Some(code.into_owned())
 }
 async fn tamper(database: &str, sql: &'static str) {
     let url = admin_url(database);
@@ -691,14 +710,37 @@ async fn proof() {
     );
     let outsider =
         format!("postgres://{OUTSIDER}@localhost/{CLONE}?host=/var/run/postgresql&sslmode=disable");
-    let connection = PgConnection::connect(&outsider).await;
+    let refusal = match PgConnection::connect(&outsider).await {
+        Ok(_) => String::new(),
+        Err(error) => error.to_string(),
+    };
     assert!(
-        connection.is_err(),
-        "outside role connected to the isolated clone"
+        refusal.contains("permission denied for database"),
+        "outside role connected to the isolated clone: {refusal}"
     );
-    let inspector = PgConnection::connect(&app_url(CLONE)).await;
-    assert!(inspector.is_ok(), "inspection role could not connect");
-    inspector.unwrap().close().await.unwrap();
+    // Each barrier separately: the session default, then revoked privileges
+    // inside an explicitly read-write transaction that overrides that default.
+    let clone_url = app_url(CLONE);
+    let mut inspector = PgConnection::connect(&clone_url).await.unwrap();
+    let default: String = sqlx::query_scalar("SHOW default_transaction_read_only")
+        .fetch_one(&mut inspector)
+        .await
+        .unwrap();
+    assert_eq!(default, "on", "clone does not default to read-only");
+    // Writes the serving role was granted on the source; each must now be refused.
+    for sql in [
+        "INSERT INTO public.outgoing_work DEFAULT VALUES",
+        "INSERT INTO public.server_audit DEFAULT VALUES",
+        "INSERT INTO public.system_create_retry DEFAULT VALUES",
+        "UPDATE public.system_parent_write_guard SET singleton = singleton",
+    ] {
+        assert_eq!(
+            write_error(&mut inspector, sql).await.as_deref(),
+            Some("42501"),
+            "inspection role can modify the clone"
+        );
+    }
+    inspector.close().await.unwrap();
     assert_eq!(
         snapshot(SOURCE_DB).await,
         inventory,
