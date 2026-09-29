@@ -237,7 +237,11 @@ fn configuration(source: &str) -> Value {
 fn start(fixture: &mut Fixture, database: &str, source: &str) -> Process {
     let path = fixture.file(&serde_json::to_vec(&configuration(source)).unwrap());
     // The source is served by its serving role; every clone only by the inspector.
-    let role = if database == SOURCE_DB { ROLE } else { INSPECTOR };
+    let role = if database == SOURCE_DB {
+        ROLE
+    } else {
+        INSPECTOR
+    };
     let url = app_url(role, database);
     Process::spawn(fixture, &["serve", path.to_str().unwrap()], &url, true)
 }

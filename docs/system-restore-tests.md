@@ -53,7 +53,9 @@ same binaries with four disposable copies of the procedure:
   still refuses writes, so the proof must fail "clone does not default to
   read-only".
 - **open-clone** drops the connection restrictions and their self-check. The
-  proof must fail "outside role connected to the isolated clone".
+  first place this shows is the deliberately failed restore, so the proof must
+  fail "failed restore left its target open to every role". The later
+  outsider and serving-role connection checks guard the successful clone.
 - **dropped-retry-state** excludes retry-receipt data from the backup. The
   proof must fail "restored clone differs from the manifest or backup
   inventory", for the reason "retry: expected 1 rows".
