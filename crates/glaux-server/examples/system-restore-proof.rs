@@ -414,7 +414,7 @@ async fn snapshot(database: &str) -> Value {
       'catalog',(SELECT json_agg(v ORDER BY v) FROM (
         SELECT 'table ' || relname FROM pg_class WHERE relnamespace = 'public'::regnamespace AND relkind = 'r'
         UNION ALL SELECT 'extension ' || extname || ' ' || extversion FROM pg_extension
-        UNION ALL SELECT 'constraint ' || conrelid::regclass::text || ' ' || conname || ' ' || pg_get_constraintdef(oid)
+        UNION ALL SELECT 'constraint ' || conrelid::regclass::text || ' ' || conname || ' ' || translate(pg_get_constraintdef(oid), '()', '')
           FROM pg_constraint WHERE connamespace = 'public'::regnamespace
         UNION ALL SELECT 'trigger ' || pg_get_triggerdef(oid) FROM pg_trigger WHERE NOT tgisinternal
         UNION ALL SELECT 'index ' || indexdef FROM pg_indexes WHERE schemaname = 'public') s(v)))::text")

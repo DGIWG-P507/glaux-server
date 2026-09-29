@@ -100,7 +100,9 @@ is valid only if both of these hold:
    - all ten System-slice tables and the migration record;
    - the parent-write guard row;
    - a catalog fingerprint listing tables, extensions and their versions,
-     constraints, triggers and indexes.
+     constraints, triggers and indexes. Constraint text is compared without
+     parentheses, because a dump and restore re-parses CHECK expressions and
+     can regroup equivalent `AND` terms.
 
    Grants are deliberately excluded, because the clone's grants are narrowed.
 
