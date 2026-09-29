@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial foundations, discovery and minimal HTTP System creation and retrieval — 28 September 2026 UTC.**
+**Initial foundations, discovery, minimal HTTP System creation and retrieval, and isolated restore — 28 September 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **303 implementation tasks**, each linked to its published issue: the original 286, 16 experimental Protobuf tasks, and CI task 1.1.5 added from the Phase 1 implementation review. These are planned tasks, not completed software.
@@ -106,6 +106,9 @@ Only then does it return an empty 201 response with a canonical Location.
 [Canonical retrieval](docs/system-read.md) reads that Location back as the same
 GeoJSON System, after restarts too, and hides Systems the caller may not read
 behind the same 404 as a missing one. Full CRUD and conformance remain later.
+[Isolated backup and restore](docs/system-restore.md) copies that data into a
+separate, read-only inspection database and verifies it against a record made
+before the backup; it does not activate the copy for serving.
 
 The [shared HTTP boundary](docs/http-boundary.md) adds bounded requests, safe
 problem responses, media-preference selection and links built from an explicitly

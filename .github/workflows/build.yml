@@ -305,6 +305,11 @@ jobs:
         run: |
           python3 -u scripts/check-execution.py retry-write | tee "$RUNNER_TEMP/glaux-ci-evidence/retry-write.log"
           python3 -u scripts/test-retry-write-failures.py
+      - name: Prove isolated backup and restore of the first System
+        shell: bash
+        run: |
+          python3 -u scripts/check-execution.py system-restore | tee "$RUNNER_TEMP/glaux-ci-evidence/system-restore.log"
+          python3 -u scripts/test-system-restore-failures.py
       - name: Verify original corpus digests after this lane's checks
         shell: bash
         run: python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-after.log"

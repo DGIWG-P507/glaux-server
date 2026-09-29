@@ -69,6 +69,10 @@ def main():
         command = [sys.executable, "-u", "scripts/test_system_read.py"]
         markers = ["System read: all required checks passed."]
         missing = "Required System read proof did not execute successfully"
+    elif sys.argv[1:] == ["system-restore"]:
+        command = [sys.executable, "-u", "scripts/test_system_restore.py"]
+        markers = ["System restore: all required checks passed."]
+        missing = "Required System restore proof did not execute successfully"
     elif sys.argv[1:] == ["discovery-browser"]:
         command = [sys.executable, "-u", "scripts/test-discovery-browser.py"]
         markers = ["Discovery browser: all required checks passed."]
@@ -90,7 +94,7 @@ def main():
         markers = ["Key refresh: all required checks passed."]
         missing = "Required key-refresh proof did not execute successfully"
     else:
-        sys.exit("Specify exactly rust, database, schema-fuzz, numeric-fuzz, time-fuzz, time-database, system-storage, revision-storage, atomic-write, conditional-write, retry-write, runtime-health, discovery, discovery-browser, system-create, system-read, http-boundary, authentication, key-refresh or authorization; no test-selection override.")
+        sys.exit("Specify exactly rust, database, schema-fuzz, numeric-fuzz, time-fuzz, time-database, system-storage, revision-storage, atomic-write, conditional-write, retry-write, runtime-health, discovery, discovery-browser, system-create, system-read, system-restore, http-boundary, authentication, key-refresh or authorization; no test-selection override.")
     print("Required command: " + " ".join(command), flush=True)
     try:
         result = subprocess.run(
