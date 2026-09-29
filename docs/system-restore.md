@@ -16,14 +16,16 @@ broker delivery or continuity-token recovery. Those belong to later tasks.
   and `psql`. The hosted proof uses the pinned test image; nothing is installed.
 - Run [scripts/system-restore.sh](../scripts/system-restore.sh) as that host's
   administrative OS user, against databases holding synthetic test data only.
-- Choose the **inspection role** deliberately. It gains the right to connect to
-  the clone and read it.
-  - It must already exist and must not be a superuser. The script refuses
-    `public` and the `current_user`-style names.
-  - It must not be the credential of a running service. Otherwise that service
-    could connect to the clone like any other database.
-  - The hosted proof reuses the test's own serving role, because only the proof
-    uses that role.
+- Choose a dedicated **inspection role**. The script gives it the right to
+  connect to the clone and read every table, and nothing else.
+  - It must already exist, must not be a superuser, and must not own any
+    restored table. The script refuses `public` and the `current_user`-style
+    names. It needs no grants on the source.
+  - It must not be the credential of a running service. The source's own
+    serving role keeps its restored grants but cannot connect to the clone.
+  - The hosted proof uses a separate inspection role. On the source it holds
+    only write grants, so its reads on the clone depend on the script's grant
+    and its lack of writes on the script's revocation.
 
 ## Procedure
 
@@ -53,13 +55,19 @@ The restore then:
 2. Revokes `CONNECT` from `PUBLIC` straight away, before any data arrives.
 3. Restores the whole dump in one transaction, stopping at the first error.
 4. Revokes `INSERT`, `UPDATE`, `DELETE` and `TRUNCATE` on every table from the
-   inspection role. This is the real write barrier.
+   inspection role. This is the real write barrier. It then grants the role
+   `USAGE` on the schema and `SELECT` on every table.
 5. Sets `default_transaction_read_only = on`. This is a session default, which
    any session can override, so it is a second guard, not the barrier.
 6. Grants `CONNECT` to the inspection role only. Administrators keep access.
-7. Checks the effective result: the role must have no write privilege on any
-   table, including through `PUBLIC` or role membership, and `PUBLIC` must not
-   be able to connect.
+7. Checks the effective result:
+   - the role has no table or column write privilege, held directly, through
+     `PUBLIC` or through inherited membership;
+   - the role owns no restored table;
+   - `PUBLIC` cannot connect.
+
+   Privileges reachable only by `SET ROLE` to a non-inherited role are not
+   counted, so do not choose a role with such memberships.
 
 If any step after creation fails, the script says the target is **not
 isolated** and must be dropped. Rerunning is refused while that target exists.
@@ -102,7 +110,9 @@ is valid only if both of these hold:
    - a catalog fingerprint listing tables, extensions and their versions,
      constraints, triggers and indexes. Constraint text is compared without
      parentheses, because a dump and restore re-parses CHECK expressions and
-     can regroup equivalent `AND` terms.
+     can regroup equivalent `AND` terms. The same normalisation cannot tell
+     apart two groupings of the same terms; a restore of the same dump does not
+     produce that, and missing, renamed or changed objects are still caught.
 
    Grants are deliberately excluded, because the clone's grants are narrowed.
 

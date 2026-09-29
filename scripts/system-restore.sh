@@ -71,12 +71,18 @@ case "${1:-}" in
             --dbname="$target" "$dump"
         # Inspection only: no request can add resources, audit, retries or outgoing work.
         sql "$target" "REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM $role" # CLONE_REVOKE
+        # Read access for inspection, whatever grants the dump carried.
+        sql "$target" "GRANT USAGE ON SCHEMA public TO $role"
+        sql "$target" "GRANT SELECT ON ALL TABLES IN SCHEMA public TO $role"
         # A session default only; the revocation above is the actual barrier.
         sql postgres "ALTER DATABASE $target SET default_transaction_read_only = on" # CLONE_DEFAULT
         sql postgres "GRANT CONNECT ON DATABASE $target TO $role" # CLONE_CONNECT
-        # Check the effective result, including privileges held through PUBLIC or roles.
-        writable=$(sql "$target" "SELECT count(*) FROM pg_tables WHERE schemaname = 'public' AND has_table_privilege('$role', format('%I.%I', schemaname, tablename), 'INSERT,UPDATE,DELETE,TRUNCATE')") # CLONE_REVOKE
+        # Check the effective result, including table and column privileges held
+        # directly or through PUBLIC (not privileges reachable only via SET ROLE).
+        writable=$(sql "$target" "SELECT count(*) FROM pg_tables WHERE schemaname = 'public' AND (has_table_privilege('$role', format('%I.%I', schemaname, tablename), 'INSERT,UPDATE,DELETE,TRUNCATE') OR has_any_column_privilege('$role', format('%I.%I', schemaname, tablename), 'INSERT,UPDATE'))") # CLONE_REVOKE
         [ "$writable" = 0 ] || fail "inspection role can still modify $target" # CLONE_REVOKE
+        owned=$(sql "$target" "SELECT count(*) FROM pg_class WHERE relnamespace = 'public'::regnamespace AND relowner = '$role'::regrole")
+        [ "$owned" = 0 ] || fail "inspection role owns objects in $target"
         open=$(sql postgres "SELECT has_database_privilege('public', '$target', 'CONNECT')") # CLONE_CONNECT
         [ "$open" = f ] || fail "$target is open to every role" # CLONE_CONNECT
         trap - EXIT

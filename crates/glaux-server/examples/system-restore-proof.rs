@@ -20,8 +20,13 @@ const CONTROL_DB: &str = "glaux_harness_control";
 const CLONE: &str = "glaux_restore_clone";
 const AUDIT_GAP: &str = "glaux_restore_audit_gap";
 const ARTIFACT_BAD: &str = "glaux_restore_artifact_bad";
+const SCHEMA_GAP: &str = "glaux_restore_schema_gap";
+const REFUSED: &str = "glaux_restore_refused";
+const FAILED: &str = "glaux_restore_failed";
 const ROLE: &str = "glaux_restore_app";
+const INSPECTOR: &str = "glaux_restore_inspector";
 const OUTSIDER: &str = "glaux_restore_outsider";
+const UNSUITABLE: &str = "inspection role must exist and must not be a superuser";
 const ENV: &str = "GLAUX_TEST_DATABASE_URL";
 const ADDRESS: &str = "127.0.0.1:18827";
 const PUBLIC: &str = "https://api.example.invalid/edge";
@@ -56,9 +61,9 @@ fn safe(text: &str) {
         );
     }
 }
-fn app_url(database: &str) -> String {
+fn app_url(role: &str, database: &str) -> String {
     format!(
-        "postgres://{ROLE}:SyntheticRestoreSecret@localhost/{database}?host=/var/run/postgresql&sslmode=disable"
+        "postgres://{role}:SyntheticRestoreSecret@localhost/{database}?host=/var/run/postgresql&sslmode=disable"
     )
 }
 fn admin_url(database: &str) -> String {
@@ -231,7 +236,9 @@ fn configuration(source: &str) -> Value {
 }
 fn start(fixture: &mut Fixture, database: &str, source: &str) -> Process {
     let path = fixture.file(&serde_json::to_vec(&configuration(source)).unwrap());
-    let url = app_url(database);
+    // The source is served by its serving role; every clone only by the inspector.
+    let role = if database == SOURCE_DB { ROLE } else { INSPECTOR };
+    let url = app_url(role, database);
     Process::spawn(fixture, &["serve", path.to_str().unwrap()], &url, true)
 }
 fn development_actor(subject: &str) -> String {
@@ -570,8 +577,17 @@ fn procedure(arguments: &[&str]) -> (bool, String) {
     (output.status.success(), text)
 }
 fn restore(dump: &str, target: &str) {
-    let (succeeded, output) = procedure(&["restore", dump, SOURCE_DB, target, ROLE]);
+    let (succeeded, output) = procedure(&["restore", dump, SOURCE_DB, target, INSPECTOR]);
     assert!(succeeded, "isolated restore failed: {output}");
+}
+const EXISTS: &str = "SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = $1)";
+const OPEN: &str = "SELECT has_database_privilege('public', $1, 'CONNECT')";
+async fn database_flag(admin: &mut PgConnection, sql: &'static str, database: &str) -> bool {
+    sqlx::query_scalar(sql)
+        .bind(database)
+        .fetch_one(admin)
+        .await
+        .unwrap()
 }
 /// SQLSTATE of one write attempted in an explicitly read-write transaction.
 async fn write_error(connection: &mut PgConnection, sql: &'static str) -> Option<String> {
@@ -612,6 +628,12 @@ async fn proof() {
         "GRANT SELECT,INSERT ON public.resource_identity,public.system_identity,public.source_identity,public.system_parent,public.source_artifact,public.system_revision,public.server_audit,public.outgoing_work,public.system_write_head,public.system_create_retry TO glaux_restore_app",
         "GRANT UPDATE(digest,system_id,revision_id,artifact_id,audit_id,event_id,retained_at,expires_at) ON public.system_create_retry TO glaux_restore_app",
         "GRANT SELECT,UPDATE ON public.system_parent_write_guard TO glaux_restore_app",
+        // The inspection role holds write-only grants on the source: clone reads
+        // depend on the procedure's SELECT grant, clone writes on its revocation.
+        "CREATE ROLE glaux_restore_inspector LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT",
+        "GRANT INSERT ON public.resource_identity,public.system_identity,public.source_identity,public.system_parent,public.source_artifact,public.system_revision,public.server_audit,public.outgoing_work,public.system_write_head,public.system_create_retry TO glaux_restore_inspector",
+        "GRANT UPDATE(digest,system_id,revision_id,artifact_id,audit_id,event_id,retained_at,expires_at) ON public.system_create_retry TO glaux_restore_inspector",
+        "GRANT UPDATE ON public.system_parent_write_guard TO glaux_restore_inspector",
     ] {
         execute(&mut admin, sql).await;
     }
@@ -668,12 +690,40 @@ async fn proof() {
         (SOURCE_DB, "restore target is the source database"),
         (CONTROL_DB, "restore target already exists"),
     ] {
-        let (succeeded, output) = procedure(&["restore", &dump, SOURCE_DB, target, ROLE]);
+        let (succeeded, output) = procedure(&["restore", &dump, SOURCE_DB, target, INSPECTOR]);
         assert!(
             !succeeded && output.contains(refusal),
             "unsafe restore target was not refused: {output}"
         );
     }
+    // Unsuitable inspection roles are refused before any database is created.
+    for (role, refusal) in [
+        ("public", "inspection role must name one specific role"),
+        ("postgres", UNSUITABLE),
+        ("glaux_restore_missing", UNSUITABLE),
+    ] {
+        let (succeeded, output) = procedure(&["restore", &dump, SOURCE_DB, REFUSED, role]);
+        assert!(
+            !succeeded && output.contains(refusal),
+            "unsuitable inspection role was accepted: {output}"
+        );
+    }
+    assert!(
+        !database_flag(&mut admin, EXISTS, REFUSED).await,
+        "refused restore created its target"
+    );
+    // A restore that fails after creating its target warns and stays closed.
+    let broken = fixture.file(b"not a PostgreSQL custom-format dump");
+    let broken = broken.to_str().unwrap().to_owned();
+    let (succeeded, output) = procedure(&["restore", &broken, SOURCE_DB, FAILED, INSPECTOR]);
+    assert!(
+        !succeeded && output.contains("is NOT isolated"),
+        "failed restore did not warn: {output}"
+    );
+    assert!(
+        !database_flag(&mut admin, OPEN, FAILED).await,
+        "failed restore left its target open to every role"
+    );
     restore(&dump, CLONE);
     assert_eq!(
         clone_error(&snapshot(CLONE).await, &inventory, &created, &denied),
@@ -723,30 +773,41 @@ async fn proof() {
         None,
         "clone state changed after a refused write"
     );
-    let outsider =
-        format!("postgres://{OUTSIDER}@localhost/{CLONE}?host=/var/run/postgresql&sslmode=disable");
-    let refusal = match PgConnection::connect(&outsider).await {
-        Ok(_) => String::new(),
-        Err(error) => error.to_string(),
-    };
-    assert!(
-        refusal.contains("permission denied for database"),
-        "outside role connected to the isolated clone: {refusal}"
-    );
+    // Neither an unrelated role nor the source's serving role may connect.
+    for (role, label) in [(OUTSIDER, "outside role"), (ROLE, "source serving role")] {
+        let url =
+            format!("postgres://{role}@localhost/{CLONE}?host=/var/run/postgresql&sslmode=disable");
+        let refusal = match PgConnection::connect(&url).await {
+            Ok(_) => String::new(),
+            Err(error) => error.to_string(),
+        };
+        assert!(
+            refusal.contains("permission denied for database"),
+            "{label} connected to the isolated clone: {refusal}"
+        );
+    }
     // Each barrier separately: the session default, then revoked privileges
     // inside an explicitly read-write transaction that overrides that default.
-    let clone_url = app_url(CLONE);
+    let clone_url = app_url(INSPECTOR, CLONE);
     let mut inspector = PgConnection::connect(&clone_url).await.unwrap();
     let default: String = sqlx::query_scalar("SHOW default_transaction_read_only")
         .fetch_one(&mut inspector)
         .await
         .unwrap();
     assert_eq!(default, "on", "clone does not default to read-only");
-    // Writes the serving role was granted on the source; each must now be refused.
+    // Every write the inspection role held on the source must now be refused.
     for sql in [
-        "INSERT INTO public.outgoing_work DEFAULT VALUES",
+        "INSERT INTO public.resource_identity DEFAULT VALUES",
+        "INSERT INTO public.system_identity DEFAULT VALUES",
+        "INSERT INTO public.source_identity DEFAULT VALUES",
+        "INSERT INTO public.system_parent DEFAULT VALUES",
+        "INSERT INTO public.source_artifact DEFAULT VALUES",
+        "INSERT INTO public.system_revision DEFAULT VALUES",
         "INSERT INTO public.server_audit DEFAULT VALUES",
+        "INSERT INTO public.outgoing_work DEFAULT VALUES",
+        "INSERT INTO public.system_write_head DEFAULT VALUES",
         "INSERT INTO public.system_create_retry DEFAULT VALUES",
+        "UPDATE public.system_create_retry SET digest = digest",
         "UPDATE public.system_parent_write_guard SET singleton = singleton",
     ] {
         assert_eq!(
@@ -780,12 +841,19 @@ async fn proof() {
          WHERE a.id = n.id AND n.forged <> a.bytes",
     )
     .await;
+    restore(&dump, SCHEMA_GAP);
+    tamper(
+        SCHEMA_GAP,
+        "DROP TRIGGER server_audit_immutable ON public.server_audit",
+    )
+    .await;
     for (database, problem) in [
         (AUDIT_GAP, "audit: expected 3 rows"),
         (
             ARTIFACT_BAD,
             "urn:glaux:test:restore-a: artifact fact differs",
         ),
+        (SCHEMA_GAP, "catalog: differs from the backup inventory"),
     ] {
         let mut server = start(&mut fixture, database, SOURCE_A);
         for system in &created {
