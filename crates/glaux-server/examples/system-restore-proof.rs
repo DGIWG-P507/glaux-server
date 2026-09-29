@@ -689,9 +689,8 @@ async fn proof() {
         None,
         "clone state changed after a refused write"
     );
-    let outsider = format!(
-        "postgres://{OUTSIDER}@localhost/{CLONE}?host=/var/run/postgresql&sslmode=disable"
-    );
+    let outsider =
+        format!("postgres://{OUTSIDER}@localhost/{CLONE}?host=/var/run/postgresql&sslmode=disable");
     let connection = PgConnection::connect(&outsider).await;
     assert!(
         connection.is_err(),
@@ -748,7 +747,11 @@ async fn proof() {
     let mut server = start(&mut fixture, SOURCE_DB, SOURCE_A);
     let later = create(
         &mut fixture,
-        &feature("urn:glaux:test:restore-later", "Later System", "sosa:Sensor"),
+        &feature(
+            "urn:glaux:test:restore-later",
+            "Later System",
+            "sosa:Sensor",
+        ),
         None,
     )
     .expect("post-backup System not created");

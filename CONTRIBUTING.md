@@ -144,6 +144,9 @@ not merely fail setup. The [System retrieval proof](docs/system-read-tests.md)
 adds exact root-to-resource retrieval across a real server restart and
 indistinguishable missing/concealed responses. Its compiled wrong-identity and
 process-memory controls must each fail their own intended assertion.
+The [System restore proof](docs/system-restore-tests.md) checks an isolated clone
+against an independent pre-backup manifest, including captured audit, and
+rejects writable, open or incomplete clones through three procedure faults.
 
 The project lead selected the branch/PR policy on September 18, 2026 and approved the explicit separate-review procedure and required-check enforcement decision on September 21, 2026:
 

@@ -58,6 +58,12 @@ case "${1:-}" in
         createdb --host="$host" --no-password --template=template0 "$target"
         pg_restore --host="$host" --no-password --exit-on-error --single-transaction \
             --dbname="$target" "$dump"
+        # Inspection only: no request can add resources, audit, retries or outgoing work.
+        sql "$target" "REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM $role" # CLONE_READ_ONLY
+        sql postgres "ALTER DATABASE $target SET default_transaction_read_only = on" # CLONE_READ_ONLY
+        # Only the named inspection role and administrators may connect.
+        sql postgres "REVOKE CONNECT ON DATABASE $target FROM PUBLIC" # CLONE_CONNECT
+        sql postgres "GRANT CONNECT ON DATABASE $target TO $role" # CLONE_CONNECT
         printf 'Restored into isolated inspection database %s.\n' "$target"
         ;;
     *)
