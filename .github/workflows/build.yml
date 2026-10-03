@@ -87,6 +87,17 @@ jobs:
           python3 -c 'import sys; sys.path.insert(0, "scripts"); from database_harness import PIN, docker; print(PIN); print(docker("pull", "--platform", PIN["platform"], PIN["image"], timeout=180))'
       - name: Inventory resolved dependencies and licence evidence
         run: python3 scripts/dependency_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/dependency-inventory.json"
+      # Temporary, approved Phase 1 Rust-only diagnostic. DO NOT MERGE.
+      # The launcher preserves failure; the post-corpus check still executes.
+      - name: Run bounded Phase 1 Rust security follow-up
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          diagnostic_status=0
+          python3 -u scripts/review-phase1-rust-scan.py --approved-ci --budget-seconds 1200 || diagnostic_status=$?
+          printf '%s\n' "$diagnostic_status" > "$RUNNER_TEMP/glaux-ci-evidence/phase1-rust-followup-status.txt"
+          python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-after-diagnostic.log"
+          exit "$diagnostic_status"
       - name: Verify original corpus digests after this lane's checks
         shell: bash
         run: python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-after.log"
