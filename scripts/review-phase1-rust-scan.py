@@ -66,6 +66,34 @@ class StageFailure(Exception):
     pass
 
 
+def strip_ansi(text):
+    # Logging color is presentation, not configuration or diagnostic severity.
+    return re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", text)
+
+
+def is_diagnostic(line):
+    return bool(re.search(r"(?:^|\s)(?:WARN(?:ING)?|ERROR|FATAL)(?:\s|:)", strip_ansi(line), re.I))
+
+
+def extractor_config_checks(text, options, command):
+    text = strip_ansi(text)
+    text = "\n".join(re.sub(r"^(?:\[[^\]]*\]\s*)+", "", line) for line in text.splitlines())
+    start = text.find("INFO configuration: {")
+    end = text.find("\n}", start)
+    if start < 0 or end < 0:
+        raise StageFailure("actual extractor configuration block unavailable")
+    config = text[start:end + 2]
+    checks = {"all_targets": bool(re.search(r"cargo_all_targets:\s*true,", config)),
+              "default_features": bool(re.search(r'cargo_features:\s*\[\s*"default",?\s*\]', config))}
+    for key in ("SYSROOT", "SYSROOT_SRC", "PROC_MACRO_SERVER"):
+        checks[key.lower()] = bool(re.search(key.lower() + r":\s*Some\(\s*" +
+                                            re.escape(json.dumps(options[key])) + r",?\s*\)", config))
+    match = re.search(r"build_script_command:\s*(\[.*?\]),", config, re.S)
+    checks["build_script_command"] = bool(match and json.loads(
+        re.sub(r",\s*\]", "]", match.group(1))) == command)
+    return config, checks
+
+
 class Campaign:
     def __init__(self, evidence, work, budget):
         self.evidence, self.work = evidence, work
@@ -94,6 +122,43 @@ class Campaign:
 
     def save(self):
         write_json(self.evidence / "rust-followup-summary.json", self.summary)
+
+    def check_parser(self):
+        options = {"SYSROOT": "/fixture/toolchain", "SYSROOT_SRC": "/fixture/library",
+                   "PROC_MACRO_SERVER": "/fixture/proc-macro-server"}
+        command = ["cargo", "+1.98.1", "check", "--locked", "--offline"]
+        fixture = '''INFO configuration: {
+cargo_all_targets: true,
+cargo_features: ["default",],
+sysroot: Some("/fixture/toolchain",),
+sysroot_src: Some("/fixture/library",),
+proc_macro_server: Some("/fixture/proc-macro-server",),
+build_script_command: ["cargo", "+1.98.1", "check", "--locked", "--offline",],
+}'''
+        plain = "\n".join("[2026-10-03 00:00:00] [build-stdout] " + line for line in fixture.splitlines())
+        colored = plain.replace("INFO", "\x1b[32mINFO\x1b[0m")
+        cases = [("uncolored_configuration", plain, True),
+                 ("colored_configuration", colored, True),
+                 ("colored_wrong_setting", colored.replace("cargo_all_targets: true", "cargo_all_targets: false"), False),
+                 ("absent_configuration", "[build-stdout] no configuration emitted", False)]
+        outcomes = []
+        for name, text, expected in cases:
+            try:
+                _, checks = extractor_config_checks(text, options, command)
+                accepted = all(checks.values())
+            except StageFailure:
+                accepted = False
+            outcomes.append({"case": name, "expected_acceptance": expected,
+                             "actual_acceptance": accepted, "passed": accepted == expected})
+        for name, line, expected in (
+                ("colored_warning_detected", "[build-stdout] \x1b[33mWARN\x1b[0m generated source warning", True),
+                ("ordinary_info_not_warning", "[build-stdout] INFO normal extraction --warnings=show", False)):
+            actual = is_diagnostic(line)
+            outcomes.append({"case": name, "expected_detection": expected,
+                             "actual_detection": actual, "passed": actual == expected})
+        write_json(self.evidence / "configuration-parser-controls.json", outcomes)
+        if not all(item["passed"] for item in outcomes):
+            raise StageFailure("configuration-parser sensitivity control failed")
 
     def run(self, name, args, *, cwd=None, cap=120):
         remaining = self.deadline - time.monotonic()
@@ -215,22 +280,8 @@ class Campaign:
         return options, command
 
     def verify_extractor_config(self, output, options, command):
-        lines = [re.sub(r"^(?:\[[^\]]*\]\s*)+", "", line) for line in output.read_text().splitlines()]
-        text = "\n".join(lines)
-        start = text.find("INFO configuration: {")
-        end = text.find("\n}", start)
-        if start < 0 or end < 0:
-            raise StageFailure("actual extractor configuration block unavailable")
-        config = text[start:end + 2]
+        config, checks = extractor_config_checks(output.read_text(), options, command)
         (self.evidence / "actual-extractor-configuration.log").write_text(config + "\n", encoding="utf-8")
-        checks = {"all_targets": bool(re.search(r"cargo_all_targets:\s*true,", config)),
-                  "default_features": bool(re.search(r'cargo_features:\s*\[\s*"default",?\s*\]', config))}
-        for key in ("SYSROOT", "SYSROOT_SRC", "PROC_MACRO_SERVER"):
-            checks[key.lower()] = bool(re.search(key.lower() + r":\s*Some\(\s*" +
-                                                re.escape(json.dumps(options[key])) + r",?\s*\)", config))
-        match = re.search(r"build_script_command:\s*(\[.*?\]),", config, re.S)
-        checks["build_script_command"] = bool(match and json.loads(
-            re.sub(r",\s*\]", "]", match.group(1))) == command)
         self.summary["actual_extractor_configuration_checks"] = checks
         self.save()
         if not all(checks.values()):
@@ -296,7 +347,7 @@ class Campaign:
         messages = []
         for path in sorted(self.evidence.rglob("*.log")):
             for number, line in enumerate(path.read_text(errors="replace").splitlines(), 1):
-                if re.search(r"(?:^|\s)(?:WARN(?:ING)?|ERROR|FATAL)(?:\s|:)", line, re.I):
+                if is_diagnostic(line):
                     messages.append({"file": str(path.relative_to(self.evidence)),
                                      "line": number, "text": line})
         write_json(self.evidence / "rust-diagnostic-lines.json", messages)
@@ -330,6 +381,7 @@ def main():
     campaign = Campaign(evidence, work, args.budget_seconds)
     tracked, before = [], {}
     try:
+        campaign.check_parser()
         output = campaign.run("source-head", ["git", "rev-parse", "HEAD"], cwd=ROOT, cap=10)
         campaign.summary["head"] = output.read_text().strip()
         if campaign.summary["head"] != os.environ.get("TESTED_HEAD"):
