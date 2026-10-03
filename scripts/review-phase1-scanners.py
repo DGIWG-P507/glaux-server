@@ -311,6 +311,10 @@ def main():
     try:
         _, output = campaign.run("source-head", ["git", "rev-parse", "HEAD"], cwd=ROOT, cap=10)
         campaign.summary["head"] = output.read_text().strip()
+        # Checkout is intentionally shallow. Fetch only the reviewed public
+        # baseline object; do not move HEAD or require persisted credentials.
+        campaign.run("fetch-reviewed-baseline", ["git", "fetch", "--no-tags", "--depth=1",
+                     "https://github.com/DGIWG-P507/glaux-server.git", BASE], cwd=ROOT, cap=45)
         campaign.run("unchanged-production", ["git", "diff", "--exit-code", BASE, "--", "Cargo.lock",
                      "Cargo.toml", "rust-toolchain.toml", "crates", "corpus", "fuzz"], cwd=ROOT, cap=15)
         _, output = campaign.run("tracked-files", ["git", "ls-files"], cwd=ROOT, cap=10)
