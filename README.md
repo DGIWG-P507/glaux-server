@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial foundations, minimal System operations and restore, and first SWE scalar types — 4 October 2026 UTC.**
+**Initial foundations, minimal System operations and restore, and SWE scalar components — 4 October 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **304 implementation tasks**, each linked to its published issue: the original 286, 16 experimental Protobuf tasks, and Phase 1 review follow-ups 1.1.5 and 1.5.4. These are planned tasks, not completed software.
@@ -29,6 +29,14 @@ typed values and metadata, distinguish missing values from false/empty values,
 and enforce local token constraints. External category vocabularies remain
 explicitly unresolved; limited regex support is documented. This adds no endpoint
 or payload codec and does not declare a completed SWE conformance class.
+
+[Count and Quantity components](docs/numeric-components.md) retain large integers,
+exact decimal values and supplied unit declarations, and enforce local numeric
+enumerations and inclusive intervals without rounding. [Offline UCUM 2.1 code
+checks](docs/ucum.md) use the complete pinned terminal dictionary and explicit
+resource limits. Semantic unit URIs remain unresolved, and special-scale algebra
+is explicitly unsupported. These bounded library checks perform no unit
+conversion and add no endpoint, payload codec or conformance declaration.
 
 [Typed resource identities](docs/resource-identities.md) now separate UUIDv7 local
 locators, URI-form published UIDs and authority-qualified source identifiers.

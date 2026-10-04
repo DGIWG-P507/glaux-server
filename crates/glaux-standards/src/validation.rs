@@ -8,6 +8,7 @@ use std::sync::{
     atomic::{AtomicUsize, Ordering},
 };
 
+use glaux_domain::numeric::{ExactNumber, NumericError};
 use serde_json::Value;
 
 include!(concat!(env!("OUT_DIR"), "/corpus.rs"));
@@ -27,6 +28,7 @@ pub enum Contract {
     Boolean,
     Text,
     Category,
+    Count,
     Quantity,
     SweRecord,
     PhysicalSystem,
@@ -43,6 +45,7 @@ impl Contract {
             Self::Boolean => format!("{SWE}Boolean.json"),
             Self::Text => format!("{SWE}Text.json"),
             Self::Category => format!("{SWE}Category.json"),
+            Self::Count => format!("{SWE}Count.json"),
             Self::Quantity => format!("{SWE}Quantity.json"),
             Self::SweRecord => format!("{SWE}DataRecord.json"),
             Self::PhysicalSystem => format!("{PIN}sensorml/schemas/json/PhysicalSystem.json"),
@@ -78,6 +81,7 @@ pub enum Failure {
     DuplicateKey,
     Structure,
     EncodingMismatch,
+    Numeric(NumericError),
 }
 
 struct Frame {
@@ -171,6 +175,12 @@ pub fn parse(input: &[u8]) -> Result<Value, Failure> {
             return Err(Failure::Nodes);
         }
         match node {
+            Value::Number(number) => {
+                // Bound exact-number work for every schema/projection caller,
+                // not just scalar compilation. The schema engine's own much
+                // larger exponent allowance is not our resource budget.
+                ExactNumber::parse_json_number(number.as_str()).map_err(Failure::Numeric)?;
+            }
             Value::Array(values) => {
                 if values.len() > MAX_MEMBERS {
                     return Err(Failure::Members);
@@ -292,6 +302,7 @@ impl StructuralValidator {
             Contract::Boolean,
             Contract::Text,
             Contract::Category,
+            Contract::Count,
             Contract::Quantity,
             Contract::SweRecord,
             Contract::PhysicalSystem,

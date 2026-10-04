@@ -149,6 +149,34 @@ fn limits_and_safe_parse() {
     // Numbers are retained, not silently rounded by a floating-point parser.
     let number = b"18446744073709551616001";
     assert_eq!(parse(number).unwrap().to_string().as_bytes(), number);
+    // Shared bounds protect the generic engine, not only scalar contracts.
+    for token in [
+        "1e4097",
+        "1e-4097",
+        "1e1000000",
+        "1.00e-9223372036854775807",
+    ] {
+        assert_eq!(
+            parse(token.as_bytes()),
+            Err(Failure::Numeric(NumericError::ExponentLimit))
+        );
+        let source =
+            format!(r#"{{"type":"Count","definition":"urn:test:p","label":"P","value":{token}}}"#);
+        assert_eq!(
+            v.validate(Contract::Count, source.as_bytes()),
+            Err(Failure::Numeric(NumericError::ExponentLimit))
+        );
+    }
+    assert_eq!(
+        parse("1".repeat(4097).as_bytes()),
+        Err(Failure::Numeric(NumericError::InputLimit))
+    );
+    for token in ["1e4096", "1e-4096"] {
+        assert!(
+            parse(token.as_bytes()).is_ok(),
+            "at the existing exponent bound"
+        );
+    }
 }
 
 #[test]

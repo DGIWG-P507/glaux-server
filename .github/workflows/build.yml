@@ -68,6 +68,7 @@ jobs:
           fi
           python3 scripts/cargo_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/cargo-dependencies.json"
           python3 scripts/renderer_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/renderer-inventory.json"
+          python3 crates/glaux-standards/src/units/verify.py --self-test | tee "$RUNNER_TEMP/glaux-ci-evidence/ucum-inventory.log"
           git diff --exit-code -- Cargo.lock
       - name: Lint Rust and check Python syntax
         run: |

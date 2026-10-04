@@ -391,7 +391,7 @@ fn scalar_bounded_inputs_and_unsupported_features() {
     assert_eq!(
         ScalarContract::compile(
             validator(),
-            br#"{"type":"Quantity","definition":"urn:example:property","label":"Property","uom":{"code":"m"}}"#
+            br#"{"type":"Time","definition":"urn:example:property","label":"Property","uom":{"code":"s"}}"#
         )
         .err(),
         Some(ScalarError::UnsupportedComponent)

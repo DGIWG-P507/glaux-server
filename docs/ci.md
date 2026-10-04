@@ -16,7 +16,7 @@ No check, fault control, inventory or exact-head verification was removed.
 
 | Lane (job ID) | Checks |
 |---|---|
-| `static-checks` | Formatting, dependency lock, Clippy, Python syntax, build, package boundaries and test discovery, Cargo/renderer/dependency/licence inventories |
+| `static-checks` | Formatting, dependency lock, Clippy, Python syntax, build, package boundaries and test discovery, Cargo/renderer/dependency/licence inventories, pinned UCUM source/table/notice checks |
 | `rust-suites` | Rust tests and doctests, schema/numeric/time campaigns and faults, identity boundary, corpus controls, validation and projection faults |
 | `listener-proofs` | HTTP boundary, authentication and key-refresh proofs with their faults |
 | `database-storage` | Database lifecycle, exact-time storage, System/revision storage, atomic/conditional/retry writes and isolated System restore, with their faults |
@@ -58,6 +58,7 @@ python3 -m compileall -q scripts
 cargo build --workspace --locked --offline
 python3 scripts/check-bootstrap.py
 python3 scripts/renderer_inventory.py
+python3 crates/glaux-standards/src/units/verify.py --self-test
 python3 scripts/check_corpus.py
 python3 -u scripts/check-execution.py rust
 python3 -u scripts/check-execution.py schema-fuzz
@@ -194,10 +195,11 @@ compiler error cannot stand in for the intended assertion failure. Mutations
 never modify the checked-out source or any user database.
 
 After the passing validation baseline, [test-validation-failures.py](../scripts/test-validation-failures.py)
-proves seven faults fail at the intended assertions: wrong Binary entry
+proves ten faults fail at the intended assertions: wrong Binary entry
 point, skipped Quantity structural checking, bypassed raw-size limit, and ignored
 unallowlisted references; plus [scalar](scalar-components.md) false/empty-value
-collapse and invalid Category acceptance. Every control must compile and fail the exact test with
+collapse and invalid Category acceptance; plus [numeric-component](numeric-components.md)
+rounding, constraint bypass and silent unit rewriting. Every control must compile and fail the exact test with
 the expected left/right values; setup failure or timeout is not detection.
 Disposable source copies share only their task-local compilation cache.
 
