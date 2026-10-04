@@ -72,7 +72,9 @@ pub(super) fn same_value(left: &ScalarValue, right: &ScalarValue) -> bool {
     // IEEE NaN stays unequal in the numeric type; only reserved-token matching
     // recognizes the explicit NaN state. No ordinary number is turned into nil.
     match (left, right) {
-        (ScalarValue::Quantity(NumericValue::NaN), ScalarValue::Quantity(NumericValue::NaN)) => true,
+        (ScalarValue::Quantity(NumericValue::NaN), ScalarValue::Quantity(NumericValue::NaN)) => {
+            true
+        }
         (ScalarValue::Time(left), ScalarValue::Time(right))
             if matches!(left.position, TimePosition::Numeric(NumericValue::NaN))
                 && matches!(right.position, TimePosition::Numeric(NumericValue::NaN)) =>

@@ -296,7 +296,9 @@ fn compile_with_denial(
         // Time/TimeRange's DateTimeNumberOrSpecial oneOf needs date-time assertion to
         // distinguish calendar strings from named numeric specials. Originals
         // remain unchanged; semantic frame/calendar checks still run separately.
-        .should_validate_formats(uri == format!("{SWE}Time.json") || uri == format!("{SWE}TimeRange.json"))
+        .should_validate_formats(
+            uri == format!("{SWE}Time.json") || uri == format!("{SWE}TimeRange.json"),
+        )
         .with_pattern_options(
             jsonschema::PatternOptions::fancy_regex()
                 .backtrack_limit(20_000)

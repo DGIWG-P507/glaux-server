@@ -12,7 +12,8 @@ use glaux_domain::{
 use serde_json::Value;
 
 use super::{
-    CheckedScalarValue, CodeSpaceCheck, ScalarContract, ScalarError, UnitReferenceCheck, ValueContext,
+    CheckedScalarValue, CodeSpaceCheck, ScalarContract, ScalarError, UnitReferenceCheck,
+    ValueContext,
 };
 
 pub(super) const GREGORIAN: &str = "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian";
@@ -120,8 +121,9 @@ fn compare(left: &TimePosition, right: &TimePosition) -> Result<Option<Ordering>
     use TimePosition::{Calendar, Numeric};
     match (left, right) {
         (Numeric(a), Numeric(b)) => Ok(a.partial_cmp(b)),
-        (Numeric(NumericValue::NaN), Calendar(_))
-        | (Calendar(_), Numeric(NumericValue::NaN)) => Ok(None),
+        (Numeric(NumericValue::NaN), Calendar(_)) | (Calendar(_), Numeric(NumericValue::NaN)) => {
+            Ok(None)
+        }
         (Calendar(CalendarTime::Utc(a)), Calendar(CalendarTime::Utc(b))) => Ok(Some(a.cmp(b))),
         (Calendar(CalendarTime::Unresolved(a)), Calendar(CalendarTime::Unresolved(b)))
             if a == b =>
