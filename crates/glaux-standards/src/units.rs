@@ -167,8 +167,9 @@ impl Parser<'_> {
                         self.pos += 1;
                         last_atom_end = self.pos;
                     }
-                    b'"' | b'(' | b')' | b'+' | b'-' | b'.' | b'/' | b'=' | b']' | b'{'
-                    | b'}' => break,
+                    b'"' | b'(' | b')' | b'+' | b'-' | b'.' | b'/' | b'=' | b']' | b'{' | b'}' => {
+                        break;
+                    }
                     _ => {
                         self.pos += 1;
                         if !byte.is_ascii_digit() {
@@ -197,8 +198,7 @@ impl Parser<'_> {
 
         let unsigned_exponent = !numeric && last_atom_end < self.pos;
         if unsigned_exponent {
-            self.unsupported_power |=
-                Self::exponent(&self.code[last_atom_end..self.pos], special)?;
+            self.unsupported_power |= Self::exponent(&self.code[last_atom_end..self.pos], special)?;
         }
         if matches!(self.peek(), Some(b'+' | b'-')) {
             if unsigned_exponent {

@@ -5,6 +5,6 @@
 
 pub mod projection;
 pub mod scalar;
-pub mod units;
 mod schema_guard;
+pub mod units;
 pub mod validation;

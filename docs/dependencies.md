@@ -38,8 +38,14 @@ covered merely by Glaux's Apache-2.0 licence.
 
 Task #28 enables `jsonschema`'s `arbitrary-precision` feature for Count and
 Quantity schema checks. This adds dependency edges from `jsonschema` and
-`jsonschema-value` to the already locked `num-bigint`; it does not change package
-versions or introduce a new archive. The corresponding features and graph are
+`jsonschema-value` to the already locked `num-bigint`. Hosted Cargo resolution
+also adds seven all-target metadata packages: `jsonschema-macros` and
+`jsonschema-macros-core` 0.56.0, `proc-macro-crate` 3.5.0,
+`toml_datetime` 1.1.1+spec-1.1.0, `toml_edit` 0.25.15+spec-1.1.0,
+`toml_parser` 1.1.3+spec-1.1.0 and `winnow` 1.0.4. Existing package versions
+are unchanged; the graph now accounts for 286 registry packages. The optional
+macro feature is not selected merely because those packages appear in Cargo's
+all-target metadata. The corresponding features, archive hashes and graph are
 recorded in the reviewed Cargo snapshot. Exact component comparisons still use
 the domain numeric primitives; the schema feature does not implement conversion
 or replace the component's bounded semantic checks.
@@ -121,7 +127,7 @@ compound Unicode/TLS/data terms remain recorded rather than reduced
 to a crate's MIT/Apache heading. This is dependency-selection accounting, not
 a legal opinion or a completed release-redistribution check.
 
-Ten archives contain no separately named licence/notice file. Six predate #21: `jsonschema-regex`
+Twelve archives contain no separately named licence/notice file. Six predate #21: `jsonschema-regex`
 and `jsonschema-value` 0.56.0 (MIT, [upstream workspace](https://github.com/Stranger6667/jsonschema/tree/rust-v0.56.0)),
 `uuid-simd` and `vsimd` 0.8.0 (MIT, [upstream](https://github.com/Nugine/simd)), and
 `r-efi` 5.3.0 and 6.0.0 (MIT OR Apache-2.0 OR LGPL-2.1-or-later,
@@ -135,6 +141,12 @@ The four added by #21 are `jni` and `jni-macros` 0.22.4, `jni-sys-macros` 0.4.1
 All four declare MIT OR Apache-2.0; missing packaged notices are recorded, not
 silently inferred from that declaration. Release packaging must collect the
 applicable notices before redistribution. No release is performed here.
+
+The two added by #28 are `jsonschema-macros` and `jsonschema-macros-core`
+0.56.0. Both declare MIT and belong to the same upstream workspace as the
+existing schema engine; absent packaged notices are recorded as absent. The
+other five added archives carry their MIT or MIT OR Apache-2.0 notices in the
+snapshot. This is not a new claim that metadata-only optional packages execute.
 
 The #21 selection checked the published GitHub advisory query for
 `reqwest@0.13.5` on 26 September 2026; it returned no matching published entry.

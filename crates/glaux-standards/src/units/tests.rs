@@ -115,7 +115,11 @@ fn ucum_dictionary_2_1() {
     assert_eq!(dictionary.prefixes.len(), 24);
     assert_eq!(dictionary.atoms.len(), 310);
     assert_eq!(
-        dictionary.atoms.values().filter(|atom| atom.special).count(),
+        dictionary
+            .atoms
+            .values()
+            .filter(|atom| atom.special)
+            .count(),
         21
     );
     for (code, atom) in &dictionary.atoms {

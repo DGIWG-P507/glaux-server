@@ -146,7 +146,10 @@ impl ScalarContract {
     /// description/record; this method checks an actually supplied JSON value.
     pub fn check_value(&self, input: &[u8]) -> Result<CheckedScalarValue, ScalarError> {
         let value = validation::parse(input).map_err(ScalarError::Syntax)?;
-        if matches!(self.component, ScalarComponent::Count { .. } | ScalarComponent::Quantity { .. }) {
+        if matches!(
+            self.component,
+            ScalarComponent::Count { .. } | ScalarComponent::Quantity { .. }
+        ) {
             let raw = std::str::from_utf8(input).map_err(|_| ScalarError::ValueType)?;
             return numeric::check_value(&self.component, &value, Some(raw.trim()));
         }

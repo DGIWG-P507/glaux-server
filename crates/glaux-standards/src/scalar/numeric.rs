@@ -73,8 +73,9 @@ fn number(value: &Value, raw: Option<&str>) -> Result<NumericValue, ScalarError>
         Value::Number(value) => ExactNumber::parse_json_number(raw.unwrap_or(value.as_str()))
             .map(NumericValue::Finite)
             .map_err(ScalarError::Numeric),
-        Value::String(value) => NumericValue::from_swe_special(value)
-            .map_err(|_| ScalarError::ValueType),
+        Value::String(value) => {
+            NumericValue::from_swe_special(value).map_err(|_| ScalarError::ValueType)
+        }
         _ => Err(ScalarError::ValueType),
     }
 }
@@ -91,7 +92,10 @@ fn constraint(source: &Value, count: bool) -> Result<Option<NumericConstraint>, 
         return Ok(None);
     };
     let values: Vec<NumericValue> = match source.get("values").and_then(Value::as_array) {
-        Some(values) => values.iter().map(|v| number(v, None)).collect::<Result<_, _>>()?,
+        Some(values) => values
+            .iter()
+            .map(|v| number(v, None))
+            .collect::<Result<_, _>>()?,
         None => Vec::new(),
     };
     let mut intervals = Vec::new();
@@ -103,7 +107,10 @@ fn constraint(source: &Value, count: bool) -> Result<Option<NumericConstraint>, 
             }
             let low = number(&range[0], None)?;
             let high = number(&range[1], None)?;
-            if !matches!(low.partial_cmp(&high), Some(Ordering::Less | Ordering::Equal)) {
+            if !matches!(
+                low.partial_cmp(&high),
+                Some(Ordering::Less | Ordering::Equal)
+            ) {
                 return Err(ScalarError::Constraint);
             }
             intervals.push([low, high]);
@@ -126,7 +133,11 @@ fn constraint(source: &Value, count: bool) -> Result<Option<NumericConstraint>, 
             count_value(value.clone()).map_err(|_| ScalarError::Constraint)?;
         }
     }
-    Ok(Some(NumericConstraint { values, intervals, significant_figures }))
+    Ok(Some(NumericConstraint {
+        values,
+        intervals,
+        significant_figures,
+    }))
 }
 
 pub(super) fn check_value(
@@ -141,7 +152,9 @@ pub(super) fn check_value(
             constraint,
             UnitReferenceCheck::NotApplicable,
         ),
-        ScalarComponent::Quantity { constraint, uom, .. } => (
+        ScalarComponent::Quantity {
+            constraint, uom, ..
+        } => (
             ScalarValue::Quantity(numeric.clone()),
             constraint,
             match &uom.href {
@@ -161,18 +174,26 @@ pub(super) fn check_value(
     })
 }
 
-fn check_constraint(constraint: &NumericConstraint, value: &NumericValue) -> Result<(), ScalarError> {
+fn check_constraint(
+    constraint: &NumericConstraint,
+    value: &NumericValue,
+) -> Result<(), ScalarError> {
     // Named NaN token membership is explicit; NumericValue's IEEE equality and
     // partial ordering are unchanged. NaN never belongs to an ordered interval.
     let enumerated = constraint.values.iter().any(|allowed| {
         allowed == value || matches!((allowed, value), (NumericValue::NaN, NumericValue::NaN))
     });
-    let in_interval = constraint.intervals.iter().any(|[low, high]| low <= value && value <= high);
+    let in_interval = constraint
+        .intervals
+        .iter()
+        .any(|[low, high]| low <= value && value <= high);
     if !(enumerated || in_interval) {
         return Err(ScalarError::ConstraintViolation);
     }
     if let (Some(maximum), NumericValue::Finite(value)) = (constraint.significant_figures, value) {
-        let source = value.decimal_lexeme().ok_or(ScalarError::UnsupportedFeature)?;
+        let source = value
+            .decimal_lexeme()
+            .ok_or(ScalarError::UnsupportedFeature)?;
         if significant_digits(source) > usize::from(maximum) {
             return Err(ScalarError::ConstraintViolation);
         }
@@ -187,6 +208,8 @@ fn significant_digits(source: &str) -> usize {
         Some(first) => digits.len() - first,
         // Explicit all-zero convention: fractional places (at least one), not
         // the exponent; no rounding or synthetic precision is applied.
-        None => mantissa.split_once('.').map_or(1, |(_, fraction)| fraction.len().max(1)),
+        None => mantissa
+            .split_once('.')
+            .map_or(1, |(_, fraction)| fraction.len().max(1)),
     }
 }
