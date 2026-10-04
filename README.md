@@ -6,10 +6,10 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial foundations, discovery, minimal HTTP System creation and retrieval, and isolated restore — 28 September 2026 UTC.**
+**Initial foundations, minimal System operations and restore, and first SWE scalar types — 4 October 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
-- The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **303 implementation tasks**, each linked to its published issue: the original 286, 16 experimental Protobuf tasks, and CI task 1.1.5 added from the Phase 1 implementation review. These are planned tasks, not completed software.
+- The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **304 implementation tasks**, each linked to its published issue: the original 286, 16 experimental Protobuf tasks, and Phase 1 review follow-ups 1.1.5 and 1.5.4. These are planned tasks, not completed software.
 - Apache-2.0 licensing and the contributor/review workflow are in place. The [active main-branch rule](https://github.com/DGIWG-P507/glaux-server/rules/23796335) requires a pull request and passing, up-to-date CI, with no bypass or mandatory human approval. [Issue #6](https://github.com/DGIWG-P507/glaux-server/issues/6) and [PR #314](https://github.com/DGIWG-P507/glaux-server/pull/314) record settings, failed/missing-check blocking proofs, actual runs and review.
 - The initial three-package Rust workspace and [CI suite](docs/ci.md) cover formatting, Clippy, build, executable regressions, real database/listener tests and controls against false-green results. They run in parallel lanes behind one required `Rust bootstrap` gate. The [dependency/licence inventory](docs/dependencies.md) records what those runs use. Health, opt-in discovery and minimal authenticated System creation and retrieval exist; this is not yet a complete CSAPI resource service.
 
@@ -23,6 +23,12 @@ The [structural validator](docs/structural-validation.md) executes those cases
 against pinned, embedded sources, with fixed entry points and bounded input.
 It rejects external schema retrieval and non-progressing reference cycles.
 Structural success is not full SWE semantics, codec support or conformance.
+
+[Boolean, Text and Category components](docs/scalar-components.md) now preserve
+typed values and metadata, distinguish missing values from false/empty values,
+and enforce local token constraints. External category vocabularies remain
+explicitly unresolved; limited regex support is documented. This adds no endpoint
+or payload codec and does not declare a completed SWE conformance class.
 
 [Typed resource identities](docs/resource-identities.md) now separate UUIDv7 local
 locators, URI-form published UIDs and authority-qualified source identifiers.
