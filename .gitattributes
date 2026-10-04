@@ -10,3 +10,4 @@ Cargo.lock text eol=lf
 crates/glaux-standards/corpus/originals/** -text
 # Preserve the reviewed renderer's exact upstream bytes and bundled notices.
 crates/glaux-server/assets/swagger-ui/** -text
+crates/glaux-standards/src/units/originals/** -text

@@ -11,9 +11,10 @@ new dependencies.
 | Component | Identity and purpose | Licence/notice source |
 | --- | --- | --- |
 | Glaux's three workspace packages | Local `0.1.0` packages with the same inward boundaries; `Cargo.lock` is committed and used without re-resolution. | [Apache-2.0](../LICENSE), as declared by each package. |
-| Structural validation | `jsonschema =0.56.0`, defaults disabled; `serde_json =1.0.151`, `arbitrary_precision` and `raw_value`. Exact transitive graph, all-target features, archive checksums and notice hashes: [reviewed Cargo snapshot](cargo-dependencies.json). | Package terms and actual packaged notices are recorded per dependency; no HTTP/filesystem retrieval feature or HTTP client is reachable from the standards/domain packages. See [selection and limits](structural-validation.md). |
+| Structural validation | `jsonschema =0.56.0`, defaults disabled, `arbitrary-precision`; `serde_json =1.0.151`, `arbitrary_precision` and `raw_value`. Exact transitive graph, all-target features, archive checksums and notice hashes: [reviewed Cargo snapshot](cargo-dependencies.json). | Package terms and actual packaged notices are recorded per dependency; no HTTP/filesystem retrieval feature or HTTP client is reachable from the standards/domain packages. See [selection and limits](structural-validation.md). |
 | Typed identities | `uuid =1.26.1`, `getrandom =0.4.3`, `fluent-uri =0.4.1`, each with defaults disabled. [Selection, contracts and limits](resource-identities.md). | Actual packaged licences/notices and unified features are recorded in the reviewed Cargo snapshot; existing transitive `getrandom` remains separately accounted. |
 | Exact numbers | `num-bigint =0.4.8`, `num-rational =0.4.2`, `num-traits =0.2.19`, defaults disabled; rational requests `num-bigint`. [Contracts and limits](exact-numbers.md). | Existing locked packages reused as direct domain dependencies; actual unified features and packaged MIT/Apache notices remain in the reviewed snapshot. |
+| UCUM declarations | UCUM 2.1, official `ucum-org/ucum` commit `910f502003269a492e32dd5cb96e5503b2351ac9`; complete original essence and specification, derived lookup for 24 prefixes and 310 atoms. [Source digests, scope and checks](ucum.md). | The source's contemporaneous UCUM terms apply separately: [full licence](../crates/glaux-standards/src/units/license.txt) and [required short notice](../crates/glaux-standards/src/units/UCUM_short_license.txt), verified against the unchanged original. Definition values and units remain with the incorporated codes. No Cargo or pip dependency is added. |
 | Initial PostgreSQL repository/runtime | `sqlx =0.9.0` (defaults disabled: `postgres`, `runtime-tokio`, `migrate`, `tls-rustls-ring-webpki`); `tokio =1.53.1` (defaults disabled: `rt`, `time`, `net`, `sync`, `signal`, `macros`). Server package only. [Storage contract](system-storage.md). | Actual SQLx MIT/Apache and Tokio MIT packaged notices, plus the full transitive feature/archive/notice inventory, are in the reviewed snapshot. TLS incorporates separately recorded ring Apache/ISC, webpki ISC and WebPKI-root CDLA-Permissive terms; these are not all relabelled MIT/Apache. |
 | Health-only HTTP and typed config | `axum =0.8.8`, defaults disabled, `http1`/`tokio`; `serde =1.0.229`, defaults disabled, `derive`/`std`; existing `serde_json =1.0.151` reused. [Runtime contract](runtime-configuration.md). | Axum/Tower/Hyper MIT; serde MIT OR Apache-2.0. The 19 archives added by #18 carry packaged notices. `matchit` is MIT AND BSD-3-Clause and `sync_wrapper` is Apache-2.0; exact compound terms and notice hashes remain in the snapshot. #21 additionally enables Hyper client features for the issuer-key transport below. |
 | Rust, Cargo, rustfmt and Clippy | Rust `1.98.1`, minimal toolchain plus the two explicit components; actual component versions appear in each run. | Rust's [Apache-2.0 OR MIT terms and third-party notice instructions](https://github.com/rust-lang/rust/blob/1.98.1/COPYRIGHT); bundled components retain their own notices. |
@@ -35,6 +36,14 @@ records the registry/Dockerfile sources and actual SQL version assertions.
 Neither the database image as a whole nor the distributed Rust toolchain is
 covered merely by Glaux's Apache-2.0 licence.
 
+Task #28 enables `jsonschema`'s `arbitrary-precision` feature for Count and
+Quantity schema checks. This adds dependency edges from `jsonschema` and
+`jsonschema-value` to the already locked `num-bigint`; it does not change package
+versions or introduce a new archive. The corresponding features and graph are
+recorded in the reviewed Cargo snapshot. Exact component comparisons still use
+the domain numeric primitives; the schema feature does not implement conversion
+or replace the component's bounded semantic checks.
+
 ## Per-run evidence
 
 The [initial standards corpus](standards-corpus.md) separately retains 129 schemas,
@@ -44,6 +53,14 @@ OGC, GeoJSON MIT and JSON Schema BSD/AFL notices remain with the originals; Glau
 Apache-2.0 licence does not relicense them. Corpus packaging itself adds no Cargo or pip dependency.
 The corpus check and its log complement, rather than modify, the runtime dependency
 inventory below. The optional PowerShell acquisition script is not a CI dependency.
+
+The separately licensed [UCUM source package](ucum.md) lives beside its validator,
+without replacing or extending that original schema corpus. The static lane runs
+`python3 crates/glaux-standards/src/units/verify.py --self-test` to check original
+file digests, reproduce every lookup field and both notices, and prove that
+changed bytes in each checked asset are rejected. It needs no network or package
+installation. UCUM notices must accompany distributions containing that data;
+the repository's Apache-2.0 licence does not replace those terms.
 
 After the workflow provisions the pinned Rust components and pulls the database
 image, it runs from the checked-out repository root:

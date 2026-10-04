@@ -7,6 +7,10 @@ persistence or payload codecs. It implements the scalar portion of
 
 ## What it does
 
+Task 2.1.2 adds [Count and Quantity](numeric-components.md) through the same
+compiler, with exact values, numeric constraints and offline unit checks. The
+Boolean/Text/Category rules below remain unchanged.
+
 `glaux_domain::scalar` holds the three distinct component/value types and their
 metadata. `glaux_standards::scalar::ScalarContract::compile` accepts a reusable
 `StructuralValidator` and source JSON bytes. It first uses the bounded parser and
@@ -81,7 +85,8 @@ to behavioral test-first evidence: false collapsed to absent, empty text collaps
 to absent, and bypassed Category membership. Every selected assertion must pass
 in an unmodified copy first, then fail at its exact expected assertion in a
 compiled disposable copy. Build/setup failure is not detection. Four existing
-validation faults remain, for seven controls total. Run the full required CI;
+validation faults remain. Task 2.1.2 adds three numeric controls, for ten total.
+Run the full required CI;
 the issue and PR record actual hosted outcomes, not this command list.
 
 ```sh

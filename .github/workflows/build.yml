@@ -58,6 +58,8 @@ jobs:
           cargo fetch --locked
           git diff --exit-code -- Cargo.lock
           cargo tree --locked --offline -p glaux-server --target x86_64-unknown-linux-gnu -e normal,build > "$RUNNER_TEMP/glaux-ci-evidence/server-linux-dependencies.txt"
+      - name: Record candidate exact-number dependency inventory
+        run: python3 scripts/cargo_inventory.py --candidate > "$RUNNER_TEMP/glaux-ci-evidence/cargo-candidate.json"
       - name: Verify formatting and locked dependencies
         shell: bash
         run: |
@@ -68,6 +70,7 @@ jobs:
           fi
           python3 scripts/cargo_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/cargo-dependencies.json"
           python3 scripts/renderer_inventory.py > "$RUNNER_TEMP/glaux-ci-evidence/renderer-inventory.json"
+          python3 crates/glaux-standards/src/units/verify.py --self-test | tee "$RUNNER_TEMP/glaux-ci-evidence/ucum-inventory.log"
           git diff --exit-code -- Cargo.lock
       - name: Lint Rust and check Python syntax
         run: |

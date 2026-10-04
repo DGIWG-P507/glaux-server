@@ -20,6 +20,7 @@ VALIDATION = Path("crates/glaux-standards/src/validation.rs")
 GUARD = Path("crates/glaux-standards/src/schema_guard.rs")
 SCALAR = Path("crates/glaux-standards/src/scalar.rs")
 SCALAR_DOMAIN = Path("crates/glaux-domain/src/scalar.rs")
+NUMERIC_SCALAR = Path("crates/glaux-standards/src/scalar/numeric.rs")
 TIMEOUT_SECONDS = 180
 
 
@@ -87,6 +88,25 @@ def bypass_category_membership(root):
             "// Fault: skip Category membership checking.")
 
 
+def round_large_count(root):
+    replace(root / NUMERIC_SCALAR,
+            "CountValue::try_from(value).map_err(ScalarError::Numeric)",
+            """let value = if value == ExactNumber::parse_json_number("9007199254740993").unwrap() {
+        ExactNumber::parse_json_number("9007199254740992").unwrap()
+    } else { value };
+    CountValue::try_from(value).map_err(ScalarError::Numeric)""")
+
+
+def bypass_numeric_constraint(root):
+    replace(root / NUMERIC_SCALAR, "if !(enumerated || in_interval) {",
+            "if false && !(enumerated || in_interval) {")
+
+
+def silently_rewrite_unit(root):
+    replace(root / NUMERIC_SCALAR, "        code,\n        href,",
+            '        code: code.map(|code| if code == "cm" { "m".to_owned() } else { code }),\n        href,')
+
+
 CASES = [
     ("binary-aggregate-root", "validation::tests::fixed_encoding_selection", wrong_binary_root,
      ["left: Err(Structure)", "right: Ok(())"]),
@@ -104,6 +124,12 @@ CASES = [
     ("scalar-category-membership-bypass",
      "scalar::tests::scalar_enumerations_preserve_tokens_and_enforce_membership",
      bypass_category_membership, ["left: None", "right: Some(ConstraintViolation)"]),
+    ("numeric-count-rounded", "scalar::numeric_tests::numeric_count_exact_large_values",
+     round_large_count, ["left: Ok(9007199254740992)", "right: Ok(9007199254740993)"]),
+    ("numeric-constraint-bypass", "scalar::numeric_tests::numeric_constraints_are_inclusive_unions",
+     bypass_numeric_constraint, ["left: None", "right: Some(ConstraintViolation)"]),
+    ("numeric-unit-rewrite", "scalar::numeric_tests::numeric_source_metadata_and_units_are_preserved",
+     silently_rewrite_unit, ['left: Some("m")', 'right: Some("cm")']),
 ]
 
 

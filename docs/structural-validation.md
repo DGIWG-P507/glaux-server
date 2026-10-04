@@ -19,7 +19,8 @@ controls and separate review; structural proof is not service conformance.
 
 ## Dependency selection and scope
 
-The selected library is Rust `jsonschema = "=0.56.0"`, with `default-features = false`.
+The selected library is Rust `jsonschema = "=0.56.0"`, with
+`default-features = false` and the `arbitrary-precision` feature.
 The selected crate supports Draft 2020-12 and Draft-07 and has an MIT licence and
 Rust 1.85.0 minimum; Glaux's workspace toolchain remains pinned separately.
 Disabling defaults excludes the crate's HTTP and filesystem resolution features.
@@ -30,13 +31,22 @@ are the selection sources. The resolved lockfile and
 [dependency/licence inventory](dependencies.md) are required delivery evidence;
 an exact top-level version declaration alone does not identify every dependency.
 
-`serde_json = "=1.0.151"` enables `arbitrary_precision` and `raw_value`. Parsing retains numeric
-values without first forcing them through a floating-point number. An authored
-regression checks preservation of a large integer beyond `u64`. This is a
-parser check, not proof of every numeric assertion inside the validator, exact
-decimal arithmetic, application numeric conversions, database representation
-or the complete numeric work owned by issue #10. Those distinctions must remain
-visible when extending this boundary.
+`serde_json = "=1.0.151"` enables `arbitrary_precision` and `raw_value`. Parsing
+retains numeric values without first forcing them through a floating-point
+number. An authored regression checks preservation of a large integer beyond
+`u64`. Task #28 also enables the schema engine's own `arbitrary-precision`
+feature for numeric assertions, including the original Count schema's integer
+type check. The two features protect different boundaries: retaining a token
+during parsing alone does not establish exact schema validation. The schema
+feature adds edges to the already locked `num-bigint`, without changing package
+versions or enabling retrieval.
+
+[Exact numeric primitives](exact-numbers.md) separately provide application
+comparison and arithmetic. The [Count and Quantity component checks](scalar-components.md)
+apply numeric input budgets before the schema engine, validate local constraints
+using those primitives and retain source spelling. Neither that bounded component
+proof nor the schema feature establishes every numeric keyword on arbitrary
+schemas, numeric database representation or complete SWE codecs.
 
 Raw JSON containers are decoded through `RawValue`, then explicitly constructed
 as objects/arrays before scalar tokens use `Value`. This prevents serde_json's
@@ -76,6 +86,7 @@ and explicit aliases.
 | `Boolean` | SWE `Boolean.json` |
 | `Text` | SWE `Text.json` |
 | `Category` | SWE `Category.json` |
+| `Count` | SWE `Count.json` |
 | `Quantity` | SWE `Quantity.json` |
 | `SweRecord` | SWE `DataRecord.json` |
 | `PhysicalSystem` | publication `sensorml/schemas/json/PhysicalSystem.json` |

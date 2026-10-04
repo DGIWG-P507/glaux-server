@@ -1,6 +1,19 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "scalar::numeric_tests::numeric_count_exact_large_values",
+    "scalar::numeric_tests::numeric_zero_absence_and_wrong_types",
+    "scalar::numeric_tests::numeric_source_metadata_and_units_are_preserved",
+    "scalar::numeric_tests::numeric_quantity_specials_and_nan_membership",
+    "scalar::numeric_tests::numeric_constraints_are_inclusive_unions",
+    "scalar::numeric_tests::numeric_significant_figures_do_not_round",
+    "scalar::numeric_tests::numeric_unit_reference_status_is_explicit",
+    "scalar::numeric_tests::numeric_generated_bounds_and_lexemes",
+    "units::tests::ucum_source_examples",
+    "units::tests::ucum_rejects_invalid_codes",
+    "units::tests::ucum_dictionary_2_1",
+    "units::tests::ucum_special_scales_explicit",
+    "units::tests::ucum_resource_limits",
     "scalar::tests::scalar_source_metadata_and_presence",
     "scalar::tests::scalar_values_reject_json_type_coercion",
     "scalar::tests::scalar_metadata_requires_published_members",

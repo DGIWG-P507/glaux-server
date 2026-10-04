@@ -1,4 +1,4 @@
-//! Bounded Boolean/Text/Category contract compilation (task 2.1.1).
+//! Bounded Boolean/Text/Category/Count/Quantity contract compilation.
 //!
 //! Original schema validation precedes local meaning checks. Category dictionary
 //! membership is explicitly unresolved; neither definitions nor code spaces are
@@ -7,6 +7,9 @@ use glaux_domain::scalar::{ComponentMetadata, ScalarComponent, ScalarValue, Toke
 use serde_json::{Value, json};
 
 use crate::validation::{self, Contract, StructuralValidator};
+use glaux_domain::numeric::NumericError;
+
+mod numeric;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ScalarError {
@@ -19,6 +22,8 @@ pub enum ScalarError {
     Constraint,
     ValueType,
     ConstraintViolation,
+    Numeric(NumericError),
+    Unit(crate::units::UnitError),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -30,9 +35,18 @@ pub enum CodeSpaceCheck {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+pub enum UnitReferenceCheck {
+    NotApplicable,
+    CodeValidated,
+    /// URI syntax was checked, not dictionary meaning or agreement with a code.
+    Unresolved(String),
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct CheckedScalarValue {
     pub value: ScalarValue,
     pub code_space: CodeSpaceCheck,
+    pub unit_reference: UnitReferenceCheck,
 }
 
 /// Immutable typed description plus the exact source artifact and local checks.
@@ -49,6 +63,8 @@ impl ScalarContract {
             Some("Boolean") => Contract::Boolean,
             Some("Text") => Contract::Text,
             Some("Category") => Contract::Category,
+            Some("Count") => Contract::Count,
+            Some("Quantity") => Contract::Quantity,
             _ => return Err(ScalarError::UnsupportedComponent),
         };
         validator
@@ -63,6 +79,9 @@ impl ScalarContract {
             return Err(ScalarError::UnsupportedFeature);
         }
         let metadata = metadata(&source)?;
+        if matches!(kind, Contract::Count | Contract::Quantity) {
+            return numeric::compile(kind, metadata, &source, input);
+        }
         let constraint = token_constraint(&source)?;
         let tokens = match &constraint {
             Some(TokenConstraint::Values(values)) => Some(local_validator(&json!({
@@ -127,6 +146,10 @@ impl ScalarContract {
     /// description/record; this method checks an actually supplied JSON value.
     pub fn check_value(&self, input: &[u8]) -> Result<CheckedScalarValue, ScalarError> {
         let value = validation::parse(input).map_err(ScalarError::Syntax)?;
+        if matches!(self.component, ScalarComponent::Count { .. } | ScalarComponent::Quantity { .. }) {
+            let raw = std::str::from_utf8(input).map_err(|_| ScalarError::ValueType)?;
+            return numeric::check_value(&self.component, &value, Some(raw.trim()));
+        }
         self.check_parsed_value(&value)
     }
 
@@ -153,8 +176,15 @@ impl ScalarContract {
                 };
                 (ScalarValue::Category(text.to_owned()), status)
             }
+            ScalarComponent::Count { .. } | ScalarComponent::Quantity { .. } => {
+                return numeric::check_value(&self.component, value, None);
+            }
         };
-        Ok(CheckedScalarValue { value, code_space })
+        Ok(CheckedScalarValue {
+            value,
+            code_space,
+            unit_reference: UnitReferenceCheck::NotApplicable,
+        })
     }
 
     fn check_tokens(&self, value: &Value) -> Result<(), ScalarError> {
@@ -287,3 +317,6 @@ fn supported_pattern(pattern: &str) -> Result<(), ScalarError> {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod numeric_tests;
