@@ -21,6 +21,7 @@ GUARD = Path("crates/glaux-standards/src/schema_guard.rs")
 SCALAR = Path("crates/glaux-standards/src/scalar.rs")
 SCALAR_DOMAIN = Path("crates/glaux-domain/src/scalar.rs")
 NUMERIC_SCALAR = Path("crates/glaux-standards/src/scalar/numeric.rs")
+TIME_SCALAR = Path("crates/glaux-standards/src/scalar/time.rs")
 TIMEOUT_SECONDS = 180
 
 
@@ -107,7 +108,26 @@ def silently_rewrite_unit(root):
             '        code: code.map(|code| if code == "cm" { "m".to_owned() } else { code }),\n        href,')
 
 
+def truncate_time_fraction(root):
+    replace(root / TIME_SCALAR,
+            "ExactInstant::parse_rfc3339(text).map_err(ScalarError::Time)?",
+            'ExactInstant::parse_rfc3339(&text.replace(".1234567890123456789", ".123456")).map_err(ScalarError::Time)?')
+
+
+def invent_numeric_utc_instant(root):
+    replace(root / SCALAR_DOMAIN,
+            "_ => Err(UnsupportedTimeConversion),",
+            """_ => {
+                static INVENTED: std::sync::OnceLock<ExactInstant> = std::sync::OnceLock::new();
+                Ok(INVENTED.get_or_init(|| ExactInstant::parse_rfc3339("1970-01-01T00:00:00Z").unwrap()))
+            },""")
+
+
 CASES = [
+    ("time-fraction-truncated", "scalar::time_tests::time_calendar_defaults_preserve_exact_instants",
+     truncate_time_fraction, ['left: "0.123456"', 'right: "0.1234567890123456789"']),
+    ("time-numeric-invented-utc", "scalar::time_tests::time_numeric_coordinates_preserve_origin_and_context",
+     invent_numeric_utc_instant, ["left: None", "right: Some(UnsupportedTimeConversion)"]),
     ("binary-aggregate-root", "validation::tests::fixed_encoding_selection", wrong_binary_root,
      ["left: Err(Structure)", "right: Ok(())"]),
     ("quantity-structural-bypass", "validation::tests::parser_fuzz_regressions",

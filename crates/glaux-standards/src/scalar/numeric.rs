@@ -50,7 +50,7 @@ pub(super) fn compile(
     })
 }
 
-fn unit(source: &Value) -> Result<UnitReference, ScalarError> {
+pub(super) fn unit(source: &Value) -> Result<UnitReference, ScalarError> {
     let source = source.get("uom").ok_or(ScalarError::Metadata)?;
     let code = super::optional_string(source, "code")?;
     let href = super::optional_string(source, "href")?;
@@ -68,7 +68,7 @@ fn unit(source: &Value) -> Result<UnitReference, ScalarError> {
     })
 }
 
-fn number(value: &Value, raw: Option<&str>) -> Result<NumericValue, ScalarError> {
+pub(super) fn number(value: &Value, raw: Option<&str>) -> Result<NumericValue, ScalarError> {
     match value {
         Value::Number(value) => ExactNumber::parse_json_number(raw.unwrap_or(value.as_str()))
             .map(NumericValue::Finite)
@@ -201,7 +201,7 @@ fn check_constraint(
     Ok(())
 }
 
-fn significant_digits(source: &str) -> usize {
+pub(super) fn significant_digits(source: &str) -> usize {
     let mantissa = source.split(['e', 'E']).next().unwrap_or(source);
     let digits: Vec<_> = mantissa.bytes().filter(u8::is_ascii_digit).collect();
     match digits.iter().position(|digit| *digit != b'0') {

@@ -1,6 +1,17 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "scalar::time_tests::time_calendar_defaults_preserve_exact_instants",
+    "scalar::time_tests::time_numeric_coordinates_preserve_origin_and_context",
+    "scalar::time_tests::time_foreign_frames_do_not_invent_utc",
+    "scalar::time_tests::time_original_schema_and_value_representation",
+    "scalar::time_tests::time_calendar_constraints_are_inclusive_unions",
+    "scalar::time_tests::time_numeric_constraints_and_special_states",
+    "scalar::time_tests::time_units_and_frame_metadata_are_validated",
+    "scalar::time_tests::time_invalid_calendar_and_bounded_inputs",
+    "scalar::time_tests::time_generated_calendar_boundaries",
+    "units::tests::ucum_time_codes_use_temporal_atoms",
+    "units::tests::ucum_time_codes_reject_or_defer_other_units",
     "scalar::numeric_tests::numeric_count_exact_large_values",
     "scalar::numeric_tests::numeric_zero_absence_and_wrong_types",
     "scalar::numeric_tests::numeric_source_metadata_and_units_are_preserved",

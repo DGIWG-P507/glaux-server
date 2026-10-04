@@ -38,6 +38,12 @@ resource limits. Semantic unit URIs remain unresolved, and special-scale algebra
 is explicitly unsupported. These bounded library checks perform no unit
 conversion and add no endpoint, payload codec or conformance declaration.
 
+[Time components](docs/time-components.md) preserve exact calendar coordinates
+and numeric offsets with their declared unit, frame and origin. Known UTC
+calendar values expose exact instants; unfamiliar frames and numeric-to-calendar
+conversions remain explicitly unsupported instead of assuming a Unix epoch.
+Calendar/numeric constraints are checked without rounding or external lookups.
+
 [Typed resource identities](docs/resource-identities.md) now separate UUIDv7 local
 locators, URI-form published UIDs and authority-qualified source identifiers.
 Strict parsing, fallible generation and type-boundary checks prevent accidental

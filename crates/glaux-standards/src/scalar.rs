@@ -1,4 +1,4 @@
-//! Bounded Boolean/Text/Category/Count/Quantity contract compilation.
+//! Bounded Boolean/Text/Category/Count/Quantity/Time contract compilation.
 //!
 //! Original schema validation precedes local meaning checks. Category dictionary
 //! membership is explicitly unresolved; neither definitions nor code spaces are
@@ -10,6 +10,7 @@ use crate::validation::{self, Contract, StructuralValidator};
 use glaux_domain::numeric::NumericError;
 
 mod numeric;
+mod time;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ScalarError {
@@ -24,6 +25,8 @@ pub enum ScalarError {
     ConstraintViolation,
     Numeric(NumericError),
     Unit(crate::units::UnitError),
+    Time(glaux_domain::temporal::TimeError),
+    UnsupportedTimeMeaning,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -38,6 +41,7 @@ pub enum CodeSpaceCheck {
 pub enum UnitReferenceCheck {
     NotApplicable,
     CodeValidated,
+    CalendarEncoding,
     /// URI syntax was checked, not dictionary meaning or agreement with a code.
     Unresolved(String),
 }
@@ -65,6 +69,7 @@ impl ScalarContract {
             Some("Category") => Contract::Category,
             Some("Count") => Contract::Count,
             Some("Quantity") => Contract::Quantity,
+            Some("Time") => Contract::Time,
             _ => return Err(ScalarError::UnsupportedComponent),
         };
         validator
@@ -79,6 +84,9 @@ impl ScalarContract {
             return Err(ScalarError::UnsupportedFeature);
         }
         let metadata = metadata(&source)?;
+        if kind == Contract::Time {
+            return time::compile(metadata, &source, input);
+        }
         if matches!(kind, Contract::Count | Contract::Quantity) {
             return numeric::compile(kind, metadata, &source, input);
         }
@@ -146,6 +154,10 @@ impl ScalarContract {
     /// description/record; this method checks an actually supplied JSON value.
     pub fn check_value(&self, input: &[u8]) -> Result<CheckedScalarValue, ScalarError> {
         let value = validation::parse(input).map_err(ScalarError::Syntax)?;
+        if let ScalarComponent::Time(component) = &self.component {
+            let raw = std::str::from_utf8(input).map_err(|_| ScalarError::ValueType)?;
+            return time::check_value(component, &value, Some(raw.trim()));
+        }
         if matches!(
             self.component,
             ScalarComponent::Count { .. } | ScalarComponent::Quantity { .. }
@@ -182,6 +194,7 @@ impl ScalarContract {
             ScalarComponent::Count { .. } | ScalarComponent::Quantity { .. } => {
                 return numeric::check_value(&self.component, value, None);
             }
+            ScalarComponent::Time(component) => return time::check_value(component, value, None),
         };
         Ok(CheckedScalarValue {
             value,
@@ -323,3 +336,6 @@ mod tests;
 
 #[cfg(test)]
 mod numeric_tests;
+
+#[cfg(test)]
+mod time_tests;
