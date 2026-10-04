@@ -1,8 +1,9 @@
-"""Detect bypassed source permission from a passing isolated HTTP/database proof."""
+"""Detect source-permission faults through the unit and HTTP/database proofs."""
 
 import json
 import os
 from pathlib import Path
+import re
 import runpy
 import sys
 import tempfile
@@ -75,7 +76,56 @@ def main():
         output = run_binary(target / "debug/examples/authorization-proof")
         validate_output(output)
         record("restored", output, passed=True)
-    print("Authorization failure control: 1 detected; 0 escaped.", flush=True)
+
+        # P1-05: the unit layer must reject an always-deny preflight, too.
+        test = "authorization::tests::configured_policy_keeps_identity_actions_and_resource_pairs_distinct"
+
+        def unit_run(root, phase):
+            status, output = HELPERS["run_test"](
+                root, target, test, evidence / ("authorization-" + phase + ".log"),
+                package="glaux-server",
+            )
+            return status, output
+
+        status, output = unit_run(baseline, "unit-baseline")
+        passed = HELPERS["passed_exact_test"](status, output, test)
+        record("unit-baseline", output, test=test, **status, passed=passed)
+        require(passed, "Permission unit baseline did not execute and pass: " + output)
+        denied = Path(directory) / "source-always-denied"
+        HELPERS["copy_source"](files, baseline, denied)
+        path = denied / SOURCE
+        source = path.read_text()
+        start = "    fn allows_source(&self, source: &str) -> bool {"
+        end = "    fn scope_json(&self) -> String {"
+        require(source.count(start) == 1 and source.count(end) == 1,
+                "Source-preflight mutation boundaries changed")
+        before, function = source.split(start)
+        _, after = function.split(end)
+        path.write_text(before + "    fn allows_source(&self, _source: &str) -> bool {\n"
+                        "        false\n    }\n\n" + end + after)
+        try:
+            status, output = unit_run(denied, "unit-always-denied")
+            lines = output.splitlines()
+            detected = (
+                status["exit"] == 101 and not status["timeout"]
+                and lines.count("running 1 test") == 1
+                and lines.count(f"test {test} ... FAILED") == 1
+                and f"thread '{test}'" in output and "panicked at" in output
+                and "nonempty resource-specific grant must allow its source" in lines
+                and len(re.findall(
+                    r"^test result: FAILED\. 0 passed; 1 failed; 0 ignored; 0 measured; \d+ filtered out;",
+                    output, re.M,
+                )) == 1
+            )
+            record("unit-always-denied", output, test=test, **status, detected=detected)
+            require(detected, "Source-preflight fault escaped or failed for another reason: " + output)
+        finally:
+            require((ROOT / SOURCE).read_bytes() == original, "Real authorization source was modified")
+            status, output = unit_run(ROOT, "unit-restored")
+            passed = HELPERS["passed_exact_test"](status, output, test)
+            record("unit-restored", output, test=test, **status, passed=passed)
+            require(passed, "Restored permission unit test did not execute and pass: " + output)
+    print("Authorization failure controls: 2 detected; 0 escaped.", flush=True)
 
 
 if __name__ == "__main__":

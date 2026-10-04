@@ -255,6 +255,9 @@ inside the owned database. It checks paired action/source/resource scope,
 concealed reads and safe bounded denial records. Its compiled permission fault
 must fail the named cross-source assertion between passing baseline/restored
 runs; setup, compilation and timeout failures cannot satisfy that control.
+The same script checks the positive source-permission unit assertions against
+a disposable constant-false preflight, with passing baseline/restored runs.
+Both controls remain in the existing gated `database-service` lane.
 
 The [discovery checks](discovery-tests.md) start the actual server with and without
 discovery inside the isolated database harness. Independent requests follow root

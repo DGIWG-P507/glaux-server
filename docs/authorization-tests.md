@@ -160,6 +160,18 @@ logs and a concise result in the ordinary CI artifact.
 
 ## Executable groups and commands
 
+Issue [#361](https://github.com/DGIWG-P507/glaux-server/issues/361) adds the
+P1-05 unit-layer regression to the existing required policy test: the configured
+nonempty source-A read grant and unrestricted source-C publish grant must each
+allow their source. Existing denial and caller/action/resource checks remain.
+The same failure-control script also replaces only `allows_source` with constant
+`false` in a disposable copy. The exact unit test must pass before injection,
+compile and fail at `nonempty resource-specific grant must allow its source`,
+then pass again on the unchanged real source. Missing execution, compilation
+failure, another panic or timeout does not count. Unit baseline/fault/restored
+logs join the existing authorization artifact. This is a unit-strength check,
+not evidence of a production vulnerability or a whole-CI blind spot.
+
 The wrapper requires all eight groups once, in this order, plus the final
 `Required authorization proof passed: 8 groups.` marker. Process success without
 that execution inventory is not a pass.

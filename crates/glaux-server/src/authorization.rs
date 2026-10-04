@@ -995,6 +995,10 @@ mod tests {
         ]))
         .unwrap();
         let read = policy.permissions(&alice, Action::Read).unwrap();
+        assert!(
+            read.allows_source("source-A"),
+            "nonempty resource-specific grant must allow its source"
+        );
         assert!(read.allows("source-A", id(1)));
         assert!(read.allows("source-B", id(2)));
         assert!(!read.allows("source-A", id(2)));
@@ -1033,6 +1037,10 @@ mod tests {
             );
         }
         let publish = policy.permissions(&alice, Action::Publish).unwrap();
+        assert!(
+            publish.allows_source("source-C"),
+            "unrestricted grant must allow its source"
+        );
         assert!(publish.allows("source-C", id(1)));
         assert!(publish.allows("source-C", id(999)));
         assert!(!publish.allows("source-B", id(999)));
