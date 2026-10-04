@@ -34,13 +34,16 @@ def main():
         raise RuntimeError("Run only without overrides in the authorized GitHub-hosted Linux checkout")
     started = time.time()
     lane_start = int(os.environ["GLAUX_OSH_LANE_STARTED"])
-    budget = min(1200, lane_start + 1800 - 180 - started)
+    # The first setup attempt used 116.735 seconds; this sole retry must keep
+    # both diagnostics within the same 1,200-second aggregate allowance.
+    budget = min(1083, lane_start + 1800 - 180 - started)
     output = Path(os.environ["RUNNER_TEMP"]) / "glaux-ci-evidence" / "phase1-osh"
     output.mkdir(parents=True, exist_ok=False)
     summary = {
         "status": "started", "head": os.environ["TESTED_HEAD"],
         "started_unix": started, "allowed_seconds": budget,
-        "limit_seconds": 1200, "request_cap": 60, "retry_automated": False,
+        "limit_seconds": 1200, "prior_attempt_seconds": 116.735,
+        "attempt": "sole-diagnosed-setup-retry", "request_cap": 60, "retry_automated": False,
         "normalizations": ["JSON member order", "per-server base/local ID mapping, with exact per-server identity checks", "Sensor and Platform: exact sosa CURIE/full http URI pair only; Glaux preserves submitted spelling"],
         "limits": ["selected fields, not complete schema or Annex A validation", "no auth parity", "ordinary restart, not crash/backup recovery", "no production or peer modification"],
         "groups": [{"peer": peer, "number": i, "name": name, "status": "unrun"}

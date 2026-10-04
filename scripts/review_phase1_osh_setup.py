@@ -33,6 +33,14 @@ ASSETS = ROOT / "scripts/review-phase1-osh"
 INSIDE = "/tmp/glaux-phase1-comparison"
 LOG_CAP = 8 * 1024 * 1024
 RAW_CAP = 1024 * 1024
+# The same identity guard protects real shutdown and the non-signalling probe.
+# /proc/PID/{exe,fd} inspection uses the serving UID, not container root without
+# CAP_SYS_PTRACE. No capability, namespace or target-validation guard is relaxed.
+OWNED_PROCESS_GUARD = (
+    'pid=$(cat "$1"); case "$pid" in ""|*[!0-9]*) exit 2;; esac; '
+    'test "$(readlink -f /proc/$pid/exe)" = "$2" || exit 3; '
+    'case "$3" in probe) exit 0;; stop) kill -TERM "$pid";; *) exit 4;; esac'
+)
 
 
 def require(condition, message):
@@ -524,7 +532,7 @@ GRANT SELECT,UPDATE ON public.system_parent_write_guard TO glaux_compare_app;
 
     def verify_listener(self, peer):
         port = urllib.parse.urlsplit(self.bases[peer]).port
-        raw = self.docker("exec", self.db.container_id, "cat", "/proc/net/tcp", "/proc/net/tcp6",
+        raw = self.docker("exec", "--user", "postgres", self.db.container_id, "cat", "/proc/net/tcp", "/proc/net/tcp6",
                           name="listener-inspection")
         matched = []
         for line in raw.splitlines():
@@ -534,18 +542,49 @@ GRANT SELECT,UPDATE ON public.system_parent_write_guard TO glaux_compare_app;
                 matched.append(columns[9])
         require(len(matched) == 1, "missing/duplicate approved peer listener")
         item = self.processes[peer]
-        pid = self.docker("exec", self.db.container_id, "cat", item["pidfile"], name="owned-process-id")
+        pid = self.docker("exec", "--user", "postgres", self.db.container_id, "cat", item["pidfile"], name="owned-process-id")
         require(re.fullmatch(r"[1-9][0-9]*", pid), "invalid owned process id")
-        actual = self.docker("exec", self.db.container_id, "readlink", "-f", f"/proc/{pid}/exe",
+        actual = self.docker("exec", "--user", "postgres", self.db.container_id, "readlink", "-f", f"/proc/{pid}/exe",
                             name="owned-executable")
         require(actual == item["executable"], "serving process executable mismatch")
-        fds = self.docker("exec", self.db.container_id, "/bin/sh", "-c",
+        fds = self.docker("exec", "--user", "postgres", self.db.container_id, "/bin/sh", "-c",
                          'for fd in /proc/"$1"/fd/*; do readlink "$fd" || true; done',
                          "owned-fds", pid, name="listener-process-ownership")
         require(f"socket:[{matched[0]}]" in fds.splitlines(), "listener not held by owned process")
         item["pid"] = pid
+        if self.starts[peer] == 1:
+            self.ownership_controls(peer)
         self.setup.setdefault("verified_listeners", []).append({"peer": peer, "pid": pid,
                     "address": f"127.0.0.1:{port}", "inode": matched[0], "start": self.starts[peer]})
+        self.save()
+
+    def ownership_controls(self, peer):
+        """Use the real PID, same UID and exact shutdown guard, without signalling."""
+        item = self.processes[peer]
+        prefix = ("exec", "--user", "postgres", self.db.container_id, "/bin/sh", "-c",
+                  OWNED_PROCESS_GUARD, "owned-control", item["pidfile"])
+        self.docker(*prefix, item["executable"], "probe", name="owned-guard-valid-control")
+        positive_log = self.commands[-1]["log"]
+        try:
+            self.docker(*prefix, INSIDE + "/not-the-serving-executable", "probe",
+                        name="owned-guard-wrong-executable-control")
+        except HarnessError:
+            # A failure to launch/read the process is not sensitivity proof.
+            # Only the shared guard's dedicated mismatch exit is acceptable.
+            require(self.commands[-1]["exit_code"] == 3 and not self.commands[-1]["failure"],
+                    "wrong-executable control failed for a setup/deadline reason")
+            negative_log = self.commands[-1]["log"]
+            self.commands[-1]["expected_control_outcome"] = "wrong executable rejected, no signal sent"
+        else:
+            raise HarnessError("owned process guard accepted a wrong executable")
+        require(item["process"].poll() is None, "non-signalling guard control stopped the serving process")
+        self.docker(*prefix, item["executable"], "probe", name="owned-guard-still-valid-control")
+        self.setup.setdefault("ownership_controls", []).append({
+            "peer": peer, "uid": "postgres (same as serving process)",
+            "valid_executable": "accepted", "wrong_executable": "rejected with guard exit 3",
+            "no_signal_sent": True, "correct_identity_rechecked": True,
+            "positive_log": positive_log, "negative_log": negative_log,
+        })
         self.save()
 
     def request(self, peer, method, path_or_url, headers=None, body=b"", readiness=False):
@@ -606,10 +645,9 @@ GRANT SELECT,UPDATE ON public.system_parent_write_guard TO glaux_compare_app;
             return
         process = item["process"]
         if process.poll() is None:
-            self.docker("exec", self.db.container_id, "/bin/sh", "-c",
-                        'pid=$(cat "$1"); case "$pid" in ""|*[!0-9]*) exit 2;; esac; '
-                        'test "$(readlink -f /proc/$pid/exe)" = "$2" || exit 3; kill -TERM "$pid"',
-                        "owned-stop", item["pidfile"], item["executable"], name="owned-stop", cleanup=cleanup)
+            self.docker("exec", "--user", "postgres", self.db.container_id, "/bin/sh", "-c",
+                        OWNED_PROCESS_GUARD, "owned-stop", item["pidfile"], item["executable"], "stop",
+                        name="owned-stop", cleanup=cleanup)
             try:
                 process.wait(timeout=self.remaining(25, cleanup))
             except subprocess.TimeoutExpired as error:
