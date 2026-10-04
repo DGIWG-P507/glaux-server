@@ -443,7 +443,6 @@ fn scalar_bounded_inputs_and_unsupported_features() {
     }
     for unsupported in [
         json!({"type": "Boolean", "constraint": {"values": [true]}}),
-        json!({"type": "Text", "nilValues": [{"reason": "urn:example:missing", "value": "NA"}]}),
         json!({"type": "Text", "quality": [{"href": "#quality"}]}),
     ] {
         let mut source = unsupported;

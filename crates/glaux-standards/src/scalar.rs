@@ -3,14 +3,28 @@
 //! Original schema validation precedes local meaning checks. Category dictionary
 //! membership is explicitly unresolved; neither definitions nor code spaces are
 //! fetched. This is not an observation codec or a claim of full SWE conformance.
-use glaux_domain::scalar::{ComponentMetadata, ScalarComponent, ScalarValue, TokenConstraint};
-use serde_json::{Value, json};
+use std::collections::BTreeMap;
+
+use glaux_domain::scalar::{
+    ComponentMetadata, NilDeclaration, ScalarComponent, ScalarValue, TokenConstraint,
+};
+use serde_json::{Value, json, value::RawValue};
 
 use crate::validation::{self, Contract, StructuralValidator};
 use glaux_domain::numeric::NumericError;
 
+mod nil;
 mod numeric;
 mod time;
+
+pub const MAX_NIL_DECLARATIONS: usize = 128;
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum ValueContext {
+    Scalar,
+    RangeEndpoint,
+    NilDeclaration,
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ScalarError {
@@ -27,6 +41,9 @@ pub enum ScalarError {
     Unit(crate::units::UnitError),
     Time(glaux_domain::temporal::TimeError),
     UnsupportedTimeMeaning,
+    NilDeclaration,
+    DuplicateNilValue,
+    NilLimit,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -51,6 +68,8 @@ pub struct CheckedScalarValue {
     pub value: ScalarValue,
     pub code_space: CodeSpaceCheck,
     pub unit_reference: UnitReferenceCheck,
+    /// The supplied value is a declared sentinel. The reason URI is not fetched.
+    pub nil_reason: Option<String>,
 }
 
 /// Immutable typed description plus the exact source artifact and local checks.
@@ -58,11 +77,33 @@ pub struct ScalarContract {
     component: ScalarComponent,
     source: Vec<u8>,
     tokens: Option<jsonschema::Validator>,
+    nil_declarations: Vec<NilDeclaration>,
+    inline: Option<CheckedScalarValue>,
 }
 
 impl ScalarContract {
     pub fn compile(validator: &StructuralValidator, input: &[u8]) -> Result<Self, ScalarError> {
+        Self::compile_context(validator, input, ValueContext::Scalar)
+    }
+
+    /// Internal scalar description selected by the enclosing range compiler.
+    /// Table 4's TimeRange specials also apply to its explicit value enumeration.
+    pub(crate) fn compile_range_endpoint_descriptor(
+        validator: &StructuralValidator,
+        input: &[u8],
+    ) -> Result<Self, ScalarError> {
+        Self::compile_context(validator, input, ValueContext::RangeEndpoint)
+    }
+
+    fn compile_context(
+        validator: &StructuralValidator,
+        input: &[u8],
+        context: ValueContext,
+    ) -> Result<Self, ScalarError> {
         let source = validation::parse(input).map_err(ScalarError::Syntax)?;
+        if context == ValueContext::RangeEndpoint && source.get("value").is_some() {
+            return Err(ScalarError::UnsupportedFeature);
+        }
         let kind = match source.get("type").and_then(Value::as_str) {
             Some("Boolean") => Contract::Boolean,
             Some("Text") => Contract::Text,
@@ -77,18 +118,17 @@ impl ScalarContract {
             .map_err(|_| ScalarError::Structure)?;
         // Known semantics owned by later leaves must not disappear as extensions.
         // This does not claim the open upstream Boolean schema forbids constraint.
-        if source.get("nilValues").is_some()
-            || source.get("quality").is_some()
+        if source.get("quality").is_some()
             || (kind == Contract::Boolean && source.get("constraint").is_some())
         {
             return Err(ScalarError::UnsupportedFeature);
         }
         let metadata = metadata(&source)?;
         if kind == Contract::Time {
-            return time::compile(metadata, &source, input);
+            return time::compile(metadata, &source, input, context)?.finish(&source, input);
         }
         if matches!(kind, Contract::Count | Contract::Quantity) {
-            return numeric::compile(kind, metadata, &source, input);
+            return numeric::compile(kind, metadata, &source, input)?.finish(&source, input);
         }
         let constraint = token_constraint(&source)?;
         let tokens = match &constraint {
@@ -106,12 +146,12 @@ impl ScalarContract {
         let component = match kind {
             Contract::Boolean => ScalarComponent::Boolean {
                 metadata,
-                value: source.get("value").and_then(Value::as_bool),
+                value: None,
             },
             Contract::Text => ScalarComponent::Text {
                 metadata,
                 constraint,
-                value: optional_string(&source, "value")?,
+                value: None,
             },
             Contract::Category => {
                 let code_space = optional_string(&source, "codeSpace")?;
@@ -125,7 +165,7 @@ impl ScalarContract {
                     metadata,
                     code_space,
                     constraint,
-                    value: optional_string(&source, "value")?,
+                    value: None,
                 }
             }
             _ => return Err(ScalarError::UnsupportedComponent),
@@ -134,11 +174,46 @@ impl ScalarContract {
             component,
             source: input.to_vec(),
             tokens,
+            nil_declarations: Vec::new(),
+            inline: None,
         };
+        compiled.finish(&source, input)
+    }
+
+    fn finish(mut self, source: &Value, input: &[u8]) -> Result<Self, ScalarError> {
+        // RawValue preserves source decimal spelling, including the sign of -0,
+        // both for inline values and every declared sentinel.
+        let raw: BTreeMap<String, Box<RawValue>> =
+            serde_json::from_slice(input).map_err(|_| ScalarError::Structure)?;
+        self.nil_declarations = nil::compile(&self, source, &raw)?;
         if let Some(value) = source.get("value") {
-            compiled.check_parsed_value(value)?;
+            let checked = self.check_with_nil(
+                value,
+                raw.get("value").map(|value| value.get()),
+                ValueContext::Scalar,
+            )?;
+            match (&mut self.component, &checked.value) {
+                (ScalarComponent::Boolean { value, .. }, ScalarValue::Boolean(inline)) => {
+                    *value = Some(*inline);
+                }
+                (ScalarComponent::Text { value, .. }, ScalarValue::Text(inline))
+                | (ScalarComponent::Category { value, .. }, ScalarValue::Category(inline)) => {
+                    *value = Some(inline.clone());
+                }
+                (ScalarComponent::Count { value, .. }, ScalarValue::Count(inline)) => {
+                    *value = Some(inline.clone());
+                }
+                (ScalarComponent::Quantity { value, .. }, ScalarValue::Quantity(inline)) => {
+                    *value = Some(inline.clone());
+                }
+                (ScalarComponent::Time(component), ScalarValue::Time(inline)) => {
+                    component.value = Some(inline.position.clone());
+                }
+                _ => return Err(ScalarError::ValueType),
+            }
+            self.inline = Some(checked);
         }
-        Ok(compiled)
+        Ok(self)
     }
 
     pub fn component(&self) -> &ScalarComponent {
@@ -150,25 +225,69 @@ impl ScalarContract {
         &self.source
     }
 
+    pub fn nil_declarations(&self) -> &[NilDeclaration] {
+        &self.nil_declarations
+    }
+
+    /// Inline meaning includes any reserved-nil reason; absence stays absent.
+    pub fn inline_value(&self) -> Option<CheckedScalarValue> {
+        self.inline.clone()
+    }
+
     /// Empty input/null is not an absent value. Absence belongs to the enclosing
     /// description/record; this method checks an actually supplied JSON value.
     pub fn check_value(&self, input: &[u8]) -> Result<CheckedScalarValue, ScalarError> {
-        let value = validation::parse(input).map_err(ScalarError::Syntax)?;
-        if let ScalarComponent::Time(component) = &self.component {
-            let raw = std::str::from_utf8(input).map_err(|_| ScalarError::ValueType)?;
-            return time::check_value(component, &value, Some(raw.trim()));
-        }
-        if matches!(
-            self.component,
-            ScalarComponent::Count { .. } | ScalarComponent::Quantity { .. }
-        ) {
-            let raw = std::str::from_utf8(input).map_err(|_| ScalarError::ValueType)?;
-            return numeric::check_value(&self.component, &value, Some(raw.trim()));
-        }
-        self.check_parsed_value(&value)
+        self.check_input(input, ValueContext::Scalar)
     }
 
-    fn check_parsed_value(&self, value: &Value) -> Result<CheckedScalarValue, ScalarError> {
+    /// The range compiler has already established the enclosing range type.
+    /// Published TimeRange endpoints admit Gregorian specials that an ordinary
+    /// Time value does not. This does not widen the public scalar entry point.
+    pub(crate) fn check_range_endpoint(
+        &self,
+        input: &[u8],
+    ) -> Result<CheckedScalarValue, ScalarError> {
+        self.check_input(input, ValueContext::RangeEndpoint)
+    }
+
+    fn check_input(
+        &self,
+        input: &[u8],
+        context: ValueContext,
+    ) -> Result<CheckedScalarValue, ScalarError> {
+        let value = validation::parse(input).map_err(ScalarError::Syntax)?;
+        let raw = std::str::from_utf8(input).map_err(|_| ScalarError::ValueType)?;
+        self.check_with_nil(&value, Some(raw.trim()), context)
+    }
+
+    fn check_with_nil(
+        &self,
+        value: &Value,
+        raw: Option<&str>,
+        context: ValueContext,
+    ) -> Result<CheckedScalarValue, ScalarError> {
+        if !self.nil_declarations.is_empty() {
+            let mut candidate =
+                self.check_parsed_value(value, raw, ValueContext::NilDeclaration, false)?;
+            if let Some(declaration) = self
+                .nil_declarations
+                .iter()
+                .find(|declaration| nil::same_value(&declaration.value, &candidate.value))
+            {
+                candidate.nil_reason = Some(declaration.reason.clone());
+                return Ok(candidate);
+            }
+        }
+        self.check_parsed_value(value, raw, context, true)
+    }
+
+    fn check_parsed_value(
+        &self,
+        value: &Value,
+        raw: Option<&str>,
+        context: ValueContext,
+        enforce_constraints: bool,
+    ) -> Result<CheckedScalarValue, ScalarError> {
         let (value, code_space) = match &self.component {
             ScalarComponent::Boolean { .. } => (
                 ScalarValue::Boolean(value.as_bool().ok_or(ScalarError::ValueType)?),
@@ -176,7 +295,9 @@ impl ScalarContract {
             ),
             ScalarComponent::Text { .. } => {
                 let text = value.as_str().ok_or(ScalarError::ValueType)?;
-                self.check_tokens(value)?;
+                if enforce_constraints {
+                    self.check_tokens(value)?;
+                }
                 (
                     ScalarValue::Text(text.to_owned()),
                     CodeSpaceCheck::NotApplicable,
@@ -184,7 +305,9 @@ impl ScalarContract {
             }
             ScalarComponent::Category { code_space, .. } => {
                 let text = value.as_str().ok_or(ScalarError::ValueType)?;
-                self.check_tokens(value)?; // Category membership must not be bypassed.
+                if enforce_constraints {
+                    self.check_tokens(value)?; // Category membership must not be bypassed.
+                }
                 let status = match code_space {
                     Some(uri) => CodeSpaceCheck::Unresolved(uri.clone()),
                     None => CodeSpaceCheck::NotApplicable,
@@ -192,14 +315,17 @@ impl ScalarContract {
                 (ScalarValue::Category(text.to_owned()), status)
             }
             ScalarComponent::Count { .. } | ScalarComponent::Quantity { .. } => {
-                return numeric::check_value(&self.component, value, None);
+                return numeric::check_value(&self.component, value, raw, enforce_constraints);
             }
-            ScalarComponent::Time(component) => return time::check_value(component, value, None),
+            ScalarComponent::Time(component) => {
+                return time::check_value(component, value, raw, context, enforce_constraints);
+            }
         };
         Ok(CheckedScalarValue {
             value,
             code_space,
             unit_reference: UnitReferenceCheck::NotApplicable,
+            nil_reason: None,
         })
     }
 
@@ -339,3 +465,6 @@ mod numeric_tests;
 
 #[cfg(test)]
 mod time_tests;
+
+#[cfg(test)]
+mod nil_tests;

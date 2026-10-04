@@ -3,7 +3,9 @@
 [Task #29](https://github.com/DGIWG-P507/glaux-server/issues/29) extends the
 immutable scalar compiler with Time descriptions and independently checked
 values. It adds no HTTP route, database mapping, observation-time selection,
-range/nil handling or complete SWE wire codec.
+range/nil handling or complete SWE wire codec. Task #30 subsequently adds the
+separate [range/nil boundary](range-components.md); ordinary scalar Time rules
+below remain unchanged unless a value is explicitly declared as a nil sentinel.
 
 ## What the values mean
 

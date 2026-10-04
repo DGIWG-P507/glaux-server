@@ -1,6 +1,21 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "range::tests::range_pair_cardinality_rejects_extra_values",
+    "range::tests::range_count_exact_pairs_and_endpoint_constraints",
+    "range::tests::range_quantity_source_units_and_nil_endpoints",
+    "range::tests::range_count_nil_correction_is_explicit_and_narrow",
+    "range::tests::range_category_order_uses_supplied_evidence",
+    "range::tests::range_time_preserves_context_and_exact_calendar_bounds",
+    "range::tests::range_special_endpoints_are_not_implicit_nil",
+    "range::tests::range_unknown_time_frames_remain_unresolved",
+    "range::tests::range_generated_exact_boundaries",
+    "scalar::nil_tests::nil_tokens_override_constraints_without_relaxing_other_values",
+    "scalar::nil_tests::nil_numeric_sentinels_preserve_exact_values_and_lexemes",
+    "scalar::nil_tests::nil_specials_are_reserved_states_not_numeric_coercions",
+    "scalar::nil_tests::nil_invalid_declarations_and_ambiguity_fail",
+    "scalar::nil_tests::nil_calendar_time_and_range_context_remain_distinct",
+    "scalar::nil_tests::nil_absence_null_and_limits_stay_distinct",
     "scalar::time_tests::time_calendar_defaults_preserve_exact_instants",
     "scalar::time_tests::time_numeric_coordinates_preserve_origin_and_context",
     "scalar::time_tests::time_foreign_frames_do_not_invent_utc",

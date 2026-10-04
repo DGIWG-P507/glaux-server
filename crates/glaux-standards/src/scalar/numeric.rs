@@ -1,11 +1,11 @@
 //! Local numeric component semantics; no payload codec or unit conversion.
-use std::{cmp::Ordering, collections::BTreeMap};
+use std::cmp::Ordering;
 
 use glaux_domain::{
     numeric::{CountValue, ExactNumber, NumericValue},
     scalar::{ComponentMetadata, NumericConstraint, ScalarComponent, ScalarValue, UnitReference},
 };
-use serde_json::{Value, value::RawValue};
+use serde_json::Value;
 
 use super::{CheckedScalarValue, CodeSpaceCheck, ScalarContract, ScalarError, UnitReferenceCheck};
 use crate::validation::Contract;
@@ -18,35 +18,26 @@ pub(super) fn compile(
 ) -> Result<ScalarContract, ScalarError> {
     let count = kind == Contract::Count;
     let constraint = constraint(source, count)?;
-    // Safe parsing/duplicate detection/structure have already succeeded. RawValue
-    // preserves even -0 and exponent spelling, which generic Number may normalize.
-    let raw: BTreeMap<String, Box<RawValue>> =
-        serde_json::from_slice(input).map_err(|_| ScalarError::Structure)?;
-    let inline = source
-        .get("value")
-        .map(|v| number(v, raw.get("value").map(|v| v.get())))
-        .transpose()?;
     let component = if count {
         ScalarComponent::Count {
             metadata,
             constraint,
-            value: inline.map(count_value).transpose()?,
+            value: None,
         }
     } else {
         ScalarComponent::Quantity {
             metadata,
             constraint,
             uom: unit(source)?,
-            value: inline,
+            value: None,
         }
     };
-    if let Some(value) = source.get("value") {
-        check_value(&component, value, raw.get("value").map(|v| v.get()))?;
-    }
     Ok(ScalarContract {
         component,
         source: input.to_vec(),
         tokens: None,
+        nil_declarations: Vec::new(),
+        inline: None,
     })
 }
 
@@ -144,6 +135,7 @@ pub(super) fn check_value(
     component: &ScalarComponent,
     value: &Value,
     raw: Option<&str>,
+    enforce_constraints: bool,
 ) -> Result<CheckedScalarValue, ScalarError> {
     let numeric = number(value, raw)?;
     let (value, constraint, unit_reference) = match component {
@@ -164,13 +156,14 @@ pub(super) fn check_value(
         ),
         _ => return Err(ScalarError::UnsupportedComponent),
     };
-    if let Some(constraint) = constraint {
+    if enforce_constraints && let Some(constraint) = constraint {
         check_constraint(constraint, &numeric)?;
     }
     Ok(CheckedScalarValue {
         value,
         code_space: CodeSpaceCheck::NotApplicable,
         unit_reference,
+        nil_reason: None,
     })
 }
 

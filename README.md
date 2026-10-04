@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial foundations, minimal System operations and restore, and SWE scalar components — 4 October 2026 UTC.**
+**Initial foundations, minimal System operations and restore, and SWE scalar/range components — 4 October 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **304 implementation tasks**, each linked to its published issue: the original 286, 16 experimental Protobuf tasks, and Phase 1 review follow-ups 1.1.5 and 1.5.4. These are planned tasks, not completed software.
@@ -43,6 +43,13 @@ and numeric offsets with their declared unit, frame and origin. Known UTC
 calendar values expose exact instants; unfamiliar frames and numeric-to-calendar
 conversions remain explicitly unsupported instead of assuming a Unix epoch.
 Calendar/numeric constraints are checked without rounding or external lookups.
+
+[Range components and nil meanings](docs/range-components.md) preserve exact
+two-endpoint extents and distinguish ordinary values, declared nil reasons and
+absence. Category order needs supplied evidence, not alphabetical guesses.
+The pinned CountRange nil-schema conflict has a separately named, opt-in
+correction; original-schema results remain distinct. These are model-level
+checks, not complete payload codecs or an unqualified conformance claim.
 
 [Typed resource identities](docs/resource-identities.md) now separate UUIDv7 local
 locators, URI-form published UIDs and authority-qualified source identifiers.

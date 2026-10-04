@@ -82,6 +82,13 @@ pub enum ScalarValue {
     Time(Box<BoundTimeValue>),
 }
 
+/// A typed reserved value and its declared reason URI; the URI is not resolved.
+#[derive(Clone, Debug, PartialEq)]
+pub struct NilDeclaration {
+    pub value: ScalarValue,
+    pub reason: String,
+}
+
 impl ScalarComponent {
     /// Absence is not false, empty text, a nil token or a default value.
     pub fn value(&self) -> Option<ScalarValue> {
