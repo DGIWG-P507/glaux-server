@@ -30,7 +30,7 @@ and enforce local token constraints. External category vocabularies remain
 explicitly unresolved; limited regex support is documented. This adds no endpoint
 or payload codec and does not declare a completed SWE conformance class.
 
-[Count and Quantity components](docs/scalar-components.md) retain large integers,
+[Count and Quantity components](docs/numeric-components.md) retain large integers,
 exact decimal values and supplied unit declarations, and enforce local numeric
 enumerations and inclusive intervals without rounding. [Offline UCUM 2.1 code
 checks](docs/ucum.md) use the complete pinned terminal dictionary and explicit

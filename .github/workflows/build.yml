@@ -51,6 +51,22 @@ jobs:
           cargo --version --verbose
           rustfmt --version
           cargo clippy --version
+      - name: Collect candidate feature graph in a disposable copy
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/glaux-ci-evidence"
+          candidate="$(mktemp -d "$RUNNER_TEMP/glaux-numeric-candidate-XXXXXX")"
+          git archive HEAD | tar -x -C "$candidate"
+          (
+            cd "$candidate"
+            git init --quiet
+            git add .
+            cargo fetch
+            cp Cargo.lock "$RUNNER_TEMP/glaux-ci-evidence/Cargo.candidate.lock"
+            python3 scripts/cargo_inventory.py --candidate > "$RUNNER_TEMP/glaux-ci-evidence/cargo-candidate.json"
+            cargo fmt --all
+            git diff -- '*.rs' > "$RUNNER_TEMP/glaux-ci-evidence/rustfmt.patch"
+          )
       - name: Fetch the locked dependency archives
         shell: bash
         run: |
@@ -58,8 +74,6 @@ jobs:
           cargo fetch --locked
           git diff --exit-code -- Cargo.lock
           cargo tree --locked --offline -p glaux-server --target x86_64-unknown-linux-gnu -e normal,build > "$RUNNER_TEMP/glaux-ci-evidence/server-linux-dependencies.txt"
-      - name: Record candidate exact-number dependency inventory
-        run: python3 scripts/cargo_inventory.py --candidate > "$RUNNER_TEMP/glaux-ci-evidence/cargo-candidate.json"
       - name: Verify formatting and locked dependencies
         shell: bash
         run: |

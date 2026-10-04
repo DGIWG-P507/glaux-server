@@ -172,6 +172,8 @@ imposed by SensorML, SWE Common or JSON Schema.
 | Parsed JSON values, including containers and scalar values | 4,096 |
 | Members per object or elements per array | 512 |
 | UTF-8 bytes per decoded string, including object keys | 16,384 |
+| Numeric token bytes | 4,096 |
+| Absolute explicit decimal exponent | 4,096 |
 | Indexed schema nodes across the catalog, including alias copies | 20,000 |
 | Nesting of schema-valued positions, with a root at depth one | 128 |
 | Nodes on a same-instance schema path | 256 |
@@ -182,7 +184,12 @@ imposed by SensorML, SWE Common or JSON Schema.
 The scanner checks raw size and container depth before constructing the full
 JSON value, decodes strings and rejects duplicate decoded object keys, including
 equivalent escaped spellings. `serde_json` then checks the complete JSON syntax.
-An iterative walk checks node/member counts before schema evaluation. Array and
+An iterative walk checks node/member counts and the existing exact-number
+budgets before schema evaluation, including extension numbers. This bounds the
+newly enabled arbitrary-precision engine path for all callers, not only numeric
+component compilation. Exponents are checked before power allocation; this
+includes extreme signed exponents that must never reach generic integer checks.
+Array and
 total-node checks occur after parsing, so they are not claims of zero allocation
 for rejected input; the raw-byte ceiling also bounds that parse input.
 
