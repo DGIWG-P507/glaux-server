@@ -5,4 +5,5 @@
 
 pub mod identity;
 pub mod numeric;
+pub mod scalar;
 pub mod temporal;

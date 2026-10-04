@@ -24,6 +24,9 @@ pub const MAX_STRING_BYTES: usize = 16_384;
 /// Call-site choice, never a schema URI supplied by a request.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Contract {
+    Boolean,
+    Text,
+    Category,
     Quantity,
     SweRecord,
     PhysicalSystem,
@@ -37,6 +40,9 @@ pub enum Contract {
 impl Contract {
     fn uri(self) -> String {
         match self {
+            Self::Boolean => format!("{SWE}Boolean.json"),
+            Self::Text => format!("{SWE}Text.json"),
+            Self::Category => format!("{SWE}Category.json"),
             Self::Quantity => format!("{SWE}Quantity.json"),
             Self::SweRecord => format!("{SWE}DataRecord.json"),
             Self::PhysicalSystem => format!("{PIN}sensorml/schemas/json/PhysicalSystem.json"),
@@ -283,6 +289,9 @@ impl StructuralValidator {
         crate::schema_guard::check_catalog(&catalog)?;
         let mut validators = BTreeMap::new();
         for contract in [
+            Contract::Boolean,
+            Contract::Text,
+            Contract::Category,
             Contract::Quantity,
             Contract::SweRecord,
             Contract::PhysicalSystem,

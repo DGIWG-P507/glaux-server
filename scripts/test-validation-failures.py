@@ -1,4 +1,4 @@
-"""Prove four validation assertions detect bounded faults in disposable copies.
+"""Prove structural and scalar assertions detect bounded disposable faults.
 
 Run after the unmodified required suite passes on the approved hosted runner.
 Each selected test must also pass in a fresh source copy before any faults run.
@@ -18,6 +18,8 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 VALIDATION = Path("crates/glaux-standards/src/validation.rs")
 GUARD = Path("crates/glaux-standards/src/schema_guard.rs")
+SCALAR = Path("crates/glaux-standards/src/scalar.rs")
+SCALAR_DOMAIN = Path("crates/glaux-domain/src/scalar.rs")
 TIMEOUT_SECONDS = 180
 
 
@@ -69,6 +71,22 @@ def ignore_unallowlisted_schema_references(root):
     replace(root / GUARD, old, new)
 
 
+def collapse_false_to_absent(root):
+    replace(root / SCALAR_DOMAIN, "value.map(ScalarValue::Boolean)",
+            "value.filter(|value| *value).map(ScalarValue::Boolean)")
+
+
+def collapse_empty_text_to_absent(root):
+    replace(root / SCALAR_DOMAIN, "value.clone().map(ScalarValue::Text)",
+            "value.clone().filter(|value| !value.is_empty()).map(ScalarValue::Text)")
+
+
+def bypass_category_membership(root):
+    replace(root / SCALAR,
+            "self.check_tokens(value)?; // Category membership must not be bypassed.",
+            "// Fault: skip Category membership checking.")
+
+
 CASES = [
     ("binary-aggregate-root", "validation::tests::fixed_encoding_selection", wrong_binary_root,
      ["left: Err(Structure)", "right: Ok(())"]),
@@ -79,6 +97,13 @@ CASES = [
     ("unallowlisted-reference-bypass", "schema_guard::tests::rejects_http_file_data_and_uri_escape_canaries",
      ignore_unallowlisted_schema_references,
      ["left: Ok(())", 'right: Err("schema reference is outside the embedded catalog")']),
+    ("scalar-false-collapsed", "scalar::tests::scalar_source_metadata_and_presence",
+     collapse_false_to_absent, ["left: None", "right: Some(Boolean(false))"]),
+    ("scalar-empty-text-collapsed", "scalar::tests::scalar_source_metadata_and_presence",
+     collapse_empty_text_to_absent, ["left: None", 'right: Some(Text(""))']),
+    ("scalar-category-membership-bypass",
+     "scalar::tests::scalar_enumerations_preserve_tokens_and_enforce_membership",
+     bypass_category_membership, ["left: None", "right: Some(ConstraintViolation)"]),
 ]
 
 
@@ -207,7 +232,7 @@ def main():
             if not detected:
                 print(output, flush=True)
                 sys.exit("Validation fault escaped or failed for an unrelated reason: " + name)
-    print("Validation failure controls: 4 detected; 0 escaped.", flush=True)
+    print(f"Validation failure controls: {len(CASES)} detected; 0 escaped.", flush=True)
 
 
 if __name__ == "__main__":

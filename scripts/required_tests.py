@@ -1,6 +1,14 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "scalar::tests::scalar_source_metadata_and_presence",
+    "scalar::tests::scalar_values_reject_json_type_coercion",
+    "scalar::tests::scalar_metadata_requires_published_members",
+    "scalar::tests::scalar_enumerations_preserve_tokens_and_enforce_membership",
+    "scalar::tests::scalar_patterns_use_ecmascript_character_classes",
+    "scalar::tests::scalar_category_code_space_is_explicitly_unresolved",
+    "scalar::tests::scalar_constraints_reject_malformed_or_ambiguous_shapes",
+    "scalar::tests::scalar_bounded_inputs_and_unsupported_features",
     "discovery::tests::system_creation_description_tracks_installation_and_authentication",
     "discovery::tests::initial_route_definitions_are_unique_and_claim_no_classes",
     "discovery::tests::generated_documents_keep_configured_prefix_and_local_references",

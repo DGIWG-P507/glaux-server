@@ -73,6 +73,9 @@ and explicit aliases.
 
 | Contract | Fixed target within its base |
 |---|---|
+| `Boolean` | SWE `Boolean.json` |
+| `Text` | SWE `Text.json` |
+| `Category` | SWE `Category.json` |
 | `Quantity` | SWE `Quantity.json` |
 | `SweRecord` | SWE `DataRecord.json` |
 | `PhysicalSystem` | publication `sensorml/schemas/json/PhysicalSystem.json` |

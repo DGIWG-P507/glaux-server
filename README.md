@@ -24,6 +24,12 @@ against pinned, embedded sources, with fixed entry points and bounded input.
 It rejects external schema retrieval and non-progressing reference cycles.
 Structural success is not full SWE semantics, codec support or conformance.
 
+[Boolean, Text and Category components](docs/scalar-components.md) now preserve
+typed values and metadata, distinguish missing values from false/empty values,
+and enforce local token constraints. External category vocabularies remain
+explicitly unresolved; limited regex support is documented. This adds no endpoint
+or payload codec and does not declare a completed SWE conformance class.
+
 [Typed resource identities](docs/resource-identities.md) now separate UUIDv7 local
 locators, URI-form published UIDs and authority-qualified source identifiers.
 Strict parsing, fallible generation and type-boundary checks prevent accidental

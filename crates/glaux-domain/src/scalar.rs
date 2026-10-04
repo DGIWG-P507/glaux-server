@@ -1,0 +1,59 @@
+//! SWE scalar meaning, independent of JSON, persistence and wire codecs.
+//!
+//! These are data types, not a validation capability. The standards package
+//! constructs a checked, immutable contract from a bounded source description.
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ComponentMetadata {
+    pub id: Option<String>,
+    pub definition: String,
+    pub label: String,
+    pub description: Option<String>,
+    pub optional: Option<bool>,
+    pub updatable: Option<bool>,
+    pub reference_frame: Option<String>,
+    pub axis_id: Option<String>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum TokenConstraint {
+    Values(Vec<String>),
+    Pattern(String),
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ScalarComponent {
+    Boolean {
+        metadata: ComponentMetadata,
+        value: Option<bool>,
+    },
+    Text {
+        metadata: ComponentMetadata,
+        constraint: Option<TokenConstraint>,
+        value: Option<String>,
+    },
+    Category {
+        metadata: ComponentMetadata,
+        code_space: Option<String>,
+        constraint: Option<TokenConstraint>,
+        value: Option<String>,
+    },
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ScalarValue {
+    Boolean(bool),
+    Text(String),
+    Category(String),
+}
+
+impl ScalarComponent {
+    /// Absence is not false, empty text, a nil token or a default value.
+    pub fn value(&self) -> Option<ScalarValue> {
+        match self {
+            Self::Boolean { value, .. } => value.map(ScalarValue::Boolean),
+            Self::Text { value, .. } => value.clone().map(ScalarValue::Text),
+            Self::Category { value, .. } => value.clone().map(ScalarValue::Category),
+        }
+    }
+}
