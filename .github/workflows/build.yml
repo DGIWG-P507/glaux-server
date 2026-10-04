@@ -335,6 +335,7 @@ jobs:
       - name: Identify the checked-out commit and runner
         shell: bash
         run: |
+          printf 'GLAUX_OSH_LANE_STARTED=%s\n' "$(date +%s)" >> "$GITHUB_ENV"
           test "$(git rev-parse HEAD)" = "$TESTED_HEAD"
           printf 'Tested commit: %s\nRunner image: %s %s\n' "$TESTED_HEAD" "$ImageOS" "$ImageVersion"
           uname -a
@@ -392,6 +393,9 @@ jobs:
       - name: Verify original corpus digests after this lane's checks
         shell: bash
         run: python3 -u scripts/check_corpus.py | tee "$RUNNER_TEMP/glaux-ci-evidence/corpus-after.log"
+      - name: Temporary approved Phase 1 OpenSensorHub comparison - DO NOT MERGE
+        shell: bash
+        run: python3 -u scripts/review-phase1-osh.py | tee "$RUNNER_TEMP/glaux-ci-evidence/phase1-osh.log"
       - name: Preserve actual execution evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1; MIT

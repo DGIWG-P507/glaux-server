@@ -1,0 +1,37 @@
+// Diagnostic external init script: does not modify upstream projects or resolve tests.
+gradle.projectsEvaluated {
+    def selected = [rootProject.project(':sensorhub-service-consys'),
+                    rootProject.project(':sensorhub-datastore-h2')]
+    rootProject.tasks.register('phase1CollectRuntime') {
+        selected.each { p ->
+            dependsOn p.tasks.named('jar')
+            dependsOn p.configurations.runtimeClasspath
+        }
+        doLast {
+            def destination = new File(System.getenv('GLAUX_OSH_LIBS'))
+            if (!destination.isDirectory()) throw new GradleException('owned output absent')
+            def files = [] as Set
+            def inventory = [] as Set
+            selected.each { p ->
+                files.add(p.tasks.named('jar').get().archiveFile.get().asFile)
+                files.addAll(p.configurations.runtimeClasspath.files)
+                p.configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.each { a ->
+                    inventory.add([component: a.moduleVersion.id.toString(), name: a.file.name])
+                }
+                inventory.add([component: "${p.group}:${p.name}:${p.version}",
+                               name: p.tasks.named('jar').get().archiveFile.get().asFile.name])
+            }
+            def names = [:]
+            files.each { f ->
+                if (!f.isFile() || !f.name.endsWith('.jar'))
+                    throw new GradleException('runtime entry is not a jar: ' + f)
+                if (names.containsKey(f.name) && names[f.name] != f)
+                    throw new GradleException('classpath filename collision: ' + f.name)
+                names[f.name] = f
+            }
+            rootProject.copy { from files; into destination }
+            new File(destination.parentFile, 'resolved-components.json').text =
+                groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(inventory))
+        }
+    }
+}
