@@ -153,8 +153,18 @@ fn is_temporal_atom(symbol: &str) -> bool {
     // and months denote its specified mean durations, not calendar arithmetic.
     matches!(
         symbol,
-        "s" | "min" | "h" | "d" | "wk" | "a_t" | "a_j" | "a_g" | "a" | "mo_s"
-            | "mo_j" | "mo_g" | "mo"
+        "s" | "min"
+            | "h"
+            | "d"
+            | "wk"
+            | "a_t"
+            | "a_j"
+            | "a_g"
+            | "a"
+            | "mo_s"
+            | "mo_j"
+            | "mo_g"
+            | "mo"
     ) || symbol
         .strip_suffix('s')
         .is_some_and(|prefix| dictionary().prefixes.contains(&prefix))

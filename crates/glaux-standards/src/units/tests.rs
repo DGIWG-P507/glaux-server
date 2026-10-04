@@ -208,7 +208,11 @@ fn ucum_time_codes_use_temporal_atoms() {
         "(s{)})",
         "mo{calendar-label-is-inert}",
     ] {
-        assert_eq!(validate_time_code(code), Ok(()), "temporal expression {code}");
+        assert_eq!(
+            validate_time_code(code),
+            Ok(()),
+            "temporal expression {code}"
+        );
     }
 }
 
@@ -216,8 +220,22 @@ fn ucum_time_codes_use_temporal_atoms() {
 fn ucum_time_codes_reject_or_defer_other_units() {
     // Passing the generic code check does not establish a temporal unit.
     for code in [
-        "m", "kg", "Hz", "mHz", "1", "Cel", "dB", "S", "{seconds}", "1{s}", "2+10", "s0", "s2",
-        "s-1", "ms0", "a2",
+        "m",
+        "kg",
+        "Hz",
+        "mHz",
+        "1",
+        "Cel",
+        "dB",
+        "S",
+        "{seconds}",
+        "1{s}",
+        "2+10",
+        "s0",
+        "s2",
+        "s-1",
+        "ms0",
+        "a2",
     ] {
         assert_eq!(validate_code(code), Ok(()), "valid UCUM {code}");
         assert_eq!(

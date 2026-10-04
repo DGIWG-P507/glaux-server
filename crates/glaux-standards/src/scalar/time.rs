@@ -44,7 +44,9 @@ pub(super) fn compile(
     source: &Value,
     input: &[u8],
 ) -> Result<ScalarContract, ScalarError> {
-    let frame = metadata.reference_frame.clone()
+    let frame = metadata
+        .reference_frame
+        .clone()
         .map_or(TimeFrame::DefaultUtc, TimeFrame::Declared);
     let uom = super::numeric::unit(source)?;
     if let Some(code) = &uom.code {
@@ -54,7 +56,8 @@ pub(super) fn compile(
         crate::units::validate_time_code(code).map_err(ScalarError::Unit)?;
     }
     let origin = super::optional_string(source, "referenceTime")?
-        .map(|text| calendar(&text, &frame)).transpose()?;
+        .map(|text| calendar(&text, &frame))
+        .transpose()?;
     let local_frame = super::optional_string(source, "localFrame")?;
     if let Some(uri) = &local_frame {
         super::check_format(uri, "uri")?;
@@ -66,14 +69,25 @@ pub(super) fn compile(
             return Err(ScalarError::Metadata);
         }
     }
-    let reference = TimeReference { frame, origin, local_frame, uom };
+    let reference = TimeReference {
+        frame,
+        origin,
+        local_frame,
+        uom,
+    };
     let constraint = constraint(source, &reference)?;
     let raw: BTreeMap<String, Box<RawValue>> =
         serde_json::from_slice(input).map_err(|_| ScalarError::Structure)?;
-    let value = source.get("value")
+    let value = source
+        .get("value")
         .map(|value| position(value, raw.get("value").map(|v| v.get()), &reference, false))
         .transpose()?;
-    let component = TimeComponent { metadata, reference, constraint, value };
+    let component = TimeComponent {
+        metadata,
+        reference,
+        constraint,
+        value,
+    };
     if let Some(value) = source.get("value") {
         check_value(&component, value, raw.get("value").map(|v| v.get()))?;
     }
@@ -111,7 +125,9 @@ fn compare(left: &TimePosition, right: &TimePosition) -> Result<Option<Ordering>
     match (left, right) {
         (Numeric(a), Numeric(b)) => Ok(a.partial_cmp(b)),
         (Calendar(CalendarTime::Utc(a)), Calendar(CalendarTime::Utc(b))) => Ok(Some(a.cmp(b))),
-        (Calendar(CalendarTime::Unresolved(a)), Calendar(CalendarTime::Unresolved(b))) if a == b => {
+        (Calendar(CalendarTime::Unresolved(a)), Calendar(CalendarTime::Unresolved(b)))
+            if a == b =>
+        {
             Ok(Some(Ordering::Equal))
         }
         (Numeric(NumericValue::NegativeInfinity), Calendar(_))
@@ -122,8 +138,13 @@ fn compare(left: &TimePosition, right: &TimePosition) -> Result<Option<Ordering>
     }
 }
 
-fn constraint(source: &Value, reference: &TimeReference) -> Result<Option<TimeConstraint>, ScalarError> {
-    let Some(source) = source.get("constraint") else { return Ok(None); };
+fn constraint(
+    source: &Value,
+    reference: &TimeReference,
+) -> Result<Option<TimeConstraint>, ScalarError> {
+    let Some(source) = source.get("constraint") else {
+        return Ok(None);
+    };
     let mut values = Vec::new();
     if let Some(items) = source.get("values").and_then(Value::as_array) {
         for item in items {
@@ -134,26 +155,43 @@ fn constraint(source: &Value, reference: &TimeReference) -> Result<Option<TimeCo
     if let Some(items) = source.get("intervals").and_then(Value::as_array) {
         for item in items {
             let pair = item.as_array().ok_or(ScalarError::Constraint)?;
-            if pair.len() != 2 { return Err(ScalarError::Constraint); }
+            if pair.len() != 2 {
+                return Err(ScalarError::Constraint);
+            }
             let low = position(&pair[0], None, reference, true)?;
             let high = position(&pair[1], None, reference, true)?;
-            if !matches!(compare(&low, &high)?, Some(Ordering::Less | Ordering::Equal)) {
+            if !matches!(
+                compare(&low, &high)?,
+                Some(Ordering::Less | Ordering::Equal)
+            ) {
                 return Err(ScalarError::Constraint);
             }
             intervals.push([low, high]);
         }
     }
-    let significant_figures = source.get("significantFigures").map(|v| {
-        if calendar_encoding(reference) { return Err(ScalarError::UnsupportedTimeMeaning); }
-        let NumericValue::Finite(value) = super::numeric::number(v, None)? else {
-            return Err(ScalarError::Constraint);
-        };
-        let n = CountValue::try_from(value).and_then(|v| v.try_to_u64())
-            .map_err(ScalarError::Numeric)?;
-        if !(1..=40).contains(&n) { return Err(ScalarError::Constraint); }
-        Ok(n as u8)
-    }).transpose()?;
-    Ok(Some(TimeConstraint { values, intervals, significant_figures }))
+    let significant_figures = source
+        .get("significantFigures")
+        .map(|v| {
+            if calendar_encoding(reference) {
+                return Err(ScalarError::UnsupportedTimeMeaning);
+            }
+            let NumericValue::Finite(value) = super::numeric::number(v, None)? else {
+                return Err(ScalarError::Constraint);
+            };
+            let n = CountValue::try_from(value)
+                .and_then(|v| v.try_to_u64())
+                .map_err(ScalarError::Numeric)?;
+            if !(1..=40).contains(&n) {
+                return Err(ScalarError::Constraint);
+            }
+            Ok(n as u8)
+        })
+        .transpose()?;
+    Ok(Some(TimeConstraint {
+        values,
+        intervals,
+        significant_figures,
+    }))
 }
 
 pub(super) fn check_value(
@@ -165,22 +203,37 @@ pub(super) fn check_value(
     if let Some(constraint) = &component.constraint {
         let mut matched = false;
         for allowed in &constraint.values {
-            if matches!((allowed, &position),
-                (TimePosition::Numeric(NumericValue::NaN), TimePosition::Numeric(NumericValue::NaN)))
-                || compare(allowed, &position)? == Some(Ordering::Equal) {
+            if matches!(
+                (allowed, &position),
+                (
+                    TimePosition::Numeric(NumericValue::NaN),
+                    TimePosition::Numeric(NumericValue::NaN)
+                )
+            ) || compare(allowed, &position)? == Some(Ordering::Equal)
+            {
                 matched = true;
             }
         }
         for [low, high] in &constraint.intervals {
-            if matches!(compare(low, &position)?, Some(Ordering::Less | Ordering::Equal))
-                && matches!(compare(&position, high)?, Some(Ordering::Less | Ordering::Equal)) {
+            if matches!(
+                compare(low, &position)?,
+                Some(Ordering::Less | Ordering::Equal)
+            ) && matches!(
+                compare(&position, high)?,
+                Some(Ordering::Less | Ordering::Equal)
+            ) {
                 matched = true;
             }
         }
-        if !matched { return Err(ScalarError::ConstraintViolation); }
+        if !matched {
+            return Err(ScalarError::ConstraintViolation);
+        }
         if let (Some(maximum), TimePosition::Numeric(NumericValue::Finite(value))) =
-            (constraint.significant_figures, &position) {
-            let text = value.decimal_lexeme().ok_or(ScalarError::UnsupportedTimeMeaning)?;
+            (constraint.significant_figures, &position)
+        {
+            let text = value
+                .decimal_lexeme()
+                .ok_or(ScalarError::UnsupportedTimeMeaning)?;
             if super::numeric::significant_digits(text) > usize::from(maximum) {
                 return Err(ScalarError::ConstraintViolation);
             }
