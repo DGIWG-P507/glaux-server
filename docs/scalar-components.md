@@ -3,7 +3,7 @@
 Task 2.1.1 ([issue #27](https://github.com/DGIWG-P507/glaux-server/issues/27))
 adds typed descriptions and local value checks, not HTTP operations, database
 persistence or payload codecs. It implements the scalar portion of
-[Guide §4.3](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-implementation-guide.md).
+[Guide §4.3](https://github.com/DGIWG-P507/glaux/blob/main/Docs/Plans/glaux-server/glaux-server-implementation-guide.md#43-sensorml-swe-common-validation-and-semantic-bindings).
 
 ## What it does
 

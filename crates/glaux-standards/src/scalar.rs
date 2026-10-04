@@ -70,7 +70,9 @@ impl ScalarContract {
             }))?),
             Some(TokenConstraint::Pattern(pattern)) => {
                 supported_pattern(pattern)?;
-                Some(local_validator(&json!({"type": "string", "pattern": pattern}))?)
+                Some(local_validator(
+                    &json!({"type": "string", "pattern": pattern}),
+                )?)
             }
             None => None,
         };
@@ -137,7 +139,10 @@ impl ScalarContract {
             ScalarComponent::Text { .. } => {
                 let text = value.as_str().ok_or(ScalarError::ValueType)?;
                 self.check_tokens(value)?;
-                (ScalarValue::Text(text.to_owned()), CodeSpaceCheck::NotApplicable)
+                (
+                    ScalarValue::Text(text.to_owned()),
+                    CodeSpaceCheck::NotApplicable,
+                )
             }
             ScalarComponent::Category { code_space, .. } => {
                 let text = value.as_str().ok_or(ScalarError::ValueType)?;
@@ -153,7 +158,11 @@ impl ScalarContract {
     }
 
     fn check_tokens(&self, value: &Value) -> Result<(), ScalarError> {
-        if self.tokens.as_ref().is_some_and(|tokens| !tokens.is_valid(value)) {
+        if self
+            .tokens
+            .as_ref()
+            .is_some_and(|tokens| !tokens.is_valid(value))
+        {
             return Err(ScalarError::ConstraintViolation);
         }
         Ok(())
@@ -163,7 +172,12 @@ impl ScalarContract {
 fn optional_string(source: &Value, member: &str) -> Result<Option<String>, ScalarError> {
     source
         .get(member)
-        .map(|value| value.as_str().map(str::to_owned).ok_or(ScalarError::Metadata))
+        .map(|value| {
+            value
+                .as_str()
+                .map(str::to_owned)
+                .ok_or(ScalarError::Metadata)
+        })
         .transpose()
 }
 

@@ -58,9 +58,8 @@ fn scalar_source_metadata_and_presence() {
             value: Some(false),
         }
     );
-    let absent = compile(
-        br#"{"type":"Boolean","definition":"urn:example:property","label":"Property"}"#,
-    );
+    let absent =
+        compile(br#"{"type":"Boolean","definition":"urn:example:property","label":"Property"}"#);
     assert_eq!(
         absent.component(),
         &ScalarComponent::Boolean {
@@ -75,9 +74,8 @@ fn scalar_source_metadata_and_presence() {
         empty.component().value(),
         Some(ScalarValue::Text(String::new()))
     );
-    let absent = compile(
-        br#"{"type":"Text","definition":"urn:example:property","label":"Property"}"#,
-    );
+    let absent =
+        compile(br#"{"type":"Text","definition":"urn:example:property","label":"Property"}"#);
     assert_eq!(absent.component().value(), None);
     let empty = compile(
         br#"{"type":"Category","definition":"urn:example:property","label":"Property","codeSpace":"urn:example:terms","value":""}"#,
@@ -116,7 +114,8 @@ fn scalar_values_reject_json_type_coercion() {
             let mut inline = source.clone();
             inline["value"] = serde_json::from_slice(value).unwrap();
             assert!(
-                ScalarContract::compile(validator(), &serde_json::to_vec(&inline).unwrap()).is_err(),
+                ScalarContract::compile(validator(), &serde_json::to_vec(&inline).unwrap())
+                    .is_err(),
                 "inline {kind} must reject {value:?}"
             );
         }
@@ -155,7 +154,8 @@ fn scalar_metadata_requires_published_members() {
             let mut missing = source.clone();
             missing.as_object_mut().unwrap().remove(required);
             assert!(
-                ScalarContract::compile(validator(), &serde_json::to_vec(&missing).unwrap()).is_err(),
+                ScalarContract::compile(validator(), &serde_json::to_vec(&missing).unwrap())
+                    .is_err(),
                 "{kind} requires {required}"
             );
         }
@@ -174,15 +174,19 @@ fn scalar_metadata_requires_published_members() {
             let mut invalid = source.clone();
             invalid[member] = value;
             assert!(
-                ScalarContract::compile(validator(), &serde_json::to_vec(&invalid).unwrap()).is_err(),
+                ScalarContract::compile(validator(), &serde_json::to_vec(&invalid).unwrap())
+                    .is_err(),
                 "{kind} rejects invalid {member}"
             );
         }
         let mut invalid_reference = source.clone();
         invalid_reference["referenceFrame"] = json!("#bad frame");
         assert_eq!(
-            ScalarContract::compile(validator(), &serde_json::to_vec(&invalid_reference).unwrap())
-                .err(),
+            ScalarContract::compile(
+                validator(),
+                &serde_json::to_vec(&invalid_reference).unwrap()
+            )
+            .err(),
             Some(ScalarError::Metadata)
         );
         let mut whitespace = source;
@@ -254,7 +258,8 @@ fn scalar_enumerations_preserve_tokens_and_enforce_membership() {
         let mut invalid_inline = source;
         invalid_inline["value"] = json!("Other");
         assert_eq!(
-            ScalarContract::compile(validator(), &serde_json::to_vec(&invalid_inline).unwrap()).err(),
+            ScalarContract::compile(validator(), &serde_json::to_vec(&invalid_inline).unwrap())
+                .err(),
             Some(ScalarError::ConstraintViolation)
         );
     }
@@ -373,7 +378,8 @@ fn scalar_constraints_reject_malformed_or_ambiguous_shapes() {
                 "codeSpace": "urn:example:terms", "constraint": constraint
             });
             assert!(
-                ScalarContract::compile(validator(), &serde_json::to_vec(&source).unwrap()).is_err(),
+                ScalarContract::compile(validator(), &serde_json::to_vec(&source).unwrap())
+                    .is_err(),
                 "{kind} rejects malformed or ambiguous AllowedTokens: {constraint}"
             );
         }
@@ -402,9 +408,8 @@ fn scalar_bounded_inputs_and_unsupported_features() {
         .err(),
         Some(ScalarError::Syntax(Failure::DuplicateKey))
     );
-    let contract = compile(
-        br#"{"type":"Text","definition":"urn:example:property","label":"Property"}"#,
-    );
+    let contract =
+        compile(br#"{"type":"Text","definition":"urn:example:property","label":"Property"}"#);
     assert_eq!(
         contract.check_value(b"\"unfinished").err(),
         Some(ScalarError::Syntax(Failure::Malformed))
