@@ -181,3 +181,90 @@ fn ucum_resource_limits() {
     assert_eq!(validate_code("m-1000000"), Err(UnitError::Limit));
     assert_eq!(validate_code(&"9".repeat(MAX_CODE_BYTES)), Ok(()));
 }
+
+#[test]
+fn ucum_time_codes_use_temporal_atoms() {
+    // Independently transcribed from the pinned essence's property=time entries
+    // and prefix table. No conversion factors or calendar rules are inferred.
+    for code in [
+        "s", "min", "h", "d", "wk", "a_t", "a_j", "a_g", "a", "mo_s", "mo_j", "mo_g", "mo",
+    ] {
+        assert_eq!(validate_time_code(code), Ok(()), "temporal atom {code}");
+    }
+    for prefix in [
+        "Y", "Z", "E", "P", "T", "G", "M", "k", "h", "da", "d", "c", "m", "u", "n", "p", "f", "a",
+        "z", "y", "Ki", "Mi", "Gi", "Ti",
+    ] {
+        let code = format!("{prefix}s");
+        assert_eq!(validate_time_code(&code), Ok(()), "prefixed second {code}");
+    }
+    for code in [
+        "s1",
+        "s+1",
+        "h+000001",
+        "(s)",
+        "((ms{ticks}))",
+        "s{1/m}",
+        "(s{)})",
+        "mo{calendar-label-is-inert}",
+    ] {
+        assert_eq!(
+            validate_time_code(code),
+            Ok(()),
+            "temporal expression {code}"
+        );
+    }
+}
+
+#[test]
+fn ucum_time_codes_reject_or_defer_other_units() {
+    // Passing the generic code check does not establish a temporal unit.
+    for code in [
+        "m",
+        "kg",
+        "Hz",
+        "mHz",
+        "1",
+        "Cel",
+        "dB",
+        "S",
+        "{seconds}",
+        "1{s}",
+        "2+10",
+        "s0",
+        "s2",
+        "s-1",
+        "ms0",
+        "a2",
+    ] {
+        assert_eq!(validate_code(code), Ok(()), "valid UCUM {code}");
+        assert_eq!(
+            validate_time_code(code),
+            Err(UnitError::Invalid),
+            "not Time {code}"
+        );
+    }
+    for code in [
+        "1.s", "s/1", "s.m/m", "Hz-1", "1/Hz", "m2/s", "[S]", "(s).(s)", "{x}.s", "s/{x}",
+    ] {
+        assert_eq!(validate_code(code), Ok(()), "valid UCUM {code}");
+        assert_eq!(
+            validate_time_code(code),
+            Err(UnitError::Unsupported),
+            "unresolved {code}"
+        );
+    }
+    for code in ["sec", "yr", "kmin", "s ", "s/typo", "s{open", "(s)2"] {
+        assert_eq!(
+            validate_time_code(code),
+            Err(UnitError::Invalid),
+            "malformed {code}"
+        );
+    }
+    assert_eq!(validate_time_code("Cel/s"), Err(UnitError::Unsupported));
+    assert_eq!(validate_time_code("s1000000"), Err(UnitError::Limit));
+    assert_eq!(
+        validate_time_code(&format!("s{{{}}}", "x".repeat(MAX_CODE_BYTES))),
+        Err(UnitError::Limit)
+    );
+}

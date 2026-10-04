@@ -30,6 +30,7 @@ pub enum Contract {
     Category,
     Count,
     Quantity,
+    Time,
     SweRecord,
     PhysicalSystem,
     ObservationSwe,
@@ -47,6 +48,7 @@ impl Contract {
             Self::Category => format!("{SWE}Category.json"),
             Self::Count => format!("{SWE}Count.json"),
             Self::Quantity => format!("{SWE}Quantity.json"),
+            Self::Time => format!("{SWE}Time.json"),
             Self::SweRecord => format!("{SWE}DataRecord.json"),
             Self::PhysicalSystem => format!("{PIN}sensorml/schemas/json/PhysicalSystem.json"),
             Self::ObservationSwe => {
@@ -283,6 +285,10 @@ fn compile_with_denial(
         .with_registry(&registry)
         .with_retriever(deny)
         .with_draft(jsonschema::Draft::Draft202012)
+        // Time's DateTimeNumberOrSpecial oneOf needs date-time assertion to
+        // distinguish calendar strings from named numeric specials. Originals
+        // remain unchanged; semantic frame/calendar checks still run separately.
+        .should_validate_formats(uri == format!("{SWE}Time.json"))
         .with_pattern_options(
             jsonschema::PatternOptions::fancy_regex()
                 .backtrack_limit(20_000)
@@ -304,6 +310,7 @@ impl StructuralValidator {
             Contract::Category,
             Contract::Count,
             Contract::Quantity,
+            Contract::Time,
             Contract::SweRecord,
             Contract::PhysicalSystem,
             Contract::ObservationSwe,

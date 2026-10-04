@@ -4,6 +4,7 @@
 //! constructs a checked, immutable contract from a bounded source description.
 
 use crate::numeric::{CountValue, NumericValue};
+use crate::temporal::ExactInstant;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ComponentMetadata {
@@ -51,6 +52,7 @@ pub enum ScalarComponent {
         uom: UnitReference,
         value: Option<NumericValue>,
     },
+    Time(Box<TimeComponent>),
 }
 
 /// Retain the complete supplied unit declaration, not a converted display unit.
@@ -77,6 +79,7 @@ pub enum ScalarValue {
     Category(String),
     Count(CountValue),
     Quantity(NumericValue),
+    Time(Box<BoundTimeValue>),
 }
 
 impl ScalarComponent {
@@ -88,6 +91,76 @@ impl ScalarComponent {
             Self::Category { value, .. } => value.clone().map(ScalarValue::Category),
             Self::Count { value, .. } => value.clone().map(ScalarValue::Count),
             Self::Quantity { value, .. } => value.clone().map(ScalarValue::Quantity),
+            Self::Time(component) => component.value.clone().map(|position| {
+                ScalarValue::Time(Box::new(BoundTimeValue {
+                    position,
+                    reference: component.reference.clone(),
+                }))
+            }),
+        }
+    }
+}
+
+/// An omitted frame has the SWE UTC default; an explicit declaration is retained.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum TimeFrame {
+    DefaultUtc,
+    Declared(String),
+}
+
+/// Only established UTC calendar meaning exposes an ExactInstant.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum CalendarTime {
+    Utc(ExactInstant),
+    Unresolved(String),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum TimePosition {
+    Calendar(CalendarTime),
+    Numeric(NumericValue),
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TimeReference {
+    pub frame: TimeFrame,
+    pub origin: Option<CalendarTime>,
+    pub local_frame: Option<String>,
+    pub uom: UnitReference,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct TimeConstraint {
+    pub values: Vec<TimePosition>,
+    pub intervals: Vec<[TimePosition; 2]>,
+    pub significant_figures: Option<u8>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct TimeComponent {
+    pub metadata: ComponentMetadata,
+    pub reference: TimeReference,
+    pub constraint: Option<TimeConstraint>,
+    pub value: Option<TimePosition>,
+}
+
+/// A numeric coordinate cannot escape as an apparently context-free UTC instant.
+#[derive(Clone, Debug, PartialEq)]
+pub struct BoundTimeValue {
+    pub position: TimePosition,
+    pub reference: TimeReference,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct UnsupportedTimeConversion;
+
+impl BoundTimeValue {
+    /// No numeric epoch arithmetic, frame conversion or local-frame chaining.
+    /// Those need a separately established mapping, not an assumed Unix epoch.
+    pub fn utc_instant(&self) -> Result<&ExactInstant, UnsupportedTimeConversion> {
+        match &self.position {
+            TimePosition::Calendar(CalendarTime::Utc(instant)) => Ok(instant),
+            _ => Err(UnsupportedTimeConversion),
         }
     }
 }

@@ -2,8 +2,9 @@
 
 Task 2.1.2 validates Quantity `uom.code` with the case-sensitive UCUM **2.1**
 basis incorporated by SWE Common 3.0. This follows Implementation Guide §4.3
-and accepted IDR-SRV-024 §7.1. A code check preserves the submitted text and
-does not convert values, infer dimensions or property identity, compare
+and accepted IDR-SRV-024 §7.1. Task 2.1.3 adds the bounded temporal-unit check
+described below for numeric Time declarations. The general code check preserves
+the submitted text and does not convert values, infer dimensions or property identity, compare
 equivalent expressions, resolve a semantic URI or establish code/URI agreement.
 It is not a claim of full UCUM semantic conformance or complete SWE conformance.
 
@@ -80,6 +81,33 @@ integer conversion and are bounded by the input limit. These bounds are local
 resource limits, not amendments to UCUM. No runtime file or network access is
 performed.
 
+## Temporal declarations
+
+`validate_time_code` first applies the complete generic code check, then confirms
+that the declaration belongs to its explicitly supported temporal subset. It
+accepts the complete set of thirteen UCUM 2.1 atoms whose original `property` is
+`time`: `s`, `min`, `h`, `d`, `wk`, `a_t`, `a_j`, `a_g`, `a`, `mo_s`, `mo_j`,
+`mo_g` and `mo`. All 24 pinned UCUM prefixes can be applied to the metric second,
+including `ms`, `us`, `ns` and `Kis`. Parentheses, inert annotations and an explicit
+power of one are accepted without changing the source declaration.
+
+The incorporated time table defines years and months as specified mean durations:
+for example `a` refers to `a_j`, and `mo` to `mo_j`. Recognizing these codes does
+not implement variable calendar-month arithmetic or conversion to seconds.
+The numeric value, frame and origin remain the Time component's responsibility;
+this helper establishes no UTC instant, leap-second handling or frame conversion.
+
+Known incompatible simple units such as `m`, `kg`, `Hz`, `1` and `Cel` return
+`Invalid`; so do powers other than one on temporal atoms, such as `s2` and `s-1`.
+Compounds such as `1.s`, `s.m/m` and `1/Hz`, and other dimensional derivations
+such as `Hz-1`, return `Unsupported` even where a full analysis could establish
+a time dimension. The Svedberg atom `[S]` also returns `Unsupported`: its
+definition has a time dimension, but its declared property is sedimentation
+coefficient. No property equivalence is inferred from matching dimensions.
+Malformed syntax and the existing resource limits keep their `Invalid` and
+`Limit` results. A generic UCUM pass alone is never accepted as proof of a
+temporal declaration.
+
 ## Verification
 
 The hosted static lane runs the standard-library-only check:
@@ -102,3 +130,8 @@ and resource boundaries. Table-loop acceptance alone is not the source oracle:
 the independent original-byte and re-derivation check establishes which complete
 dictionary was used. Execution evidence belongs to the task PR and issue;
 having these checks in the checkout does not imply that they have run.
+
+`ucum_time_codes_use_temporal_atoms` independently names all thirteen sourced
+temporal atoms and 24 prefixes, with annotated and parenthesized examples.
+`ucum_time_codes_reject_or_defer_other_units` separately checks incompatible
+units, valid but unsupported expressions, malformed input and inherited limits.
