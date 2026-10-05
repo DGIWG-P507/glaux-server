@@ -221,7 +221,8 @@ impl AggregateContract {
                 }
                 let child_contract = match value.get("type").and_then(Value::as_str) {
                     Some("Geometry") => ChildContract::Geometry(Box::new(
-                        GeometryContract::compile(validator, bytes).map_err(AggregateError::Geometry)?,
+                        GeometryContract::compile(validator, bytes)
+                            .map_err(AggregateError::Geometry)?,
                     )),
                     Some("Boolean" | "Text" | "Category" | "Count" | "Quantity" | "Time") => {
                         let scalar = if contract == Contract::Vector {

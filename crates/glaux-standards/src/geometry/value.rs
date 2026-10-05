@@ -85,7 +85,10 @@ fn position(raw: &RawValue, dimension: &mut Option<usize>) -> Result<Position, G
     Ok(Position { ordinates })
 }
 
-fn positions(raw: &RawValue, dimension: &mut Option<usize>) -> Result<Vec<Position>, GeometryError> {
+fn positions(
+    raw: &RawValue,
+    dimension: &mut Option<usize>,
+) -> Result<Vec<Position>, GeometryError> {
     array(raw)?
         .iter()
         .map(|value| position(value, dimension))
@@ -100,7 +103,10 @@ fn line(raw: &RawValue, dimension: &mut Option<usize>) -> Result<Vec<Position>, 
     Ok(positions)
 }
 
-fn polygon(raw: &RawValue, dimension: &mut Option<usize>) -> Result<Vec<Vec<Position>>, GeometryError> {
+fn polygon(
+    raw: &RawValue,
+    dimension: &mut Option<usize>,
+) -> Result<Vec<Vec<Position>>, GeometryError> {
     array(raw)?
         .iter()
         .map(|ring| {

@@ -3,7 +3,9 @@ use super::{GeometryContract, GeometryError, SrsCheck};
 use crate::{
     aggregate::{AggregateContract, AggregateError},
     array::{ArrayContract, ArrayOptions},
-    choice::{CheckedComponentValue, ChoiceContract, ComponentErrorKind, ComponentValue, NamedValue},
+    choice::{
+        CheckedComponentValue, ChoiceContract, ComponentErrorKind, ComponentValue, NamedValue,
+    },
     scalar::{MAX_NIL_DECLARATIONS, ScalarContract},
     validation::{self, Contract, Failure, StructuralValidator},
 };
@@ -40,7 +42,10 @@ fn descriptor(srs: &str) -> Value {
 
 fn position(ordinates: &[&str]) -> Position {
     Position {
-        ordinates: ordinates.iter().map(|value| value.parse().unwrap()).collect(),
+        ordinates: ordinates
+            .iter()
+            .map(|value| value.parse().unwrap())
+            .collect(),
     }
 }
 
@@ -243,7 +248,12 @@ fn geometry_allowed_types_preserve_absent_empty_and_order() {
     input["constraint"] = json!({});
     let empty_object = compile(&bytes(&input));
     assert_eq!(
-        empty_object.component().constraint.as_ref().unwrap().geom_types,
+        empty_object
+            .component()
+            .constraint
+            .as_ref()
+            .unwrap()
+            .geom_types,
         None
     );
     let point = br#"{"type":"Point","coordinates":[1,2]}"#;
@@ -367,7 +377,8 @@ fn geometry_shape_and_ring_semantics_exceed_schema() {
             .err(),
         Some(GeometryError::Bbox)
     );
-    let across_dateline = br#"{"type":"MultiPoint","coordinates":[[177,-20],[-178,-16]],"bbox":[177,-20,-178,-16]}"#;
+    let across_dateline =
+        br#"{"type":"MultiPoint","coordinates":[[177,-20],[-178,-16]],"bbox":[177,-20,-178,-16]}"#;
     assert!(
         contract.check_value(across_dateline).is_ok(),
         "west greater than east is valid for an antimeridian bbox"
@@ -380,8 +391,14 @@ fn geometry_shape_and_ring_semantics_exceed_schema() {
         let mut input = json!({"type":"Point","coordinates":[1,2]});
         input[member] = value;
         let input = bytes(&input);
-        assert_eq!(validator().validate(Contract::GeometryValue, &input), Ok(()));
-        assert_eq!(contract.check_value(&input).err(), Some(GeometryError::Structure));
+        assert_eq!(
+            validator().validate(Contract::GeometryValue, &input),
+            Ok(())
+        );
+        assert_eq!(
+            contract.check_value(&input).err(),
+            Some(GeometryError::Structure)
+        );
     }
     let foreign = br#"{"type":"Point","coordinates":[1,2],"extension":{"geometry":null,"properties":{},"features":[]}}"#;
     assert_eq!(contract.check_value(foreign).unwrap().source, foreign);
@@ -394,9 +411,15 @@ fn geometry_nil_metadata_absence_and_extensions() {
     assert!(contract.inline_value().is_none());
     assert_eq!(contract.nil_declarations().len(), 2);
     assert_eq!(contract.nil_declarations()[0].value, "MISSING");
-    assert_eq!(contract.nil_declarations()[0].reason, "urn:example:nil:missing");
+    assert_eq!(
+        contract.nil_declarations()[0].reason,
+        "urn:example:nil:missing"
+    );
     assert_eq!(contract.nil_declarations()[1].value, "");
-    assert_eq!(contract.nil_declarations()[1].reason, "urn:example:nil:empty");
+    assert_eq!(
+        contract.nil_declarations()[1].reason,
+        "urn:example:nil:empty"
+    );
     assert_eq!(contract.source(), NIL);
     assert_eq!(compile(contract.source()).component(), contract.component());
     for input in [br#""MISSING""#.as_slice(), br#""""#.as_slice(), b"null"] {
@@ -469,9 +492,7 @@ fn geometry_nested_record_choice_and_array_boundaries() {
         },
         NamedValue {
             name: "location",
-            value: ComponentValue::GeometryJson(
-                br#"{"type":"Point","coordinates":[12,34,56.00]}"#,
-            ),
+            value: ComponentValue::GeometryJson(br#"{"type":"Point","coordinates":[12,34,56.00]}"#),
         },
     ];
     let checked = record
@@ -557,7 +578,10 @@ fn geometry_nested_record_choice_and_array_boundaries() {
             .kind,
         ComponentErrorKind::Compile(AggregateError::InlineElementValue)
     );
-    input["elementType"].as_object_mut().unwrap().remove("value");
+    input["elementType"]
+        .as_object_mut()
+        .unwrap()
+        .remove("value");
     input["type"] = json!("Matrix");
     assert_eq!(
         ArrayContract::compile(validator(), &bytes(&input), ArrayOptions::default())
@@ -618,7 +642,11 @@ fn geometry_original_schema_required_metadata() {
     let mut whitespace = descriptor(CRS84);
     whitespace["label"] = json!(" ");
     assert_eq!(
-        compile(&bytes(&whitespace)).component().metadata.label.as_deref(),
+        compile(&bytes(&whitespace))
+            .component()
+            .metadata
+            .label
+            .as_deref(),
         Some(" ")
     );
 }
