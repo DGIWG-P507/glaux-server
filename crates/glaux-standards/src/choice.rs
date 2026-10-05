@@ -75,7 +75,10 @@ pub struct ComponentError {
 
 impl ComponentError {
     pub(crate) fn new(kind: ComponentErrorKind) -> Self {
-        Self { kind, path: Vec::new() }
+        Self {
+            kind,
+            path: Vec::new(),
+        }
     }
 
     pub(crate) fn at(mut self, index: usize) -> Self {
@@ -131,7 +134,10 @@ impl ChoiceContract {
         self.aggregate.choice_value()
     }
 
-    pub fn check_value(&self, selection: &[NamedValue<'_>]) -> Result<CheckedChoiceValue, ComponentError> {
+    pub fn check_value(
+        &self,
+        selection: &[NamedValue<'_>],
+    ) -> Result<CheckedChoiceValue, ComponentError> {
         match value::check(&self.aggregate, &ComponentValue::Choice(selection))? {
             CheckedComponentValue::Choice(value) => Ok(*value),
             _ => Err(ComponentError::new(ComponentErrorKind::ValueType)),

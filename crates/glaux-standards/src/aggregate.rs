@@ -186,13 +186,14 @@ impl AggregateContract {
                     Some("CategoryRange" | "CountRange" | "QuantityRange" | "TimeRange") => {
                         // No implicit source correction or external category-order
                         // evidence is introduced by nesting an existing contract.
-                        let range = RangeContract::compile(validator, bytes, RangeOptions::default())
-                            .map_err(AggregateError::Range)?;
+                        let range =
+                            RangeContract::compile(validator, bytes, RangeOptions::default())
+                                .map_err(AggregateError::Range)?;
                         ChildContract::Range(Box::new(range))
                     }
-                    Some("DataRecord" | "Vector" | "DataChoice") => ChildContract::Aggregate(Box::new(
-                        Self::compile_tree(validator, bytes, &value)?,
-                    )),
+                    Some("DataRecord" | "Vector" | "DataChoice") => ChildContract::Aggregate(
+                        Box::new(Self::compile_tree(validator, bytes, &value)?),
+                    ),
                     _ => return Err(AggregateError::UnsupportedComponent.into()),
                 };
                 Ok(NamedContract {
@@ -282,7 +283,9 @@ fn kind(source: &Value) -> Result<(Contract, &'static str), AggregateError> {
 fn valid_name(name: &str) -> bool {
     // basicTypes.json NameToken: ^[A-Za-z][A-Za-z0-9_\-]*$
     let mut bytes = name.bytes();
-    bytes.next().is_some_and(|first| first.is_ascii_alphabetic())
+    bytes
+        .next()
+        .is_some_and(|first| first.is_ascii_alphabetic())
         && bytes.all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-'))
 }
 

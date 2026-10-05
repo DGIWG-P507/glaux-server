@@ -1,13 +1,13 @@
-use glaux_domain::{
-    aggregate::AggregateComponent,
-    scalar::ScalarComponent,
-};
+use glaux_domain::{aggregate::AggregateComponent, scalar::ScalarComponent};
 
 use super::{
     CheckedChoiceValue, CheckedComponentValue, CheckedNamedValue, ComponentError,
     ComponentErrorKind, ComponentValue, NamedValue,
 };
-use crate::{aggregate::{AggregateContract, NamedContract}, validation};
+use crate::{
+    aggregate::{AggregateContract, NamedContract},
+    validation,
+};
 
 pub(super) fn check(
     contract: &AggregateContract,
@@ -62,7 +62,9 @@ fn aggregate(
     match (contract.component(), input) {
         (AggregateComponent::Choice { .. }, ComponentValue::Choice(values)) => {
             if values.len() != 1 {
-                return Err(ComponentError::new(ComponentErrorKind::SelectionCardinality));
+                return Err(ComponentError::new(
+                    ComponentErrorKind::SelectionCardinality,
+                ));
             }
             let selected = &values[0];
             let (index, child) = contract
@@ -74,16 +76,22 @@ fn aggregate(
             // Identity selects exactly one contract. Never fall back to another
             // arm merely because that arm accepts the supplied value.
             let value = check_child(child, &selected.value).map_err(|error| error.at(index))?;
-            Ok(CheckedComponentValue::Choice(Box::new(CheckedChoiceValue {
-                name: child.name().to_owned(),
-                value,
-            })))
+            Ok(CheckedComponentValue::Choice(Box::new(
+                CheckedChoiceValue {
+                    name: child.name().to_owned(),
+                    value,
+                },
+            )))
         }
         (AggregateComponent::Record { .. }, ComponentValue::Record(values)) => {
             members(contract, values, true).map(CheckedComponentValue::Record)
         }
         (
-            AggregateComponent::Vector { reference_frame, local_frame, .. },
+            AggregateComponent::Vector {
+                reference_frame,
+                local_frame,
+                ..
+            },
             ComponentValue::Vector(values),
         ) => Ok(CheckedComponentValue::Vector {
             reference_frame: reference_frame.clone(),
@@ -147,9 +155,14 @@ fn members(
             let value = match value {
                 Some(value) => Some(check_child(child, value).map_err(|error| error.at(index))?),
                 None if allow_optional && optional(child) => None,
-                None => return Err(ComponentError::new(ComponentErrorKind::MissingMember).at(index)),
+                None => {
+                    return Err(ComponentError::new(ComponentErrorKind::MissingMember).at(index));
+                }
             };
-            Ok(CheckedNamedValue { name: child.name().to_owned(), value })
+            Ok(CheckedNamedValue {
+                name: child.name().to_owned(),
+                value,
+            })
         })
         .collect()
 }

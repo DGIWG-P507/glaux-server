@@ -353,7 +353,10 @@ impl StructuralValidator {
             Contract::TextEncoding,
             Contract::BinaryEncoding,
         ] {
-            let validator = if matches!(contract, Contract::DataRecord | Contract::Vector | Contract::DataChoice) {
+            let validator = if matches!(
+                contract,
+                Contract::DataRecord | Contract::Vector | Contract::DataChoice
+            ) {
                 // Nested Time schemas need the same format assertion as their
                 // direct entry points. SweRecord keeps its earlier baseline.
                 compile_with_formats(&catalog, &contract.uri(), DenyRetrieval::default(), true)?
