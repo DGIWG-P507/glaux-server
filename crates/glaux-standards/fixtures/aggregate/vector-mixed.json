@@ -1,0 +1,39 @@
+{
+  "type": "Vector",
+  "definition": "urn:example:sample-position",
+  "label": " Sample position ",
+  "referenceFrame": "urn:example:spatiotemporal-frame",
+  "localFrame": "#platform",
+  "optional": true,
+  "coordinates": [
+    {
+      "name": "zIndex",
+      "type": "Count",
+      "definition": "urn:example:index",
+      "label": "Index",
+      "axisID": "I",
+      "optional": false,
+      "value": 9007199254740993
+    },
+    {
+      "name": "aLength",
+      "type": "Quantity",
+      "definition": "urn:example:length",
+      "label": "Length",
+      "axisID": "X",
+      "uom": {"code": "cm"},
+      "value": 125.00
+    },
+    {
+      "name": "mTime",
+      "type": "Time",
+      "definition": "urn:example:sample-time",
+      "label": "Sample time",
+      "axisID": "T",
+      "uom": {"href": "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian"},
+      "referenceTime": "2000-01-01T00:00:00Z",
+      "value": "2000-01-01T00:00:00.1234567890123456789Z"
+    }
+  ],
+  "vendor:note": "Keep supplied axes and frames; do not convert"
+}

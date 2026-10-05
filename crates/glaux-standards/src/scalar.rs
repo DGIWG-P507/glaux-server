@@ -83,7 +83,7 @@ pub struct ScalarContract {
 
 impl ScalarContract {
     pub fn compile(validator: &StructuralValidator, input: &[u8]) -> Result<Self, ScalarError> {
-        Self::compile_context(validator, input, ValueContext::Scalar)
+        Self::compile_context(validator, input, ValueContext::Scalar, None)
     }
 
     /// Internal scalar description selected by the enclosing range compiler.
@@ -92,13 +92,29 @@ impl ScalarContract {
         validator: &StructuralValidator,
         input: &[u8],
     ) -> Result<Self, ScalarError> {
-        Self::compile_context(validator, input, ValueContext::RangeEndpoint)
+        Self::compile_context(validator, input, ValueContext::RangeEndpoint, None)
+    }
+
+    /// The Vector compiler has checked coordinate/frame rules. This context
+    /// changes Time meaning, never the retained source or supplied metadata.
+    pub(crate) fn compile_vector_coordinate(
+        validator: &StructuralValidator,
+        input: &[u8],
+        reference_frame: &str,
+    ) -> Result<Self, ScalarError> {
+        Self::compile_context(
+            validator,
+            input,
+            ValueContext::Scalar,
+            Some(reference_frame),
+        )
     }
 
     fn compile_context(
         validator: &StructuralValidator,
         input: &[u8],
         context: ValueContext,
+        inherited_frame: Option<&str>,
     ) -> Result<Self, ScalarError> {
         let source = validation::parse(input).map_err(ScalarError::Syntax)?;
         if context == ValueContext::RangeEndpoint && source.get("value").is_some() {
@@ -125,7 +141,8 @@ impl ScalarContract {
         }
         let metadata = metadata(&source)?;
         if kind == Contract::Time {
-            return time::compile(metadata, &source, input, context)?.finish(&source, input);
+            return time::compile(metadata, &source, input, context, inherited_frame)?
+                .finish(&source, input);
         }
         if matches!(kind, Contract::Count | Contract::Quantity) {
             return numeric::compile(kind, metadata, &source, input)?.finish(&source, input);
