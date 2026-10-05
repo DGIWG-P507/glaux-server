@@ -5,8 +5,8 @@ immutable component descriptions under Guide §4.3. It does not add HTTP routes,
 storage, record payload encoders, coordinate transformations or a reference-graph
 resolver. [Task #32](choice-components.md) adds choices and model-level selected
 value checking. [Task #33](array-components.md) adds array/matrix descriptions,
-not their payload values. Geometry and quality remain their owning tasks' work,
-not silently accepted typed components.
+not their payload values. [Task #34](geometry-components.md) adds distinct
+Geometry children; quality remains its owning task's work.
 
 ## What the contract preserves and checks
 
@@ -17,7 +17,8 @@ a map whose sorting could change the data layout. Child identity is scoped to
 its parent; the same name may occur in different nested records.
 
 Records can contain the implemented scalar and range families, records, vectors
-and choices, arrays and matrices. Child compilation reuses scalar/range validation, including exact
+and choices, arrays, matrices and Geometry descriptions. Child compilation reuses
+the corresponding typed validation, including exact
 numbers, units, constraints, time context and declared nil reasons. Root and
 child `source()` retain the original bytes, including numeric spelling and
 extensions. `children()` exposes immutable child contracts so callers can inspect

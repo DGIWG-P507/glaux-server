@@ -26,6 +26,7 @@ RANGE = Path("crates/glaux-standards/src/range.rs")
 AGGREGATE = Path("crates/glaux-standards/src/aggregate.rs")
 CHOICE_VALUE = Path("crates/glaux-standards/src/choice/value.rs")
 ARRAY = Path("crates/glaux-standards/src/array.rs")
+GEOMETRY_VALUE = Path("crates/glaux-standards/src/geometry/value.rs")
 TIMEOUT_SECONDS = 180
 
 
@@ -158,7 +159,14 @@ def drop_inner_array_dimensions(root):
             "if dimensions.is_empty() { dimensions.push(element_count); }")
 
 
+def drop_geometry_height(root):
+    replace(root / GEOMETRY_VALUE, "    Ok(Position { ordinates })",
+            "    Ok(Position { ordinates: ordinates.into_iter().take(2).collect() })")
+
+
 CASES = [
+    ("geometry-height-dropped", "geometry::tests::geometry_height_and_exact_source_are_preserved",
+     drop_geometry_height, ["left: None", 'right: Some("123.4500")']),
     ("array-inner-dimension-dropped", "array::tests::array_fixed_dimensions_preserve_exact_order",
      drop_inner_array_dimensions, ['left: [Some("9007199254740993")]',
                                   'right: [Some("9007199254740993"), Some("7")]']),

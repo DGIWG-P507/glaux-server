@@ -1,6 +1,15 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "geometry::tests::geometry_height_and_exact_source_are_preserved",
+    "geometry::tests::geometry_all_six_shapes_keep_coordinate_order",
+    "geometry::tests::geometry_srs_dimensions_and_unknown_references",
+    "geometry::tests::geometry_allowed_types_preserve_absent_empty_and_order",
+    "geometry::tests::geometry_shape_and_ring_semantics_exceed_schema",
+    "geometry::tests::geometry_nil_metadata_absence_and_extensions",
+    "geometry::tests::geometry_nested_record_choice_and_array_boundaries",
+    "geometry::tests::geometry_original_schema_required_metadata",
+    "geometry::tests::geometry_bounded_generated_positions_and_limits",
     "array::tests::array_fixed_dimensions_preserve_exact_order",
     "array::tests::array_variable_count_and_original_requiredness",
     "array::tests::array_count_reference_correction_preserves_original_verdict",

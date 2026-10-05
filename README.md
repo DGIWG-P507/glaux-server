@@ -69,6 +69,11 @@ contents. Nested dimension order and Matrix numeric/frame meaning are checked;
 reference metadata remains distinct from a resolved count. Payload codecs and
 full component-graph resolution are later work.
 
+[SWE Geometry descriptions](docs/geometry-components.md) keep geometry kind,
+exact coordinates and height together with the declared reference system.
+They remain distinct from CSAPI features; the compiler checks supported shapes
+without transforming coordinates or treating an unresolved CRS as resolved.
+
 [Typed resource identities](docs/resource-identities.md) now separate UUIDv7 local
 locators, URI-form published UIDs and authority-qualified source identifiers.
 Strict parsing, fallible generation and type-boundary checks prevent accidental

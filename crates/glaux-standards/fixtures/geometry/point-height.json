@@ -1,0 +1,17 @@
+{
+  "type": "Geometry",
+  "id": "target",
+  "definition": "urn:example:target-location",
+  "label": " Target location ",
+  "description": "Synthetic exact three-dimensional point",
+  "optional": true,
+  "updatable": false,
+  "srs": "http://www.opengis.net/def/crs/OGC/0/CRS84h",
+  "constraint": { "geomTypes": ["Point"] },
+  "value": {
+    "type": "Point",
+    "coordinates": [-75.1234567890123456789, 40.000000000000000001, 123.4500],
+    "bbox": [-76, 39, 100, -74, 41, 200],
+    "sourceTag": "synthetic"
+  }
+}

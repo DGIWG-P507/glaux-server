@@ -1,6 +1,7 @@
 //! Ordered SWE descriptions, independent of payload codecs or frame resolution.
 use crate::{
     array::{ArrayKind, ElementCount},
+    geometry::GeometryComponent,
     range::RangeComponent,
     scalar::ScalarComponent,
 };
@@ -21,6 +22,7 @@ pub enum Component {
     Scalar(Box<ScalarComponent>),
     Range(Box<RangeComponent>),
     Aggregate(Box<AggregateComponent>),
+    Geometry(Box<GeometryComponent>),
 }
 
 #[derive(Clone, Debug, PartialEq)]

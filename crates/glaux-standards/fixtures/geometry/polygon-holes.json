@@ -1,0 +1,14 @@
+{
+  "type": "Geometry",
+  "definition": "urn:example:area",
+  "label": "Area with a hole",
+  "srs": "http://www.opengis.net/def/crs/EPSG/0/4326",
+  "constraint": { "geomTypes": ["Polygon", "MultiPolygon"] },
+  "value": {
+    "type": "Polygon",
+    "coordinates": [
+      [[0, 0], [6, 0], [6, 6], [0, 6], [0.0, 0.0]],
+      [[1, 1], [1, 2], [2, 2], [2, 1], [1, 1]]
+    ]
+  }
+}

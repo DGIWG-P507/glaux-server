@@ -5,6 +5,7 @@
 
 pub mod aggregate;
 pub mod array;
+pub mod geometry;
 pub mod identity;
 pub mod numeric;
 pub mod range;

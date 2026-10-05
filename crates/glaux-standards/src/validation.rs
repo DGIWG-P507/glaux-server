@@ -40,6 +40,8 @@ pub enum Contract {
     DataChoice,
     DataArray,
     Matrix,
+    Geometry,
+    GeometryValue,
     SweRecord,
     PhysicalSystem,
     ObservationSwe,
@@ -67,6 +69,8 @@ impl Contract {
             Self::DataChoice => format!("{SWE}DataChoice.json"),
             Self::DataArray => format!("{SWE}DataArray.json"),
             Self::Matrix => format!("{SWE}Matrix.json"),
+            Self::Geometry => format!("{SWE}Geometry.json"),
+            Self::GeometryValue => "https://geojson.org/schema/Geometry.json".to_owned(),
             Self::PhysicalSystem => format!("{PIN}sensorml/schemas/json/PhysicalSystem.json"),
             Self::ObservationSwe => {
                 format!("{PIN}api/part2/openapi/schemas/json/observationSchemaSwe.json")
@@ -358,6 +362,8 @@ impl StructuralValidator {
             Contract::DataChoice,
             Contract::DataArray,
             Contract::Matrix,
+            Contract::Geometry,
+            Contract::GeometryValue,
             Contract::SweRecord,
             Contract::PhysicalSystem,
             Contract::ObservationSwe,
@@ -373,6 +379,7 @@ impl StructuralValidator {
                     | Contract::DataChoice
                     | Contract::DataArray
                     | Contract::Matrix
+                    | Contract::Geometry
             ) {
                 // Nested Time schemas need the same format assertion as their
                 // direct entry points. SweRecord keeps its earlier baseline.

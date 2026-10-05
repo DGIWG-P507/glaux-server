@@ -547,7 +547,7 @@ fn choice_invalid_unselected_alternative_has_bounded_path() {
         ComponentErrorKind::Compile(AggregateError::CoordinateAxis)
     );
     assert_eq!(error.path, [4, 1]);
-    for kind in ["Geometry", "DataStream"] {
+    for kind in ["DataStream", "Unknown"] {
         let input = description(vec![count("valid"), json!({"name":"later","type":kind})]);
         let error = ChoiceContract::compile(validator(), &input).err().unwrap();
         assert_eq!(

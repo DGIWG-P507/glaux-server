@@ -6,6 +6,7 @@
 pub mod aggregate;
 pub mod array;
 pub mod choice;
+pub mod geometry;
 pub mod projection;
 pub mod range;
 pub mod scalar;

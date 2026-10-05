@@ -11,6 +11,7 @@ use serde_json::{Value, value::RawValue};
 use crate::{
     array::{self, ArrayOptions, SourceValidation},
     choice::{CheckedComponentValue, ComponentError, ComponentValue},
+    geometry::{GeometryContract, GeometryError},
     range::{RangeContract, RangeError, RangeOptions},
     scalar::{ScalarContract, ScalarError},
     validation::{self, Contract, StructuralValidator},
@@ -38,12 +39,14 @@ pub enum AggregateError {
     AdaptationSourceChanged,
     Scalar(ScalarError),
     Range(RangeError),
+    Geometry(GeometryError),
 }
 
 enum ChildContract {
     Scalar(Box<ScalarContract>),
     Range(Box<RangeContract>),
     Aggregate(Box<AggregateContract>),
+    Geometry(Box<GeometryContract>),
 }
 
 /// Each child retains its name and original JSON object, in declaration order.
@@ -78,11 +81,19 @@ impl NamedContract {
         }
     }
 
+    pub fn geometry(&self) -> Option<&GeometryContract> {
+        match &self.contract {
+            ChildContract::Geometry(contract) => Some(contract),
+            _ => None,
+        }
+    }
+
     pub fn source(&self) -> &[u8] {
         match &self.contract {
             ChildContract::Scalar(contract) => contract.source(),
             ChildContract::Range(contract) => contract.source(),
             ChildContract::Aggregate(contract) => contract.source(),
+            ChildContract::Geometry(contract) => contract.source(),
         }
     }
 
@@ -96,6 +107,9 @@ impl NamedContract {
             }
             ChildContract::Aggregate(contract) => {
                 Component::Aggregate(Box::new(contract.component().clone()))
+            }
+            ChildContract::Geometry(contract) => {
+                Component::Geometry(Box::new(contract.component().clone()))
             }
         };
         NamedComponent {
@@ -206,6 +220,10 @@ impl AggregateContract {
                     return Err(AggregateError::DuplicateName.into());
                 }
                 let child_contract = match value.get("type").and_then(Value::as_str) {
+                    Some("Geometry") => ChildContract::Geometry(Box::new(
+                        GeometryContract::compile(validator, bytes)
+                            .map_err(AggregateError::Geometry)?,
+                    )),
                     Some("Boolean" | "Text" | "Category" | "Count" | "Quantity" | "Time") => {
                         let scalar = if contract == Contract::Vector {
                             ScalarContract::compile_vector_coordinate(
@@ -383,7 +401,7 @@ fn preflight(source: &Value) -> Result<(), ComponentError> {
         Some("DataRecord" | "Vector" | "DataChoice" | "DataArray" | "Matrix") => kind(source)?,
         Some(
             "Boolean" | "Text" | "Category" | "Count" | "Quantity" | "Time" | "CategoryRange"
-            | "CountRange" | "QuantityRange" | "TimeRange",
+            | "CountRange" | "QuantityRange" | "TimeRange" | "Geometry",
         ) => return Ok(()),
         _ => return Err(AggregateError::UnsupportedComponent.into()),
     };
