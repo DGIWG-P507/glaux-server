@@ -1,8 +1,8 @@
 //! Source-derived association positions and independently counted graph walks.
 //! SWE basicTypes defines fragment-addressed IDs; binary name paths are separate.
 use super::{
-    ComponentGraph, MAX_COMPONENTS, MAX_REFERENCES, MAX_TRAVERSAL_DEPTH,
-    MAX_TRAVERSAL_STEPS, ReferenceError, ReferenceKind, ReferenceTarget,
+    ComponentGraph, MAX_COMPONENTS, MAX_REFERENCES, MAX_TRAVERSAL_DEPTH, MAX_TRAVERSAL_STEPS,
+    ReferenceError, ReferenceKind, ReferenceTarget,
 };
 use crate::{
     array::{ArrayOptions, CountReferenceSchema, SourceValidation},
@@ -56,11 +56,22 @@ fn reference_local_ids_resolve_exact_targets() {
     assert_eq!(graph.source_validation(), SourceValidation::Original);
     let nodes = graph.components();
     assert_eq!(
-        nodes.iter().map(|node| node.id.as_deref()).collect::<Vec<_>>(),
-        [Some("ROOT"), Some("TARGET_NEAR"), Some("BOX"), Some("TARGET")]
+        nodes
+            .iter()
+            .map(|node| node.id.as_deref())
+            .collect::<Vec<_>>(),
+        [
+            Some("ROOT"),
+            Some("TARGET_NEAR"),
+            Some("BOX"),
+            Some("TARGET")
+        ]
     );
     assert_eq!(
-        nodes.iter().map(|node| node.path.as_str()).collect::<Vec<_>>(),
+        nodes
+            .iter()
+            .map(|node| node.path.as_str())
+            .collect::<Vec<_>>(),
         ["", "/fields/0", "/fields/2", "/fields/2/fields/0"]
     );
     assert_eq!(nodes[3].name.as_deref(), Some("target"));
@@ -88,10 +99,16 @@ fn reference_local_ids_resolve_exact_targets() {
         Some(br##"{ "name": "back", "href": "#TARGET_NEAR" }"##.as_slice())
     );
     for (index, node) in nodes.iter().enumerate() {
-        assert_eq!(graph.component_source(index), Some(&LOCAL[node.source.clone()]));
+        assert_eq!(
+            graph.component_source(index),
+            Some(&LOCAL[node.source.clone()])
+        );
     }
     for (index, reference) in refs.iter().enumerate() {
-        assert_eq!(graph.reference_source(index), Some(&LOCAL[reference.source.clone()]));
+        assert_eq!(
+            graph.reference_source(index),
+            Some(&LOCAL[reference.source.clone()])
+        );
     }
     assert_eq!(graph.component_source(nodes.len()), None);
     assert_eq!(graph.reference_source(refs.len()), None);
@@ -107,20 +124,29 @@ fn reference_fragments_decode_once_without_name_paths() {
         ("a b", "#a%20b"),
         ("é", "#%C3%A9"),
     ] {
-        let graph = resolve(&record(vec![count("differentName", id), linked("alias", href)]))
-            .unwrap();
+        let graph = resolve(&record(vec![
+            count("differentName", id),
+            linked("alias", href),
+        ]))
+        .unwrap();
         assert_eq!(graph.references()[0].href, href);
         assert_eq!(graph.references()[0].target, ReferenceTarget::Local(1));
         assert_eq!(graph.components()[1].id.as_deref(), Some(id));
     }
     for href in ["#differentName", "#/fields/0", "#press_qc"] {
         assert_error(
-            &record(vec![count("differentName", "PRESS_QC"), linked("alias", href)]),
+            &record(vec![
+                count("differentName", "PRESS_QC"),
+                linked("alias", href),
+            ]),
             ReferenceError::UnresolvedLocal,
         );
     }
     for href in ["", "#", "#%", "#%ZZ", "#%FF", "not a URI"] {
-        assert!(resolve(&record(vec![linked("invalid", href)])).is_err(), "{href}");
+        assert!(
+            resolve(&record(vec![linked("invalid", href)])).is_err(),
+            "{href}"
+        );
     }
 }
 
@@ -131,7 +157,11 @@ fn reference_nonlocal_metadata_preserved_without_fetch() {
     assert_eq!(graph.components().len(), 1);
     assert_eq!(graph.traversal(), [0]);
     assert_eq!(
-        graph.references().iter().map(|reference| reference.href.as_str()).collect::<Vec<_>>(),
+        graph
+            .references()
+            .iter()
+            .map(|reference| reference.href.as_str())
+            .collect::<Vec<_>>(),
         [
             "https://example.invalid/protected.json#TARGET",
             "file:///forbidden/component.json#TARGET",
@@ -199,10 +229,16 @@ fn reference_permitted_slots_and_count_schema_qualification() {
         json!({"name":"samples","type":"DataArray","elementCount":{"href":"#SIZE"},
             "elementType":{"name":"sample","href":"#SIZE"}}),
     ]);
-    assert_eq!(validator().validate(Contract::DataRecord, &bytes(&input)), Err(Failure::Structure));
+    assert_eq!(
+        validator().validate(Contract::DataRecord, &bytes(&input)),
+        Err(Failure::Structure)
+    );
     assert_error(&input, ReferenceError::Structure);
     let graph = ComponentGraph::resolve(validator(), &bytes(&input), correction()).unwrap();
-    assert_eq!(graph.source_validation(), SourceValidation::CountReferenceCorrection);
+    assert_eq!(
+        graph.source_validation(),
+        SourceValidation::CountReferenceCorrection
+    );
     assert_eq!(graph.components()[3].path, "/fields/1/choiceValue");
     assert_eq!(graph.components()[3].kind, Contract::Category);
     assert_eq!(graph.references()[0].target, ReferenceTarget::Local(1));
@@ -247,7 +283,10 @@ fn reference_target_restrictions_survive_resolution() {
         count("coefficient", "COEFFICIENT"),
         json!({"name":"matrix","type":"Matrix","elementCount":{"value":2},"elementType":{"name":"entry","href":"#COEFFICIENT"}}),
     ]);
-    assert_eq!(resolve(&valid_matrix).unwrap().references()[0].target, ReferenceTarget::Local(1));
+    assert_eq!(
+        resolve(&valid_matrix).unwrap().references()[0].target,
+        ReferenceTarget::Local(1)
+    );
     let mut valued = valid_matrix;
     valued["fields"][0]["value"] = json!(9);
     assert_error(&valued, ReferenceError::InlineElementValue);
@@ -289,23 +328,65 @@ fn reference_nested_array_counts_remain_descriptor_metadata() {
 #[test]
 fn reference_all_component_families_are_valid_targets() {
     let cases = [
-        (Contract::Boolean, json!({"type":"Boolean","definition":"urn:example:b","label":"B"})),
-        (Contract::Text, json!({"type":"Text","definition":"urn:example:t","label":"T"})),
-        (Contract::Category, json!({"type":"Category","definition":"urn:example:c","label":"C"})),
+        (
+            Contract::Boolean,
+            json!({"type":"Boolean","definition":"urn:example:b","label":"B"}),
+        ),
+        (
+            Contract::Text,
+            json!({"type":"Text","definition":"urn:example:t","label":"T"}),
+        ),
+        (
+            Contract::Category,
+            json!({"type":"Category","definition":"urn:example:c","label":"C"}),
+        ),
         (Contract::Count, count("count", "COUNT")),
-        (Contract::Quantity, json!({"type":"Quantity","definition":"urn:example:q","label":"Q","uom":{"code":"m"}})),
-        (Contract::Time, json!({"type":"Time","definition":"urn:example:t","label":"T","uom":{"code":"s"}})),
-        (Contract::CategoryRange, json!({"type":"CategoryRange","definition":"urn:example:cr","label":"CR"})),
-        (Contract::CountRange, json!({"type":"CountRange","definition":"urn:example:cr","label":"CR"})),
-        (Contract::QuantityRange, json!({"type":"QuantityRange","definition":"urn:example:qr","label":"QR","uom":{"code":"m"}})),
-        (Contract::TimeRange, json!({"type":"TimeRange","definition":"urn:example:tr","label":"TR","uom":{"code":"s"}})),
-        (Contract::Geometry, json!({"type":"Geometry","definition":"urn:example:g","label":"G","srs":"urn:example:frame"})),
+        (
+            Contract::Quantity,
+            json!({"type":"Quantity","definition":"urn:example:q","label":"Q","uom":{"code":"m"}}),
+        ),
+        (
+            Contract::Time,
+            json!({"type":"Time","definition":"urn:example:t","label":"T","uom":{"code":"s"}}),
+        ),
+        (
+            Contract::CategoryRange,
+            json!({"type":"CategoryRange","definition":"urn:example:cr","label":"CR"}),
+        ),
+        (
+            Contract::CountRange,
+            json!({"type":"CountRange","definition":"urn:example:cr","label":"CR"}),
+        ),
+        (
+            Contract::QuantityRange,
+            json!({"type":"QuantityRange","definition":"urn:example:qr","label":"QR","uom":{"code":"m"}}),
+        ),
+        (
+            Contract::TimeRange,
+            json!({"type":"TimeRange","definition":"urn:example:tr","label":"TR","uom":{"code":"s"}}),
+        ),
+        (
+            Contract::Geometry,
+            json!({"type":"Geometry","definition":"urn:example:g","label":"G","srs":"urn:example:frame"}),
+        ),
         (Contract::DataRecord, record(vec![count("field", "FIELD")])),
-        (Contract::Vector, json!({"type":"Vector","definition":"urn:example:v","label":"V","referenceFrame":"urn:example:frame",
-            "coordinates":[{"type":"Count","name":"x","definition":"urn:example:x","label":"X","axisID":"X"}]})),
-        (Contract::DataChoice, json!({"type":"DataChoice","items":[count("a", "A"),count("b", "B")]})),
-        (Contract::DataArray, json!({"type":"DataArray","elementCount":{"value":2},"elementType":count("sample", "SAMPLE")})),
-        (Contract::Matrix, json!({"type":"Matrix","elementCount":{"value":2},"elementType":count("sample", "SAMPLE")})),
+        (
+            Contract::Vector,
+            json!({"type":"Vector","definition":"urn:example:v","label":"V","referenceFrame":"urn:example:frame",
+            "coordinates":[{"type":"Count","name":"x","definition":"urn:example:x","label":"X","axisID":"X"}]}),
+        ),
+        (
+            Contract::DataChoice,
+            json!({"type":"DataChoice","items":[count("a", "A"),count("b", "B")]}),
+        ),
+        (
+            Contract::DataArray,
+            json!({"type":"DataArray","elementCount":{"value":2},"elementType":count("sample", "SAMPLE")}),
+        ),
+        (
+            Contract::Matrix,
+            json!({"type":"Matrix","elementCount":{"value":2},"elementType":count("sample", "SAMPLE")}),
+        ),
     ];
     for (kind, mut target) in cases {
         target["name"] = json!("target");
@@ -334,8 +415,10 @@ fn reference_structure_and_metadata_are_not_bypassed() {
         assert_eq!(graph.source(), bytes(&input));
     }
     for kind_extension in ["Count", "Vendor"] {
-        let input = record(vec![json!({"name":"association","href":"https://example.invalid/target",
-            "type":kind_extension,"value":7,"id":"METADATA_ONLY"})]);
+        let input = record(vec![
+            json!({"name":"association","href":"https://example.invalid/target",
+            "type":kind_extension,"value":7,"id":"METADATA_ONLY"}),
+        ]);
         let graph = resolve(&input).unwrap();
         assert_eq!(graph.components().len(), 1);
         assert_eq!(graph.references().len(), 1);
@@ -369,8 +452,16 @@ fn reference_component_limit_boundaries() {
     // Three aggregate nodes, plus N leaves. Splitting keeps fields below 512.
     for total in [511, 512, 513] {
         let leaves = total - 3;
-        let mut left = record((0..leaves / 2).map(|i| count(&format!("a{i}"), &format!("A{i}"))).collect());
-        let mut right = record((0..leaves - leaves / 2).map(|i| count(&format!("b{i}"), &format!("B{i}"))).collect());
+        let mut left = record(
+            (0..leaves / 2)
+                .map(|i| count(&format!("a{i}"), &format!("A{i}")))
+                .collect(),
+        );
+        let mut right = record(
+            (0..leaves - leaves / 2)
+                .map(|i| count(&format!("b{i}"), &format!("B{i}")))
+                .collect(),
+        );
         left["name"] = json!("left");
         right["name"] = json!("right");
         let input = record(vec![left, right]);
@@ -389,8 +480,16 @@ fn reference_component_limit_boundaries() {
 fn reference_reference_limit_boundaries() {
     assert_eq!(MAX_REFERENCES, 512);
     for total in [511, 512, 513] {
-        let mut left = record((0..total / 2).map(|i| linked(&format!("a{i}"), "https://example.invalid/a")).collect());
-        let mut right = record((0..total - total / 2).map(|i| linked(&format!("b{i}"), "file:///forbidden/b")).collect());
+        let mut left = record(
+            (0..total / 2)
+                .map(|i| linked(&format!("a{i}"), "https://example.invalid/a"))
+                .collect(),
+        );
+        let mut right = record(
+            (0..total - total / 2)
+                .map(|i| linked(&format!("b{i}"), "file:///forbidden/b"))
+                .collect(),
+        );
         left["name"] = json!("left");
         right["name"] = json!("right");
         let input = record(vec![left, right]);
@@ -408,8 +507,10 @@ fn reference_reference_limit_boundaries() {
 fn chain(depth: usize) -> Value {
     let mut fields = Vec::new();
     for index in 0..depth - 2 {
-        fields.push(json!({"type":"DataRecord","name":format!("n{index}"),"id":format!("N{index}"),
-            "fields":[{"name":"next","href":format!("#N{}", index + 1)}]}));
+        fields.push(
+            json!({"type":"DataRecord","name":format!("n{index}"),"id":format!("N{index}"),
+            "fields":[{"name":"next","href":format!("#N{}", index + 1)}]}),
+        );
     }
     fields.push(count("leaf", &format!("N{}", depth - 2)));
     record(fields)
@@ -431,7 +532,11 @@ fn reference_depth_limit_boundaries() {
 }
 
 fn shared_subtree(steps: usize) -> Value {
-    let mut subtree = record((0..8).map(|i| count(&format!("leaf{i}"), &format!("LEAF{i}"))).collect());
+    let mut subtree = record(
+        (0..8)
+            .map(|i| count(&format!("leaf{i}"), &format!("LEAF{i}")))
+            .collect(),
+    );
     subtree["id"] = json!("SUBTREE");
     subtree["name"] = json!("template");
     let mut fields = vec![subtree];

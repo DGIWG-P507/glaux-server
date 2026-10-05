@@ -351,7 +351,9 @@ impl Index<'_> {
             // The enclosing oneOf already selected exactly one schema branch.
             // An inline component can have an unknown href extension that does
             // not itself satisfy AssociationAttributeGroup.
-            return Ok(EdgeTarget::Component(self.component(value, raw, path, kind)?));
+            return Ok(EdgeTarget::Component(
+                self.component(value, raw, path, kind)?,
+            ));
         }
         if value.get("href").is_some() {
             return self.reference(owner, value, raw, path, ReferenceKind::Component);
