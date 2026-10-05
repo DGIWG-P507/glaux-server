@@ -195,7 +195,7 @@ compiler error cannot stand in for the intended assertion failure. Mutations
 never modify the checked-out source or any user database.
 
 After the passing validation baseline, [test-validation-failures.py](../scripts/test-validation-failures.py)
-proves seventeen faults fail at the intended assertions: wrong Binary entry
+proves eighteen faults fail at the intended assertions: wrong Binary entry
 point, skipped Quantity structural checking, bypassed raw-size limit, and ignored
 unallowlisted references; plus [scalar](scalar-components.md) false/empty-value
 collapse and invalid Category acceptance; plus [numeric-component](numeric-components.md)
@@ -206,7 +206,8 @@ fraction truncation and inventing a UTC instant for a numeric coordinate; plus
 [choice](choice-components.md) accepting a value under a different alternative
 from the one explicitly selected; and [array](array-components.md) loss of an
 inner dimension from a nested descriptor; and [Geometry](geometry-components.md)
-loss of a supplied height ordinate.
+loss of a supplied height ordinate; and [component references](component-references.md)
+selecting a similarly named but wrong local component.
 Every control must compile and fail the exact test with
 the expected left/right values; setup failure or timeout is not detection.
 Disposable source copies share only their task-local compilation cache.

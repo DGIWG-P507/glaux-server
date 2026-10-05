@@ -66,13 +66,18 @@ Text/Binary framing, command behavior or a conformance declaration.
 [Array and Matrix descriptions](docs/array-components.md) preserve element
 types and fixed or variable dimensions without allocating their declared
 contents. Nested dimension order and Matrix numeric/frame meaning are checked;
-reference metadata remains distinct from a resolved count. Payload codecs and
-full component-graph resolution are later work.
+reference metadata remains distinct from a runtime count. Payload codecs remain
+later work.
 
 [SWE Geometry descriptions](docs/geometry-components.md) keep geometry kind,
 exact coordinates and height together with the declared reference system.
 They remain distinct from CSAPI features; the compiler checks supported shapes
 without transforming coordinates or treating an unresolved CRS as resolved.
+
+[Component references](docs/component-references.md) resolve permitted local
+links to exact component IDs, preserve original descriptions and reject cycles
+or excessive traversal. Nonlocal links remain metadata and are never fetched.
+This is the reference stage of the shared model, not a runtime payload decoder.
 
 [Typed resource identities](docs/resource-identities.md) now separate UUIDv7 local
 locators, URI-form published UIDs and authority-qualified source identifiers.

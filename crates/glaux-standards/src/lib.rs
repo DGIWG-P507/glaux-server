@@ -9,6 +9,7 @@ pub mod choice;
 pub mod geometry;
 pub mod projection;
 pub mod range;
+pub mod references;
 pub mod scalar;
 mod schema_guard;
 pub mod units;

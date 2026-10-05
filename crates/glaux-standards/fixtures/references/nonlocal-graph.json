@@ -1,0 +1,10 @@
+{
+  "type": "DataRecord",
+  "fields": [
+    { "name": "network", "href": "https://example.invalid/protected.json#TARGET", "role": "urn:example:remote", "arcrole": "urn:example:association", "title": " Network metadata " },
+    { "name": "file", "href": "file:///forbidden/component.json#TARGET", "title": " File metadata " },
+    { "name": "data", "href": "data:application/json,%7B%22id%22%3A%22TARGET%22%7D" },
+    { "name": "relative", "href": "../unavailable/component.json#TARGET" },
+    { "name": "urn", "href": "urn:example:unavailable:component" }
+  ]
+}
