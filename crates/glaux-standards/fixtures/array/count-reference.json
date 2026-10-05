@@ -1,0 +1,15 @@
+{
+  "type": "DataArray",
+  "elementCount": {
+    "href": "https://example.invalid/description#sampleCount",
+    "role": "urn:example:count",
+    "arcrole": "urn:example:has-count",
+    "title": " Unresolved count "
+  },
+  "elementType": {
+    "name": "sample",
+    "type": "Text",
+    "definition": "urn:example:sample",
+    "label": "Sample"
+  }
+}

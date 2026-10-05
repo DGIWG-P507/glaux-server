@@ -1,6 +1,15 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "array::tests::array_fixed_dimensions_preserve_exact_order",
+    "array::tests::array_variable_count_and_original_requiredness",
+    "array::tests::array_count_reference_correction_preserves_original_verdict",
+    "array::tests::array_counts_reject_inconsistent_and_invalid_values",
+    "array::tests::array_matrix_members_frames_and_inheritance",
+    "array::tests::array_element_descriptors_reject_inline_payloads",
+    "array::tests::array_nested_record_choice_and_source_retention",
+    "array::tests::array_descriptor_limits_reject_excessive_shape",
+    "array::tests::array_generated_dimension_counts_and_lexemes",
     "choice::tests::choice_declared_order_and_source_are_preserved",
     "choice::tests::choice_cardinality_names_and_selector_metadata",
     "choice::tests::choice_selection_rejects_zero_multiple_and_unknown",

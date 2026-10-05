@@ -25,6 +25,7 @@ TIME_SCALAR = Path("crates/glaux-standards/src/scalar/time.rs")
 RANGE = Path("crates/glaux-standards/src/range.rs")
 AGGREGATE = Path("crates/glaux-standards/src/aggregate.rs")
 CHOICE_VALUE = Path("crates/glaux-standards/src/choice/value.rs")
+ARRAY = Path("crates/glaux-standards/src/array.rs")
 TIMEOUT_SECONDS = 180
 
 
@@ -152,7 +153,15 @@ def accept_another_choice_arm(root):
             }).map_err(|error| error.at(index))?;""")
 
 
+def drop_inner_array_dimensions(root):
+    replace(root / ARRAY, "dimensions.push(element_count);",
+            "if dimensions.is_empty() { dimensions.push(element_count); }")
+
+
 CASES = [
+    ("array-inner-dimension-dropped", "array::tests::array_fixed_dimensions_preserve_exact_order",
+     drop_inner_array_dimensions, ['left: [Some("9007199254740993")]',
+                                  'right: [Some("9007199254740993"), Some("7")]']),
     ("choice-wrong-arm-fallback", "choice::tests::choice_dispatches_exact_selected_arm",
      accept_another_choice_arm, ["left: None", "right: Some(Scalar(ConstraintViolation))"]),
     ("record-fields-sorted", "aggregate::tests::aggregate_record_preserves_declared_field_order",

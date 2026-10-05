@@ -4,6 +4,7 @@
 //! models, authorization, HTTP handling, database access and broker behavior.
 
 pub mod aggregate;
+pub mod array;
 pub mod identity;
 pub mod numeric;
 pub mod range;

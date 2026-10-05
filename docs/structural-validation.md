@@ -97,6 +97,7 @@ and explicit aliases.
 | `DataRecord` | SWE `DataRecord.json`, with format assertion for typed aggregate compilation |
 | `Vector` | SWE `Vector.json`, with format assertion for typed aggregate compilation |
 | `DataChoice` | SWE `DataChoice.json`, with format assertion for typed choice compilation |
+| `DataArray`, `Matrix` | Original SWE array/matrix schemas, with format assertion; qualified count-reference correction is a separate opt-in compiler path |
 | `PhysicalSystem` | publication `sensorml/schemas/json/PhysicalSystem.json` |
 | `ObservationSwe` | publication `api/part2/openapi/schemas/json/observationSchemaSwe.json` |
 | `CommandSwe` | publication `api/part2/openapi/schemas/json/commandSchemaSwe.json` |
@@ -110,7 +111,7 @@ also requires the descriptor's `type` to match the caller's fixed `Encoding`
 choice. That helper does not replace validation of the complete applicable
 observation/command wrapper. XML is not an entry point.
 
-Time, TimeRange, DataRecord, Vector and DataChoice entry points enable date-time format
+Time, TimeRange, DataRecord, Vector, DataChoice, DataArray and Matrix entry points enable date-time format
 assertion to disambiguate `DateTimeNumberOrSpecial`, including nested values.
 The earlier `SweRecord` source-diagnostic entry retains its format-annotation
 settings; [typed aggregate compilation](aggregate-components.md) uses

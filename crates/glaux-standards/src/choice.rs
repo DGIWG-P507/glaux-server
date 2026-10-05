@@ -2,6 +2,7 @@
 use glaux_domain::aggregate::AggregateComponent;
 
 use crate::{
+    array::{ArrayOptions, SourceValidation},
     aggregate::{AggregateContract, AggregateError, NamedContract},
     range::{CheckedRangeValue, RangeError},
     scalar::{CheckedScalarValue, ScalarContract, ScalarError},
@@ -57,6 +58,7 @@ pub enum ComponentErrorKind {
     Scalar(ScalarError),
     Range(RangeError),
     ValueType,
+    UnsupportedValue,
     SelectionCardinality,
     UnknownSelection,
     UnknownMember,
@@ -111,7 +113,15 @@ pub struct ChoiceContract {
 
 impl ChoiceContract {
     pub fn compile(validator: &StructuralValidator, input: &[u8]) -> Result<Self, ComponentError> {
-        let aggregate = AggregateContract::compile_detailed(validator, input)?;
+        Self::compile_with_options(validator, input, ArrayOptions::default())
+    }
+
+    pub fn compile_with_options(
+        validator: &StructuralValidator,
+        input: &[u8],
+        options: ArrayOptions,
+    ) -> Result<Self, ComponentError> {
+        let aggregate = AggregateContract::compile_detailed_with_options(validator, input, options)?;
         if !matches!(aggregate.component(), AggregateComponent::Choice { .. }) {
             return Err(AggregateError::UnsupportedComponent.into());
         }
@@ -132,6 +142,10 @@ impl ChoiceContract {
 
     pub fn choice_value(&self) -> Option<&ScalarContract> {
         self.aggregate.choice_value()
+    }
+
+    pub fn source_validation(&self) -> SourceValidation {
+        self.aggregate.source_validation()
     }
 
     pub fn check_value(

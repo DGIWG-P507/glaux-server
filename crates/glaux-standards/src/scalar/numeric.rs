@@ -78,6 +78,27 @@ fn count_value(value: NumericValue) -> Result<CountValue, ScalarError> {
     CountValue::try_from(value).map_err(ScalarError::Numeric)
 }
 
+/// ElementCount has optional identification metadata, unlike a full Count.
+/// Reuse exact numeric/constraint rules without inventing required metadata.
+pub(crate) fn element_count(
+    source: &Value,
+    raw_value: Option<&str>,
+) -> Result<(Option<NumericConstraint>, Option<CountValue>), ScalarError> {
+    let constraint = constraint(source, true)?;
+    let value = source
+        .get("value")
+        .map(|value| -> Result<CountValue, ScalarError> {
+            let numeric = number(value, raw_value)?;
+            let count = count_value(numeric.clone())?;
+            if let Some(constraint) = &constraint {
+                check_constraint(constraint, &numeric)?;
+            }
+            Ok(count)
+        })
+        .transpose()?;
+    Ok((constraint, value))
+}
+
 fn constraint(source: &Value, count: bool) -> Result<Option<NumericConstraint>, ScalarError> {
     let Some(source) = source.get("constraint") else {
         return Ok(None);
