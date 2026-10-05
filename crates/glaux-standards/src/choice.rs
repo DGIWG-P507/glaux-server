@@ -4,6 +4,7 @@ use glaux_domain::aggregate::AggregateComponent;
 use crate::{
     aggregate::{AggregateContract, AggregateError, NamedContract},
     array::{ArrayOptions, SourceValidation},
+    geometry::{CheckedGeometryValue, GeometryError},
     range::{CheckedRangeValue, RangeError},
     scalar::{CheckedScalarValue, ScalarContract, ScalarError},
     validation::{self, StructuralValidator},
@@ -16,6 +17,7 @@ mod value;
 pub enum ComponentValue<'a> {
     ScalarJson(&'a [u8]),
     RangeJson(&'a [u8]),
+    GeometryJson(&'a [u8]),
     Record(&'a [NamedValue<'a>]),
     Vector(&'a [NamedValue<'a>]),
     Choice(&'a [NamedValue<'a>]),
@@ -30,6 +32,7 @@ pub struct NamedValue<'a> {
 pub enum CheckedComponentValue {
     Scalar(Box<CheckedScalarValue>),
     Range(Box<CheckedRangeValue>),
+    Geometry(Box<CheckedGeometryValue>),
     Record(Vec<CheckedNamedValue>),
     Vector {
         reference_frame: String,
@@ -57,6 +60,7 @@ pub enum ComponentErrorKind {
     Compile(AggregateError),
     Scalar(ScalarError),
     Range(RangeError),
+    Geometry(GeometryError),
     ValueType,
     UnsupportedValue,
     SelectionCardinality,

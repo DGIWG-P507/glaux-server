@@ -1,0 +1,11 @@
+{
+  "type": "Geometry",
+  "definition": "urn:example:geometry",
+  "label": "Unresolved geometry descriptor",
+  "srs": "urn:example:local-spatial-frame",
+  "nilValues": [
+    { "reason": "urn:example:nil:missing", "value": "MISSING" },
+    { "reason": "urn:example:nil:empty", "value": "" }
+  ],
+  "extension": { "type": "Feature", "geometry": null, "value": "not component content" }
+}

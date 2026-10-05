@@ -30,7 +30,9 @@ fn budget(input: &ComponentValue<'_>) -> Result<(), ComponentError> {
             return Err(limit());
         }
         match value {
-            ComponentValue::ScalarJson(raw) | ComponentValue::RangeJson(raw) => {
+            ComponentValue::ScalarJson(raw)
+            | ComponentValue::RangeJson(raw)
+            | ComponentValue::GeometryJson(raw) => {
                 bytes = bytes.checked_add(raw.len()).ok_or_else(limit)?;
             }
             ComponentValue::Record(values)
@@ -130,6 +132,15 @@ fn check_child(
     if let Some(contract) = contract.aggregate() {
         return aggregate(contract, input);
     }
+    if let Some(geometry) = contract.geometry() {
+        let ComponentValue::GeometryJson(raw) = input else {
+            return Err(ComponentError::new(ComponentErrorKind::ValueType));
+        };
+        return geometry
+            .check_value(raw)
+            .map(|value| CheckedComponentValue::Geometry(Box::new(value)))
+            .map_err(|error| ComponentError::new(ComponentErrorKind::Geometry(error)));
+    }
     Err(ComponentError::new(ComponentErrorKind::ValueType))
 }
 
@@ -187,6 +198,9 @@ fn optional(contract: &NamedContract) -> bool {
     }
     if let Some(range) = contract.range() {
         return scalar_optional(&range.component().endpoint);
+    }
+    if let Some(geometry) = contract.geometry() {
+        return geometry.component().metadata.optional == Some(true);
     }
     contract.aggregate().is_some_and(|contract| {
         let metadata = match contract.component() {

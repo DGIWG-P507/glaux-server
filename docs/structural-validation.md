@@ -98,6 +98,8 @@ and explicit aliases.
 | `Vector` | SWE `Vector.json`, with format assertion for typed aggregate compilation |
 | `DataChoice` | SWE `DataChoice.json`, with format assertion for typed choice compilation |
 | `DataArray`, `Matrix` | Original SWE array/matrix schemas, with format assertion; qualified count-reference correction is a separate opt-in compiler path |
+| `Geometry` | Original SWE Geometry schema, with format assertion; coordinate shape and reference meaning are separate typed checks |
+| `GeometryValue` | Packaged `https://geojson.org/schema/Geometry.json`, the six-kind value schema used by SWE Geometry; dimensional and ring checks remain separate |
 | `PhysicalSystem` | publication `sensorml/schemas/json/PhysicalSystem.json` |
 | `ObservationSwe` | publication `api/part2/openapi/schemas/json/observationSchemaSwe.json` |
 | `CommandSwe` | publication `api/part2/openapi/schemas/json/commandSchemaSwe.json` |
@@ -113,6 +115,8 @@ observation/command wrapper. XML is not an entry point.
 
 Time, TimeRange, DataRecord, Vector, DataChoice, DataArray and Matrix entry points enable date-time format
 assertion to disambiguate `DateTimeNumberOrSpecial`, including nested values.
+The Geometry entry also asserts URI formats; a URI syntax pass is not proof
+that the declared reference system has been resolved.
 The earlier `SweRecord` source-diagnostic entry retains its format-annotation
 settings; [typed aggregate compilation](aggregate-components.md) uses
 `DataRecord`. Semantic calendar/frame checks remain separate. The
