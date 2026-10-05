@@ -85,7 +85,7 @@ fn reference_local_ids_resolve_exact_targets() {
     );
     assert_eq!(
         graph.reference_source(1),
-        Some(br#"{ "name": "back", "href": "#TARGET_NEAR" }"#.as_slice())
+        Some(br##"{ "name": "back", "href": "#TARGET_NEAR" }"##.as_slice())
     );
     for (index, node) in nodes.iter().enumerate() {
         assert_eq!(graph.component_source(index), Some(&LOCAL[node.source.clone()]));
@@ -356,7 +356,7 @@ fn reference_structure_and_metadata_are_not_bypassed() {
     ] {
         assert!(resolve(&record(vec![field])).is_err());
     }
-    let input = br#"{"type":"DataRecord","fields":[{"name":"a","href":"#A","href":"#B"}]}"#;
+    let input = br##"{"type":"DataRecord","fields":[{"name":"a","href":"#A","href":"#B"}]}"##;
     assert_eq!(
         ComponentGraph::resolve(validator(), input, ArrayOptions::default()).err(),
         Some(ReferenceError::Syntax(Failure::DuplicateKey))
