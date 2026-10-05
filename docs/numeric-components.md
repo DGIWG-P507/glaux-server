@@ -73,8 +73,9 @@ apply. Special-scale unit algebra has a separate unsupported result, documented
 with all UCUM parser limits. The shared JSON parser enforces numeric token and
 exponent bounds before any schema or projection evaluation, including numbers
 in extensions; the generic engine's larger limits do not replace local budgets.
-Nil/quality semantics remain explicitly unsupported
-here and belong to later tasks. No external resource is fetched.
+[Task #30](range-components.md) adds declared nil recognition before ordinary
+constraints. Quality remains explicitly unsupported until its owning task.
+No external resource is fetched.
 
 ## Verification
 

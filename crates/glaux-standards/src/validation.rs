@@ -31,6 +31,10 @@ pub enum Contract {
     Count,
     Quantity,
     Time,
+    CategoryRange,
+    CountRange,
+    QuantityRange,
+    TimeRange,
     SweRecord,
     PhysicalSystem,
     ObservationSwe,
@@ -49,6 +53,10 @@ impl Contract {
             Self::Count => format!("{SWE}Count.json"),
             Self::Quantity => format!("{SWE}Quantity.json"),
             Self::Time => format!("{SWE}Time.json"),
+            Self::CategoryRange => format!("{SWE}CategoryRange.json"),
+            Self::CountRange => format!("{SWE}CountRange.json"),
+            Self::QuantityRange => format!("{SWE}QuantityRange.json"),
+            Self::TimeRange => format!("{SWE}TimeRange.json"),
             Self::SweRecord => format!("{SWE}DataRecord.json"),
             Self::PhysicalSystem => format!("{PIN}sensorml/schemas/json/PhysicalSystem.json"),
             Self::ObservationSwe => {
@@ -285,10 +293,12 @@ fn compile_with_denial(
         .with_registry(&registry)
         .with_retriever(deny)
         .with_draft(jsonschema::Draft::Draft202012)
-        // Time's DateTimeNumberOrSpecial oneOf needs date-time assertion to
+        // Time/TimeRange's DateTimeNumberOrSpecial oneOf needs date-time assertion to
         // distinguish calendar strings from named numeric specials. Originals
         // remain unchanged; semantic frame/calendar checks still run separately.
-        .should_validate_formats(uri == format!("{SWE}Time.json"))
+        .should_validate_formats(
+            uri == format!("{SWE}Time.json") || uri == format!("{SWE}TimeRange.json"),
+        )
         .with_pattern_options(
             jsonschema::PatternOptions::fancy_regex()
                 .backtrack_limit(20_000)
@@ -311,6 +321,10 @@ impl StructuralValidator {
             Contract::Count,
             Contract::Quantity,
             Contract::Time,
+            Contract::CategoryRange,
+            Contract::CountRange,
+            Contract::QuantityRange,
+            Contract::TimeRange,
             Contract::SweRecord,
             Contract::PhysicalSystem,
             Contract::ObservationSwe,

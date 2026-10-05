@@ -50,8 +50,9 @@ a code space or enumeration; 23 and 25 explain the unresolved external checks.
 The accepted IDR-022 scalar/constraint analysis is supporting research, not a
 replacement for these sources. The vendored originals are unchanged.
 
-Known nil/quality semantics are owned by later tasks and return
-`UnsupportedFeature`; they are not silently discarded. Boolean constraints also
+Task 2.1.4 adds [declared nil semantics](range-components.md) and the checked
+`nil_reason` distinction for supported scalars. Quality remains owned by a later
+task and returns `UnsupportedFeature`; it is not silently discarded. Boolean constraints also
 return that result: this task invents no Boolean constraint form and does not
 claim that the inherited open schema universally prohibits extensions.
 
@@ -85,7 +86,8 @@ to behavioral test-first evidence: false collapsed to absent, empty text collaps
 to absent, and bypassed Category membership. Every selected assertion must pass
 in an unmodified copy first, then fail at its exact expected assertion in a
 compiled disposable copy. Build/setup failure is not detection. Four existing
-validation faults remain. Task 2.1.2 adds three numeric controls, for ten total.
+validation faults remain. Later numeric, Time and range controls extend the
+same runner; [CI documentation](ci.md) records the current inventory.
 Run the full required CI;
 the issue and PR record actual hosted outcomes, not this command list.
 

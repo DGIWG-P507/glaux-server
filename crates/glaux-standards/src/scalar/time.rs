@@ -1,5 +1,5 @@
 //! SWE Time coordinates with explicit reference context, not a conversion engine.
-use std::{cmp::Ordering, collections::BTreeMap};
+use std::cmp::Ordering;
 
 use glaux_domain::{
     numeric::{CountValue, NumericValue},
@@ -9,9 +9,12 @@ use glaux_domain::{
     },
     temporal::ExactInstant,
 };
-use serde_json::{Value, value::RawValue};
+use serde_json::Value;
 
-use super::{CheckedScalarValue, CodeSpaceCheck, ScalarContract, ScalarError, UnitReferenceCheck};
+use super::{
+    CheckedScalarValue, CodeSpaceCheck, ScalarContract, ScalarError, UnitReferenceCheck,
+    ValueContext,
+};
 
 pub(super) const GREGORIAN: &str = "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian";
 const UTC: &str = "http://www.opengis.net/def/trs/BIPM/0/UTC";
@@ -43,6 +46,7 @@ pub(super) fn compile(
     metadata: ComponentMetadata,
     source: &Value,
     input: &[u8],
+    context: ValueContext,
 ) -> Result<ScalarContract, ScalarError> {
     let frame = metadata
         .reference_frame
@@ -75,26 +79,19 @@ pub(super) fn compile(
         local_frame,
         uom,
     };
-    let constraint = constraint(source, &reference)?;
-    let raw: BTreeMap<String, Box<RawValue>> =
-        serde_json::from_slice(input).map_err(|_| ScalarError::Structure)?;
-    let value = source
-        .get("value")
-        .map(|value| position(value, raw.get("value").map(|v| v.get()), &reference, false))
-        .transpose()?;
+    let constraint = constraint(source, &reference, context)?;
     let component = TimeComponent {
         metadata,
         reference,
         constraint,
-        value,
+        value: None,
     };
-    if let Some(value) = source.get("value") {
-        check_value(&component, value, raw.get("value").map(|v| v.get()))?;
-    }
     Ok(ScalarContract {
         component: ScalarComponent::Time(Box::new(component)),
         source: input.to_vec(),
         tokens: None,
+        nil_declarations: Vec::new(),
+        inline: None,
     })
 }
 
@@ -124,6 +121,9 @@ fn compare(left: &TimePosition, right: &TimePosition) -> Result<Option<Ordering>
     use TimePosition::{Calendar, Numeric};
     match (left, right) {
         (Numeric(a), Numeric(b)) => Ok(a.partial_cmp(b)),
+        (Numeric(NumericValue::NaN), Calendar(_)) | (Calendar(_), Numeric(NumericValue::NaN)) => {
+            Ok(None)
+        }
         (Calendar(CalendarTime::Utc(a)), Calendar(CalendarTime::Utc(b))) => Ok(Some(a.cmp(b))),
         (Calendar(CalendarTime::Unresolved(a)), Calendar(CalendarTime::Unresolved(b)))
             if a == b =>
@@ -141,6 +141,7 @@ fn compare(left: &TimePosition, right: &TimePosition) -> Result<Option<Ordering>
 fn constraint(
     source: &Value,
     reference: &TimeReference,
+    context: ValueContext,
 ) -> Result<Option<TimeConstraint>, ScalarError> {
     let Some(source) = source.get("constraint") else {
         return Ok(None);
@@ -148,7 +149,11 @@ fn constraint(
     let mut values = Vec::new();
     if let Some(items) = source.get("values").and_then(Value::as_array) {
         for item in items {
-            values.push(position(item, None, reference, true)?);
+            values.push(if context == ValueContext::RangeEndpoint {
+                data_position(item, None, reference, context)?
+            } else {
+                position(item, None, reference, true)?
+            });
         }
     }
     let mut intervals = Vec::new();
@@ -198,9 +203,11 @@ pub(super) fn check_value(
     component: &TimeComponent,
     value: &Value,
     raw: Option<&str>,
+    context: ValueContext,
+    enforce_constraints: bool,
 ) -> Result<CheckedScalarValue, ScalarError> {
-    let position = position(value, raw, &component.reference, false)?;
-    if let Some(constraint) = &component.constraint {
+    let position = data_position(value, raw, &component.reference, context)?;
+    if enforce_constraints && let Some(constraint) = &component.constraint {
         let mut matched = false;
         for allowed in &constraint.values {
             if matches!(
@@ -254,5 +261,29 @@ pub(super) fn check_value(
         })),
         code_space: CodeSpaceCheck::NotApplicable,
         unit_reference,
+        nil_reason: None,
     })
+}
+
+fn data_position(
+    value: &Value,
+    raw: Option<&str>,
+    reference: &TimeReference,
+    context: ValueContext,
+) -> Result<TimePosition, ScalarError> {
+    if calendar_encoding(reference) && context != ValueContext::Scalar {
+        if let Some(text) = value.as_str()
+            && let Ok(special) = NumericValue::from_swe_special(text)
+        {
+            // Table 4 admits these as TimeRange endpoints. For scalar nils,
+            // this is the explicitly documented reserved-sentinel interpretation;
+            // unmatched specials still pass through the ordinary scalar parser.
+            return Ok(TimePosition::Numeric(special));
+        }
+        if context == ValueContext::NilDeclaration && value.is_number() {
+            // A finite number is not an established Gregorian calendar value.
+            return Err(ScalarError::UnsupportedTimeMeaning);
+        }
+    }
+    position(value, raw, reference, false)
 }

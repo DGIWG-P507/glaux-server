@@ -88,6 +88,11 @@ and explicit aliases.
 | `Category` | SWE `Category.json` |
 | `Count` | SWE `Count.json` |
 | `Quantity` | SWE `Quantity.json` |
+| `Time` | SWE `Time.json` |
+| `CategoryRange` | SWE `CategoryRange.json` |
+| `CountRange` | SWE `CountRange.json` |
+| `QuantityRange` | SWE `QuantityRange.json` |
+| `TimeRange` | SWE `TimeRange.json` |
 | `SweRecord` | SWE `DataRecord.json` |
 | `PhysicalSystem` | publication `sensorml/schemas/json/PhysicalSystem.json` |
 | `ObservationSwe` | publication `api/part2/openapi/schemas/json/observationSchemaSwe.json` |
@@ -101,6 +106,11 @@ the originals and their reference bases. `validate_encoding(format, bytes)`
 also requires the descriptor's `type` to match the caller's fixed `Encoding`
 choice. That helper does not replace validation of the complete applicable
 observation/command wrapper. XML is not an entry point.
+
+Time and TimeRange entry points enable date-time format assertion to disambiguate
+`DateTimeNumberOrSpecial`; semantic calendar/frame checks remain separate. The
+[CountRange nil correction](range-components.md) is an explicitly selected local
+catalog in the range compiler; this original-contract API never applies it.
 
 The original aggregate `encodings.json` root excludes BinaryEncoding although
 its named definition and applicable wrapper permit it. The fixture test calls
