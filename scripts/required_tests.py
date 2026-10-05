@@ -1,6 +1,21 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "references::tests::reference_local_ids_resolve_exact_targets",
+    "references::tests::reference_fragments_decode_once_without_name_paths",
+    "references::tests::reference_nonlocal_metadata_preserved_without_fetch",
+    "references::tests::reference_duplicate_ids_and_unresolved_targets_fail",
+    "references::tests::reference_cycles_fail",
+    "references::tests::reference_permitted_slots_and_count_schema_qualification",
+    "references::tests::reference_target_restrictions_survive_resolution",
+    "references::tests::reference_structure_and_metadata_are_not_bypassed",
+    "references::tests::reference_component_limit_boundaries",
+    "references::tests::reference_reference_limit_boundaries",
+    "references::tests::reference_depth_limit_boundaries",
+    "references::tests::reference_traversal_limit_boundaries",
+    "references::tests::reference_generated_graphs_preserve_targets",
+    "references::tests::reference_nested_array_counts_remain_descriptor_metadata",
+    "references::tests::reference_all_component_families_are_valid_targets",
     "geometry::tests::geometry_height_and_exact_source_are_preserved",
     "geometry::tests::geometry_all_six_shapes_keep_coordinate_order",
     "geometry::tests::geometry_srs_dimensions_and_unknown_references",

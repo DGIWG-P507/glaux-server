@@ -27,8 +27,10 @@ machine-sized allocation. Nested arrays retain each dimension's own meaning.
 
 A reference count preserves its `href` and supplied association metadata, with
 unresolved status explicit. Locally checkable invalid forms are rejected. The
-full graph/occurrence resolver belongs to #35; compiling a reference does not
-claim to have found its runtime count or established stream decoding order.
+[separate component graph](component-references.md) resolves local descriptor
+IDs under #35; compiling a reference here does not claim to have found its
+runtime count or established stream decoding order. #38 composes the graph and
+typed contracts, while payload codecs own runtime count interpretation.
 There is no network or filesystem retrieval through these references.
 Exact local references whose known targets are all non-Count components are
 rejected; missing or ambiguous targets remain unresolved. Specialized count
@@ -90,5 +92,5 @@ Required discovery and execution use the existing CI lanes, with a compiled
 disposable fault demonstrating a meaningful assertion failure from a passing
 baseline. Actual results and separate review belong to the PR/execution record.
 
-No array payload encoding/decoding, database array layout, compression, complete
-reference graph or extra SWE component family is introduced here.
+No array payload encoding/decoding, database array layout, compression or extra
+SWE component family is introduced by this array compiler.

@@ -1,0 +1,19 @@
+{
+  "type": "DataRecord",
+  "id": "ROOT",
+  "fields": [
+    { "name": "target", "type": "Count", "id": "TARGET_NEAR", "definition": "urn:example:decoy", "label": "Decoy", "value": 41 },
+    { "name": "forward", "href": "#TARGET", "role": "urn:example:role", "arcrole": "urn:example:arc", "title": " Exact target " },
+    {
+      "name": "nested",
+      "type": "DataRecord",
+      "id": "BOX",
+      "fields": [
+        { "name": "target", "type": "Count", "id": "TARGET", "definition": "urn:example:target", "label": "Target", "value": 9007199254740993 },
+        { "name": "back", "href": "#TARGET_NEAR" }
+      ]
+    },
+    { "name": "shared", "href": "#BOX" }
+  ],
+  "extension": { "id": "TARGET", "href": "#ROOT", "fields": [{ "id": "HIDDEN", "type": "Text" }] }
+}

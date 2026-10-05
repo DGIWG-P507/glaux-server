@@ -27,6 +27,7 @@ AGGREGATE = Path("crates/glaux-standards/src/aggregate.rs")
 CHOICE_VALUE = Path("crates/glaux-standards/src/choice/value.rs")
 ARRAY = Path("crates/glaux-standards/src/array.rs")
 GEOMETRY_VALUE = Path("crates/glaux-standards/src/geometry/value.rs")
+REFERENCES = Path("crates/glaux-standards/src/references.rs")
 TIMEOUT_SECONDS = 180
 
 
@@ -164,7 +165,16 @@ def drop_geometry_height(root):
             "    Ok(Position { ordinates: ordinates.into_iter().take(2).collect() })")
 
 
+def select_similarly_named_component(root):
+    replace(root / REFERENCES,
+            "let target = *self.ids.get(&id).ok_or(ReferenceError::UnresolvedLocal)?;",
+            """let id = if id == "TARGET" { "TARGET_NEAR".to_owned() } else { id };
+                let target = *self.ids.get(&id).ok_or(ReferenceError::UnresolvedLocal)?;""")
+
+
 CASES = [
+    ("reference-wrong-local-target", "references::tests::reference_local_ids_resolve_exact_targets",
+     select_similarly_named_component, ["left: Local(1)", "right: Local(3)"]),
     ("geometry-height-dropped", "geometry::tests::geometry_height_and_exact_source_are_preserved",
      drop_geometry_height, ["left: None", 'right: Some("123.4500")']),
     ("array-inner-dimension-dropped", "array::tests::array_fixed_dimensions_preserve_exact_order",
