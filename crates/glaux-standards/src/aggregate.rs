@@ -5,9 +5,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use glaux_domain::aggregate::{AggregateComponent, AggregateMetadata, Component, NamedComponent};
+use glaux_domain::array::ArrayKind;
 use serde_json::{Value, value::RawValue};
 
 use crate::{
+    array::{self, ArrayOptions, SourceValidation},
     choice::{CheckedComponentValue, ComponentError, ComponentValue},
     range::{RangeContract, RangeError, RangeOptions},
     scalar::{ScalarContract, ScalarError},
@@ -28,6 +30,12 @@ pub enum AggregateError {
     CoordinateAxis,
     OptionalCoordinate,
     ChoiceCardinality,
+    MissingElementCount,
+    ElementCount,
+    CountReference,
+    MatrixElement,
+    InlineElementValue,
+    AdaptationSourceChanged,
     Scalar(ScalarError),
     Range(RangeError),
 }
@@ -103,47 +111,63 @@ pub struct AggregateContract {
     source: Vec<u8>,
     children: Vec<NamedContract>,
     choice_value: Option<ScalarContract>,
+    element_count_source: Option<Vec<u8>>,
+    source_validation: SourceValidation,
 }
 
 impl AggregateContract {
     pub fn compile(validator: &StructuralValidator, input: &[u8]) -> Result<Self, AggregateError> {
+        Self::compile_with_options(validator, input, ArrayOptions::default())
+    }
+
+    pub fn compile_with_options(
+        validator: &StructuralValidator,
+        input: &[u8],
+        options: ArrayOptions,
+    ) -> Result<Self, AggregateError> {
         // All byte/depth/node/member/string/numeric budgets and duplicate keys
         // are checked over the complete document before any tree traversal.
         let source = validation::parse(input).map_err(AggregateError::Syntax)?;
         preflight(&source).map_err(ComponentError::aggregate_kind)?;
+        array::references(&source).map_err(ComponentError::aggregate_kind)?;
         // Preserve the established aggregate entry point's schema-first error
         // categories. The detailed choice entry point also locates child errors.
         let (contract, _) = kind(&source)?;
-        validator
-            .validate(contract, input)
-            .map_err(|_| AggregateError::Structure)?;
-        Self::compile_tree(validator, input, &source).map_err(ComponentError::aggregate_kind)
+        array::structure(validator, contract, input, options)?;
+        Self::compile_tree(validator, input, &source, options, None)
+            .map_err(ComponentError::aggregate_kind)
     }
 
-    pub(crate) fn compile_detailed(
+    pub(crate) fn compile_detailed_with_options(
         validator: &StructuralValidator,
         input: &[u8],
+        options: ArrayOptions,
     ) -> Result<Self, ComponentError> {
         let source = validation::parse(input).map_err(AggregateError::Syntax)?;
         preflight(&source)?;
-        Self::compile_tree(validator, input, &source)
+        array::references(&source)?;
+        Self::compile_tree(validator, input, &source, options, None)
     }
 
     fn compile_tree(
         validator: &StructuralValidator,
         input: &[u8],
         source: &Value,
+        options: ArrayOptions,
+        inherited_frame: Option<&str>,
     ) -> Result<Self, ComponentError> {
         let (contract, member) = kind(source)?;
         let metadata = metadata(source)?;
-        let (reference_frame, local_frame) = if contract == Contract::Vector {
-            (
-                optional_string(source, "referenceFrame")?,
-                optional_string(source, "localFrame")?,
-            )
-        } else {
-            (None, None)
-        };
+        let (reference_frame, local_frame) =
+            if matches!(contract, Contract::Vector | Contract::Matrix) {
+                (
+                    optional_string(source, "referenceFrame")?,
+                    optional_string(source, "localFrame")?,
+                )
+            } else {
+                (None, None)
+            };
+        let effective_frame = reference_frame.as_deref().or(inherited_frame);
         if contract == Contract::Vector && local_frame.is_some() && local_frame == reference_frame {
             return Err(AggregateError::Metadata.into());
         }
@@ -151,9 +175,21 @@ impl AggregateContract {
         // A Value round trip would lose JSON number spelling such as -0.
         let raw: BTreeMap<String, Box<RawValue>> =
             serde_json::from_slice(input).map_err(|_| AggregateError::Structure)?;
-        let raw_children: Vec<Box<RawValue>> =
+        let is_array = matches!(contract, Contract::DataArray | Contract::Matrix);
+        let raw_children: Vec<Box<RawValue>> = if is_array {
+            vec![
+                RawValue::from_string(
+                    raw.get(member)
+                        .ok_or(AggregateError::Structure)?
+                        .get()
+                        .to_owned(),
+                )
+                .map_err(|_| AggregateError::Structure)?,
+            ]
+        } else {
             serde_json::from_str(raw.get(member).ok_or(AggregateError::Structure)?.get())
-                .map_err(|_| AggregateError::Structure)?;
+                .map_err(|_| AggregateError::Structure)?
+        };
         let mut children = Vec::with_capacity(raw_children.len());
         let mut names = BTreeSet::new();
         for child in raw_children {
@@ -177,6 +213,11 @@ impl AggregateContract {
                                 bytes,
                                 reference_frame.as_deref().ok_or(AggregateError::Metadata)?,
                             )
+                        } else if contract == Contract::Matrix
+                            && value.get("referenceFrame").is_none()
+                            && let Some(frame) = effective_frame
+                        {
+                            ScalarContract::compile_vector_coordinate(validator, bytes, frame)
                         } else {
                             ScalarContract::compile(validator, bytes)
                         }
@@ -191,9 +232,19 @@ impl AggregateContract {
                                 .map_err(AggregateError::Range)?;
                         ChildContract::Range(Box::new(range))
                     }
-                    Some("DataRecord" | "Vector" | "DataChoice") => ChildContract::Aggregate(
-                        Box::new(Self::compile_tree(validator, bytes, &value)?),
-                    ),
+                    Some("DataRecord" | "Vector" | "DataChoice" | "DataArray" | "Matrix") => {
+                        ChildContract::Aggregate(Box::new(Self::compile_tree(
+                            validator,
+                            bytes,
+                            &value,
+                            options,
+                            if contract == Contract::Matrix {
+                                effective_frame
+                            } else {
+                                None
+                            },
+                        )?))
+                    }
                     _ => return Err(AggregateError::UnsupportedComponent.into()),
                 };
                 Ok(NamedContract {
@@ -214,10 +265,13 @@ impl AggregateContract {
         };
         // Locate child failures first, but never omit the original enclosing
         // schema check or replace it with independently passing child schemas.
-        validator
-            .validate(contract, input)
-            .map_err(|_| AggregateError::Structure)?;
-        let components = children.iter().map(NamedContract::component).collect();
+        let source_validation = array::structure(validator, contract, input, options)?;
+        let mut components: Vec<NamedComponent> =
+            children.iter().map(NamedContract::component).collect();
+        let element_count_source = raw
+            .get("elementCount")
+            .filter(|_| is_array)
+            .map(|value| value.get().as_bytes().to_vec());
         let component = if contract == Contract::Vector {
             AggregateComponent::Vector {
                 metadata,
@@ -233,6 +287,26 @@ impl AggregateContract {
                     .as_ref()
                     .map(|value| Box::new(value.component().clone())),
             }
+        } else if is_array {
+            let element_count = array::count(
+                source
+                    .get("elementCount")
+                    .ok_or(AggregateError::MissingElementCount)?,
+                raw.get("elementCount")
+                    .ok_or(AggregateError::MissingElementCount)?,
+            )?;
+            AggregateComponent::Array {
+                kind: if contract == Contract::Matrix {
+                    ArrayKind::Matrix
+                } else {
+                    ArrayKind::DataArray
+                },
+                metadata,
+                element_count,
+                element_type: Box::new(components.pop().ok_or(AggregateError::Structure)?),
+                reference_frame,
+                local_frame,
+            }
         } else {
             AggregateComponent::Record {
                 metadata,
@@ -244,6 +318,8 @@ impl AggregateContract {
             source: input.to_vec(),
             children,
             choice_value,
+            element_count_source,
+            source_validation,
         })
     }
 
@@ -263,6 +339,14 @@ impl AggregateContract {
         self.choice_value.as_ref()
     }
 
+    pub fn element_count_source(&self) -> Option<&[u8]> {
+        self.element_count_source.as_deref()
+    }
+
+    pub fn source_validation(&self) -> SourceValidation {
+        self.source_validation
+    }
+
     pub fn check_value(
         &self,
         input: &ComponentValue<'_>,
@@ -276,6 +360,8 @@ fn kind(source: &Value) -> Result<(Contract, &'static str), AggregateError> {
         Some("DataRecord") => Ok((Contract::DataRecord, "fields")),
         Some("Vector") => Ok((Contract::Vector, "coordinates")),
         Some("DataChoice") => Ok((Contract::DataChoice, "items")),
+        Some("DataArray") => Ok((Contract::DataArray, "elementType")),
+        Some("Matrix") => Ok((Contract::Matrix, "elementType")),
         _ => Err(AggregateError::UnsupportedComponent),
     }
 }
@@ -294,7 +380,7 @@ fn valid_name(name: &str) -> bool {
 // Recursion is safe only because compile() first bounded the entire document.
 fn preflight(source: &Value) -> Result<(), ComponentError> {
     let (contract, member) = match source.get("type").and_then(Value::as_str) {
-        Some("DataRecord" | "Vector" | "DataChoice") => kind(source)?,
+        Some("DataRecord" | "Vector" | "DataChoice" | "DataArray" | "Matrix") => kind(source)?,
         Some(
             "Boolean" | "Text" | "Category" | "Count" | "Quantity" | "Time" | "CategoryRange"
             | "CountRange" | "QuantityRange" | "TimeRange",
@@ -306,6 +392,28 @@ fn preflight(source: &Value) -> Result<(), ComponentError> {
         .any(|member| source.get(member).is_some())
     {
         return Err(AggregateError::UnsupportedFeature.into());
+    }
+    if matches!(contract, Contract::DataArray | Contract::Matrix) {
+        if ["encoding", "values"]
+            .iter()
+            .any(|member| source.get(member).is_some())
+        {
+            return Err(AggregateError::UnsupportedFeature.into());
+        }
+        if source.get("elementCount").is_none() {
+            return Err(AggregateError::MissingElementCount.into());
+        }
+        let child = source.get("elementType").ok_or(AggregateError::Structure)?;
+        if contract == Contract::Matrix
+            && !matches!(
+                child.get("type").and_then(Value::as_str),
+                Some("Matrix" | "Count" | "Quantity" | "Time")
+            )
+        {
+            return Err(ComponentError::from(AggregateError::MatrixElement).at(0));
+        }
+        no_element_values(child).map_err(|error| error.at(0))?;
+        return preflight(child).map_err(|error| error.at(0));
     }
     let children = source
         .get(member)
@@ -354,7 +462,10 @@ fn preflight(source: &Value) -> Result<(), ComponentError> {
     Ok(())
 }
 
-fn optional_string(source: &Value, member: &str) -> Result<Option<String>, AggregateError> {
+pub(crate) fn optional_string(
+    source: &Value,
+    member: &str,
+) -> Result<Option<String>, AggregateError> {
     source
         .get(member)
         .map(|value| {
@@ -366,7 +477,7 @@ fn optional_string(source: &Value, member: &str) -> Result<Option<String>, Aggre
         .transpose()
 }
 
-fn metadata(source: &Value) -> Result<AggregateMetadata, AggregateError> {
+pub(crate) fn metadata(source: &Value) -> Result<AggregateMetadata, AggregateError> {
     Ok(AggregateMetadata {
         id: optional_string(source, "id")?,
         definition: optional_string(source, "definition")?,
@@ -375,6 +486,39 @@ fn metadata(source: &Value) -> Result<AggregateMetadata, AggregateError> {
         optional: source.get("optional").and_then(Value::as_bool),
         updatable: source.get("updatable").and_then(Value::as_bool),
     })
+}
+
+fn no_element_values(source: &Value) -> Result<(), ComponentError> {
+    let kind = source.get("type").and_then(Value::as_str);
+    if source.get("value").is_some()
+        || (matches!(kind, Some("DataArray" | "Matrix")) && source.get("values").is_some())
+    {
+        return Err(AggregateError::InlineElementValue.into());
+    }
+    let member = match kind {
+        Some("DataRecord") => Some("fields"),
+        Some("Vector") => Some("coordinates"),
+        Some("DataChoice") => Some("items"),
+        _ => None,
+    };
+    if let Some(member) = member
+        && let Some(children) = source.get(member).and_then(Value::as_array)
+    {
+        for (index, child) in children.iter().enumerate() {
+            no_element_values(child).map_err(|error| error.at(index))?;
+        }
+    }
+    if matches!(kind, Some("DataArray" | "Matrix"))
+        && let Some(child) = source.get("elementType")
+    {
+        no_element_values(child).map_err(|error| error.at(0))?;
+    }
+    if kind == Some("DataChoice")
+        && let Some(selector) = source.get("choiceValue")
+    {
+        no_element_values(selector)?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]

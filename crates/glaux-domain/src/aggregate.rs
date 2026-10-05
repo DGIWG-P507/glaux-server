@@ -1,5 +1,9 @@
 //! Ordered SWE descriptions, independent of payload codecs or frame resolution.
-use crate::{range::RangeComponent, scalar::ScalarComponent};
+use crate::{
+    array::{ArrayKind, ElementCount},
+    range::RangeComponent,
+    scalar::ScalarComponent,
+};
 
 /// DataRecord does not require definition/label; retain absence, not empty text.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -42,5 +46,13 @@ pub enum AggregateComponent {
         metadata: AggregateMetadata,
         items: Vec<NamedComponent>,
         choice_value: Option<Box<ScalarComponent>>,
+    },
+    Array {
+        kind: ArrayKind,
+        metadata: AggregateMetadata,
+        element_count: ElementCount,
+        element_type: Box<NamedComponent>,
+        reference_frame: Option<String>,
+        local_frame: Option<String>,
     },
 }

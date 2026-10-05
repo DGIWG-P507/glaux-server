@@ -17,6 +17,8 @@ mod nil;
 mod numeric;
 mod time;
 
+pub(crate) use numeric::element_count;
+
 pub const MAX_NIL_DECLARATIONS: usize = 128;
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -95,7 +97,7 @@ impl ScalarContract {
         Self::compile_context(validator, input, ValueContext::RangeEndpoint, None)
     }
 
-    /// The Vector compiler has checked coordinate/frame rules. This context
+    /// The enclosing aggregate has checked its coordinate/frame rules. This context
     /// changes Time meaning, never the retained source or supplied metadata.
     pub(crate) fn compile_vector_coordinate(
         validator: &StructuralValidator,
@@ -411,7 +413,7 @@ fn token_constraint(source: &Value) -> Result<Option<TokenConstraint>, ScalarErr
     }
 }
 
-fn check_format(value: &str, format: &str) -> Result<(), ScalarError> {
+pub(crate) fn check_format(value: &str, format: &str) -> Result<(), ScalarError> {
     let schema = json!({"type": "string", "format": format});
     let validator = jsonschema::options()
         .with_draft(jsonschema::Draft::Draft202012)

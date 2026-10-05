@@ -1,0 +1,19 @@
+{
+  "type": "Matrix",
+  "referenceFrame": "urn:example:unknown-time-frame",
+  "localFrame": "#clock-array",
+  "elementCount": { "value": 3 },
+  "elementType": {
+    "name": "row",
+    "type": "Matrix",
+    "elementCount": {},
+    "elementType": {
+      "name": "time",
+      "type": "Time",
+      "definition": "urn:example:time",
+      "label": "Time",
+      "uom": { "href": "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian" },
+      "referenceTime": "2000-01-01T00:00:00Z"
+    }
+  }
+}

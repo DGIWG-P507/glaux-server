@@ -1,0 +1,23 @@
+{
+  "type": "DataArray",
+  "id": "image",
+  "label": " Ordered samples ",
+  "description": "Synthetic descriptor; declared contents are never allocated",
+  "optional": true,
+  "updatable": false,
+  "elementCount": { "definition": "urn:example:rows", "value": 9007199254740993 },
+  "elementType": {
+    "name": "zRow",
+    "type": "DataArray",
+    "elementCount": { "label": "Samples", "value": 7 },
+    "elementType": {
+      "name": "aSample",
+      "type": "Quantity",
+      "definition": "urn:example:length",
+      "label": "Length",
+      "uom": { "code": "cm" },
+      "constraint": { "intervals": [[0.1234567890123456789, 125.00]] },
+      "nilValues": [{ "reason": "urn:example:nil:missing", "value": -999.00 }]
+    }
+  }
+}

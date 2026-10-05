@@ -38,6 +38,8 @@ pub enum Contract {
     DataRecord,
     Vector,
     DataChoice,
+    DataArray,
+    Matrix,
     SweRecord,
     PhysicalSystem,
     ObservationSwe,
@@ -48,7 +50,7 @@ pub enum Contract {
 }
 
 impl Contract {
-    fn uri(self) -> String {
+    pub(crate) fn uri(self) -> String {
         match self {
             Self::Boolean => format!("{SWE}Boolean.json"),
             Self::Text => format!("{SWE}Text.json"),
@@ -63,6 +65,8 @@ impl Contract {
             Self::DataRecord | Self::SweRecord => format!("{SWE}DataRecord.json"),
             Self::Vector => format!("{SWE}Vector.json"),
             Self::DataChoice => format!("{SWE}DataChoice.json"),
+            Self::DataArray => format!("{SWE}DataArray.json"),
+            Self::Matrix => format!("{SWE}Matrix.json"),
             Self::PhysicalSystem => format!("{PIN}sensorml/schemas/json/PhysicalSystem.json"),
             Self::ObservationSwe => {
                 format!("{PIN}api/part2/openapi/schemas/json/observationSchemaSwe.json")
@@ -265,6 +269,13 @@ pub(crate) fn compile(
     compile_with_denial(catalog, uri, DenyRetrieval::default())
 }
 
+pub(crate) fn compile_component(
+    catalog: &BTreeMap<String, Value>,
+    contract: Contract,
+) -> Result<jsonschema::Validator, String> {
+    compile_with_formats(catalog, &contract.uri(), DenyRetrieval::default(), true)
+}
+
 /// The only installed retriever has no I/O or fallback. Its counter lets tests
 /// prove that ordinary validation never asks it to resolve instance data.
 #[derive(Clone, Default)]
@@ -345,6 +356,8 @@ impl StructuralValidator {
             Contract::DataRecord,
             Contract::Vector,
             Contract::DataChoice,
+            Contract::DataArray,
+            Contract::Matrix,
             Contract::SweRecord,
             Contract::PhysicalSystem,
             Contract::ObservationSwe,
@@ -355,7 +368,11 @@ impl StructuralValidator {
         ] {
             let validator = if matches!(
                 contract,
-                Contract::DataRecord | Contract::Vector | Contract::DataChoice
+                Contract::DataRecord
+                    | Contract::Vector
+                    | Contract::DataChoice
+                    | Contract::DataArray
+                    | Contract::Matrix
             ) {
                 // Nested Time schemas need the same format assertion as their
                 // direct entry points. SweRecord keeps its earlier baseline.

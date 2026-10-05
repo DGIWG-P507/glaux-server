@@ -63,6 +63,12 @@ vectors and choices. Unknown or multiple selections and wrong-alternative values
 fail with bounded component paths. This is shared-model validation, not new
 Text/Binary framing, command behavior or a conformance declaration.
 
+[Array and Matrix descriptions](docs/array-components.md) preserve element
+types and fixed or variable dimensions without allocating their declared
+contents. Nested dimension order and Matrix numeric/frame meaning are checked;
+reference metadata remains distinct from a resolved count. Payload codecs and
+full component-graph resolution are later work.
+
 [Typed resource identities](docs/resource-identities.md) now separate UUIDv7 local
 locators, URI-form published UIDs and authority-qualified source identifiers.
 Strict parsing, fallible generation and type-boundary checks prevent accidental

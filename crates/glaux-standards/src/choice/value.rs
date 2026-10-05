@@ -60,6 +60,9 @@ fn aggregate(
     input: &ComponentValue<'_>,
 ) -> Result<CheckedComponentValue, ComponentError> {
     match (contract.component(), input) {
+        (AggregateComponent::Array { .. }, _) => {
+            Err(ComponentError::new(ComponentErrorKind::UnsupportedValue))
+        }
         (AggregateComponent::Choice { .. }, ComponentValue::Choice(values)) => {
             if values.len() != 1 {
                 return Err(ComponentError::new(
@@ -189,7 +192,8 @@ fn optional(contract: &NamedContract) -> bool {
         let metadata = match contract.component() {
             AggregateComponent::Record { metadata, .. }
             | AggregateComponent::Vector { metadata, .. }
-            | AggregateComponent::Choice { metadata, .. } => metadata,
+            | AggregateComponent::Choice { metadata, .. }
+            | AggregateComponent::Array { metadata, .. } => metadata,
         };
         metadata.optional == Some(true)
     })
