@@ -1,6 +1,15 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "choice::tests::choice_declared_order_and_source_are_preserved",
+    "choice::tests::choice_cardinality_names_and_selector_metadata",
+    "choice::tests::choice_selection_rejects_zero_multiple_and_unknown",
+    "choice::tests::choice_dispatches_exact_selected_arm",
+    "choice::tests::choice_nested_record_vector_and_choice_values",
+    "choice::tests::choice_invalid_unselected_alternative_has_bounded_path",
+    "choice::tests::choice_nil_absent_and_inline_are_not_selection",
+    "choice::tests::choice_limits_cover_total_input_and_nested_traversal",
+    "choice::tests::choice_generated_selection_identity",
     "aggregate::tests::aggregate_record_preserves_declared_field_order",
     "aggregate::tests::aggregate_metadata_optional_and_nested_names",
     "aggregate::tests::aggregate_nested_scalar_and_range_checks",

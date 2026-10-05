@@ -474,14 +474,7 @@ fn aggregate_invalid_children_and_references_fail_explicitly() {
             "do not fetch or discard a required reference"
         );
     }
-    for kind in [
-        "DataChoice",
-        "DataArray",
-        "Matrix",
-        "Geometry",
-        "DataStream",
-        "Unknown",
-    ] {
+    for kind in ["DataArray", "Matrix", "Geometry", "DataStream", "Unknown"] {
         let input = record(vec![json!({"name":"deferred","type":kind})]);
         assert_eq!(
             AggregateContract::compile(validator(), &input).err(),

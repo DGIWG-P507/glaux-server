@@ -37,6 +37,7 @@ pub enum Contract {
     TimeRange,
     DataRecord,
     Vector,
+    DataChoice,
     SweRecord,
     PhysicalSystem,
     ObservationSwe,
@@ -61,6 +62,7 @@ impl Contract {
             Self::TimeRange => format!("{SWE}TimeRange.json"),
             Self::DataRecord | Self::SweRecord => format!("{SWE}DataRecord.json"),
             Self::Vector => format!("{SWE}Vector.json"),
+            Self::DataChoice => format!("{SWE}DataChoice.json"),
             Self::PhysicalSystem => format!("{PIN}sensorml/schemas/json/PhysicalSystem.json"),
             Self::ObservationSwe => {
                 format!("{PIN}api/part2/openapi/schemas/json/observationSchemaSwe.json")
@@ -342,6 +344,7 @@ impl StructuralValidator {
             Contract::TimeRange,
             Contract::DataRecord,
             Contract::Vector,
+            Contract::DataChoice,
             Contract::SweRecord,
             Contract::PhysicalSystem,
             Contract::ObservationSwe,
@@ -350,7 +353,10 @@ impl StructuralValidator {
             Contract::TextEncoding,
             Contract::BinaryEncoding,
         ] {
-            let validator = if matches!(contract, Contract::DataRecord | Contract::Vector) {
+            let validator = if matches!(
+                contract,
+                Contract::DataRecord | Contract::Vector | Contract::DataChoice
+            ) {
                 // Nested Time schemas need the same format assertion as their
                 // direct entry points. SweRecord keeps its earlier baseline.
                 compile_with_formats(&catalog, &contract.uri(), DenyRetrieval::default(), true)?

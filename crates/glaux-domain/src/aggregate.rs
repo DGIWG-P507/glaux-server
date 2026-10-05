@@ -38,4 +38,9 @@ pub enum AggregateComponent {
         local_frame: Option<String>,
         coordinates: Vec<NamedComponent>,
     },
+    Choice {
+        metadata: AggregateMetadata,
+        items: Vec<NamedComponent>,
+        choice_value: Option<Box<ScalarComponent>>,
+    },
 }
