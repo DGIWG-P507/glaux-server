@@ -250,7 +250,10 @@ fn array_count_reference_correction_preserves_original_verdict() {
     // The original oneOf admits this through its open inline-count branch,
     // even though the association branch rejects the URI. Semantic count
     // validation must still reject it; an original structural pass is not enough.
-    assert_eq!(validator().validate(Contract::DataArray, &invalid_uri), Ok(()));
+    assert_eq!(
+        validator().validate(Contract::DataArray, &invalid_uri),
+        Ok(())
+    );
     assert_eq!(
         ArrayContract::compile(validator(), &invalid_uri, correction())
             .err()
