@@ -81,7 +81,9 @@ impl NamedContract {
             ChildContract::Scalar(contract) => {
                 Component::Scalar(Box::new(contract.component().clone()))
             }
-            ChildContract::Range(contract) => Component::Range(Box::new(contract.component().clone())),
+            ChildContract::Range(contract) => {
+                Component::Range(Box::new(contract.component().clone()))
+            }
             ChildContract::Aggregate(contract) => {
                 Component::Aggregate(Box::new(contract.component().clone()))
             }
@@ -171,9 +173,9 @@ impl AggregateContract {
                         .map_err(AggregateError::Range)?;
                     ChildContract::Range(Box::new(range))
                 }
-                Some("DataRecord" | "Vector") => {
-                    ChildContract::Aggregate(Box::new(Self::compile_tree(validator, bytes, &value)?))
-                }
+                Some("DataRecord" | "Vector") => ChildContract::Aggregate(Box::new(
+                    Self::compile_tree(validator, bytes, &value)?,
+                )),
                 _ => return Err(AggregateError::UnsupportedComponent),
             };
             children.push(NamedContract {

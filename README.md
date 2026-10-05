@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial foundations, minimal System operations and restore, and SWE scalar/range/record components — 4 October 2026 UTC.**
+**Initial foundations, minimal System operations and restore, and SWE scalar/range/record components — 5 October 2026 UTC.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **304 implementation tasks**, each linked to its published issue: the original 286, 16 experimental Protobuf tasks, and Phase 1 review follow-ups 1.1.5 and 1.5.4. These are planned tasks, not completed software.

@@ -102,7 +102,12 @@ impl ScalarContract {
         input: &[u8],
         reference_frame: &str,
     ) -> Result<Self, ScalarError> {
-        Self::compile_context(validator, input, ValueContext::Scalar, Some(reference_frame))
+        Self::compile_context(
+            validator,
+            input,
+            ValueContext::Scalar,
+            Some(reference_frame),
+        )
     }
 
     fn compile_context(
