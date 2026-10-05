@@ -45,7 +45,8 @@ impl ArrayContract {
         input: &[u8],
         options: ArrayOptions,
     ) -> Result<Self, ComponentError> {
-        let aggregate = AggregateContract::compile_detailed_with_options(validator, input, options)?;
+        let aggregate =
+            AggregateContract::compile_detailed_with_options(validator, input, options)?;
         if !matches!(aggregate.component(), AggregateComponent::Array { .. }) {
             return Err(AggregateError::UnsupportedComponent.into());
         }
@@ -82,7 +83,10 @@ impl ArrayContract {
                 break;
             };
             dimensions.push(element_count);
-            current = contract.children().first().and_then(NamedContract::aggregate);
+            current = contract
+                .children()
+                .first()
+                .and_then(NamedContract::aggregate);
         }
         dimensions
     }
@@ -130,8 +134,9 @@ pub(crate) fn count(source: &Value, raw: &RawValue) -> Result<ElementCount, Aggr
     }
     let raw: BTreeMap<String, Box<RawValue>> =
         serde_json::from_str(raw.get()).map_err(|_| AggregateError::ElementCount)?;
-    let (constraint, value) = scalar::element_count(source, raw.get("value").map(|value| value.get()))
-        .map_err(AggregateError::Scalar)?;
+    let (constraint, value) =
+        scalar::element_count(source, raw.get("value").map(|value| value.get()))
+            .map_err(AggregateError::Scalar)?;
     let zero: CountValue = "0".parse().map_err(|_| AggregateError::ElementCount)?;
     // Fixed dimensions are positive. Zero belongs to variable payload sizes,
     // whose later decoder is not implemented by this description compiler.
@@ -171,11 +176,13 @@ pub(crate) fn structure(
     }
 }
 
-fn corrected_validators() -> &'static Result<BTreeMap<Contract, jsonschema::Validator>, AggregateError> {
+fn corrected_validators()
+-> &'static Result<BTreeMap<Contract, jsonschema::Validator>, AggregateError> {
     static CORRECTED: OnceLock<Result<BTreeMap<Contract, jsonschema::Validator>, AggregateError>> =
         OnceLock::new();
     CORRECTED.get_or_init(|| {
-        let mut catalog = validation::catalog().map_err(|_| AggregateError::AdaptationSourceChanged)?;
+        let mut catalog =
+            validation::catalog().map_err(|_| AggregateError::AdaptationSourceChanged)?;
         let schema = catalog
             .get_mut(&Contract::DataArray.uri())
             .ok_or(AggregateError::AdaptationSourceChanged)?;

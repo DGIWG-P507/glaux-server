@@ -2,7 +2,9 @@
 use super::{ArrayContract, ArrayOptions, CountReferenceSchema, SourceValidation};
 use crate::{
     aggregate::{AggregateContract, AggregateError},
-    choice::{CheckedComponentValue, ChoiceContract, ComponentErrorKind, ComponentValue, NamedValue},
+    choice::{
+        CheckedComponentValue, ChoiceContract, ComponentErrorKind, ComponentValue, NamedValue,
+    },
     scalar::ScalarError,
     validation::{self, Contract, Failure, StructuralValidator},
 };
@@ -101,7 +103,10 @@ fn array_fixed_dimensions_preserve_exact_order() {
         count.value.as_ref().unwrap().try_to_u64(),
         Ok(9_007_199_254_740_993)
     );
-    assert_eq!(count.metadata.definition.as_deref(), Some("urn:example:rows"));
+    assert_eq!(
+        count.metadata.definition.as_deref(),
+        Some("urn:example:rows")
+    );
     assert_eq!(
         contract.element_count_source(),
         br#"{ "definition": "urn:example:rows", "value": 9007199254740993 }"#
@@ -128,7 +133,8 @@ fn array_fixed_dimensions_preserve_exact_order() {
         sample.check_value(b"-999").unwrap().nil_reason.as_deref(),
         Some("urn:example:nil:missing")
     );
-    let ScalarValue::Quantity(NumericValue::Finite(nil)) = &sample.nil_declarations()[0].value else {
+    let ScalarValue::Quantity(NumericValue::Finite(nil)) = &sample.nil_declarations()[0].value
+    else {
         panic!("exact declared nil sentinel")
     };
     assert_eq!(nil.decimal_lexeme(), Some("-999.00"));
@@ -241,15 +247,22 @@ fn array_count_reference_correction_preserves_original_verdict() {
         );
     }
     let invalid_uri = bytes(&array(json!({"href":"not a URI"}), count("element")));
+    // The original oneOf admits this through its open inline-count branch,
+    // even though the association branch rejects the URI. Semantic count
+    // validation must still reject it; an original structural pass is not enough.
+    assert_eq!(validator().validate(Contract::DataArray, &invalid_uri), Ok(()));
     assert_eq!(
         ArrayContract::compile(validator(), &invalid_uri, correction())
             .err()
             .unwrap()
             .kind,
-        ComponentErrorKind::Compile(AggregateError::Structure)
+        ComponentErrorKind::Compile(AggregateError::CountReference)
     );
     let mut invalid: Value = serde_json::from_slice(REFERENCE).unwrap();
-    invalid["elementType"].as_object_mut().unwrap().remove("label");
+    invalid["elementType"]
+        .as_object_mut()
+        .unwrap()
+        .remove("label");
     let failure = ArrayContract::compile(validator(), &bytes(&invalid), correction())
         .err()
         .unwrap();
@@ -491,7 +504,8 @@ fn array_nested_record_choice_and_source_retention() {
         validator().validate(Contract::DataRecord, &input),
         Err(Failure::Structure)
     );
-    let record = AggregateContract::compile_with_options(validator(), &input, correction()).unwrap();
+    let record =
+        AggregateContract::compile_with_options(validator(), &input, correction()).unwrap();
     assert_eq!(
         record.source_validation(),
         SourceValidation::CountReferenceCorrection
@@ -523,12 +537,9 @@ fn array_nested_record_choice_and_source_retention() {
     let mut extension: Value = serde_json::from_slice(&input).unwrap();
     extension["fields"][0]["fields"] = json!([{"id":"shadow","type":"Text"}]);
     extension["fields"][1]["elementCount"]["href"] = json!("#shadow");
-    let extension = AggregateContract::compile_with_options(
-        validator(),
-        &bytes(&extension),
-        correction(),
-    )
-    .unwrap();
+    let extension =
+        AggregateContract::compile_with_options(validator(), &bytes(&extension), correction())
+            .unwrap();
     let AggregateComponent::Array { element_count, .. } =
         extension.children()[1].aggregate().unwrap().component()
     else {
@@ -643,7 +654,8 @@ fn array_generated_dimension_counts_and_lexemes() {
         let expected = (0..depth)
             .map(|axis| format!("{}.0", 9_007_199_254_740_993 + case * 4 + axis as u64))
             .collect::<Vec<_>>();
-        let mut element = r#"{"name":"leaf","type":"Count","definition":"urn:example:n","label":"N"}"#.to_owned();
+        let mut element =
+            r#"{"name":"leaf","type":"Count","definition":"urn:example:n","label":"N"}"#.to_owned();
         for axis in (0..depth).rev() {
             element = format!(
                 r#"{{"name":"axis{axis}","type":"DataArray","elementCount":{{"value":{}}},"elementType":{element}}}"#,
@@ -665,9 +677,10 @@ fn array_generated_dimension_counts_and_lexemes() {
             inner = &mut inner["elementType"];
         }
         inner["elementCount"]["constraint"] = json!({"values":[1]});
-        let failure = ArrayContract::compile(validator(), &bytes(&invalid), ArrayOptions::default())
-            .err()
-            .unwrap();
+        let failure =
+            ArrayContract::compile(validator(), &bytes(&invalid), ArrayOptions::default())
+                .err()
+                .unwrap();
         assert_eq!(
             failure.kind,
             ComponentErrorKind::Compile(AggregateError::Scalar(ScalarError::ConstraintViolation))

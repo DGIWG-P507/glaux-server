@@ -2,8 +2,8 @@
 use glaux_domain::aggregate::AggregateComponent;
 
 use crate::{
-    array::{ArrayOptions, SourceValidation},
     aggregate::{AggregateContract, AggregateError, NamedContract},
+    array::{ArrayOptions, SourceValidation},
     range::{CheckedRangeValue, RangeError},
     scalar::{CheckedScalarValue, ScalarContract, ScalarError},
     validation::{self, StructuralValidator},
@@ -121,7 +121,8 @@ impl ChoiceContract {
         input: &[u8],
         options: ArrayOptions,
     ) -> Result<Self, ComponentError> {
-        let aggregate = AggregateContract::compile_detailed_with_options(validator, input, options)?;
+        let aggregate =
+            AggregateContract::compile_detailed_with_options(validator, input, options)?;
         if !matches!(aggregate.component(), AggregateComponent::Choice { .. }) {
             return Err(AggregateError::UnsupportedComponent.into());
         }

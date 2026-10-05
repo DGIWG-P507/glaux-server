@@ -158,14 +158,15 @@ impl AggregateContract {
     ) -> Result<Self, ComponentError> {
         let (contract, member) = kind(source)?;
         let metadata = metadata(source)?;
-        let (reference_frame, local_frame) = if matches!(contract, Contract::Vector | Contract::Matrix) {
-            (
-                optional_string(source, "referenceFrame")?,
-                optional_string(source, "localFrame")?,
-            )
-        } else {
-            (None, None)
-        };
+        let (reference_frame, local_frame) =
+            if matches!(contract, Contract::Vector | Contract::Matrix) {
+                (
+                    optional_string(source, "referenceFrame")?,
+                    optional_string(source, "localFrame")?,
+                )
+            } else {
+                (None, None)
+            };
         let effective_frame = reference_frame.as_deref().or(inherited_frame);
         if contract == Contract::Vector && local_frame.is_some() && local_frame == reference_frame {
             return Err(AggregateError::Metadata.into());
@@ -176,13 +177,15 @@ impl AggregateContract {
             serde_json::from_slice(input).map_err(|_| AggregateError::Structure)?;
         let is_array = matches!(contract, Contract::DataArray | Contract::Matrix);
         let raw_children: Vec<Box<RawValue>> = if is_array {
-            vec![RawValue::from_string(
-                raw.get(member)
-                    .ok_or(AggregateError::Structure)?
-                    .get()
-                    .to_owned(),
-            )
-            .map_err(|_| AggregateError::Structure)?]
+            vec![
+                RawValue::from_string(
+                    raw.get(member)
+                        .ok_or(AggregateError::Structure)?
+                        .get()
+                        .to_owned(),
+                )
+                .map_err(|_| AggregateError::Structure)?,
+            ]
         } else {
             serde_json::from_str(raw.get(member).ok_or(AggregateError::Structure)?.get())
                 .map_err(|_| AggregateError::Structure)?
@@ -459,7 +462,10 @@ fn preflight(source: &Value) -> Result<(), ComponentError> {
     Ok(())
 }
 
-pub(crate) fn optional_string(source: &Value, member: &str) -> Result<Option<String>, AggregateError> {
+pub(crate) fn optional_string(
+    source: &Value,
+    member: &str,
+) -> Result<Option<String>, AggregateError> {
     source
         .get(member)
         .map(|value| {
