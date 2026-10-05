@@ -1,0 +1,57 @@
+{
+  "type": "DataRecord",
+  "id": "MIXED",
+  "label": " Mixed values ",
+  "description": "Independent ordered record fixture",
+  "optional": true,
+  "updatable": false,
+  "fields": [
+    {
+      "name": "zCount",
+      "type": "Count",
+      "definition": "urn:example:count",
+      "label": "Exact count",
+      "value": 9007199254740993
+    },
+    {
+      "name": "aBand",
+      "type": "QuantityRange",
+      "definition": "urn:example:extent",
+      "label": "Length band",
+      "uom": {"code": "cm", "label": " centimetres "},
+      "constraint": {"intervals": [[100, 200]]},
+      "value": [125.00, 150.00]
+    },
+    {
+      "name": "mNested",
+      "type": "DataRecord",
+      "fields": [
+        {
+          "name": "zCount",
+          "type": "Boolean",
+          "definition": "urn:example:enabled",
+          "label": "Enabled",
+          "value": false
+        },
+        {
+          "name": "aText",
+          "type": "Text",
+          "definition": "urn:example:note",
+          "label": "Note",
+          "optional": true,
+          "value": ""
+        },
+        {
+          "name": "mStatus",
+          "type": "Category",
+          "definition": "urn:example:status",
+          "label": "Status",
+          "constraint": {"values": ["ok"]},
+          "nilValues": [{"reason": "urn:example:nil:missing", "value": "missing"}],
+          "value": "missing"
+        }
+      ]
+    }
+  ],
+  "vendor:note": {"preserve": "original", "order": ["z", "a"]}
+}

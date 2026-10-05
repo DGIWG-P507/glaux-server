@@ -47,10 +47,11 @@ pub(super) fn compile(
     source: &Value,
     input: &[u8],
     context: ValueContext,
+    inherited_frame: Option<&str>,
 ) -> Result<ScalarContract, ScalarError> {
-    let frame = metadata
-        .reference_frame
-        .clone()
+    let frame = inherited_frame
+        .map(str::to_owned)
+        .or_else(|| metadata.reference_frame.clone())
         .map_or(TimeFrame::DefaultUtc, TimeFrame::Declared);
     let uom = super::numeric::unit(source)?;
     if let Some(code) = &uom.code {

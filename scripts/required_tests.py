@@ -1,6 +1,15 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "aggregate::tests::aggregate_record_preserves_declared_field_order",
+    "aggregate::tests::aggregate_metadata_optional_and_nested_names",
+    "aggregate::tests::aggregate_nested_scalar_and_range_checks",
+    "aggregate::tests::aggregate_vector_numeric_members_and_frame_binding",
+    "aggregate::tests::aggregate_vector_semantics_exceed_original_schema",
+    "aggregate::tests::aggregate_invalid_children_and_references_fail_explicitly",
+    "aggregate::tests::aggregate_exact_source_and_nil_states",
+    "aggregate::tests::aggregate_limits_fail_before_unbounded_traversal",
+    "aggregate::tests::aggregate_generated_order_and_identity",
     "range::tests::range_pair_cardinality_rejects_extra_values",
     "range::tests::range_count_exact_pairs_and_endpoint_constraints",
     "range::tests::range_quantity_source_units_and_nil_endpoints",

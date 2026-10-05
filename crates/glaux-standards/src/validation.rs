@@ -35,6 +35,8 @@ pub enum Contract {
     CountRange,
     QuantityRange,
     TimeRange,
+    DataRecord,
+    Vector,
     SweRecord,
     PhysicalSystem,
     ObservationSwe,
@@ -57,7 +59,8 @@ impl Contract {
             Self::CountRange => format!("{SWE}CountRange.json"),
             Self::QuantityRange => format!("{SWE}QuantityRange.json"),
             Self::TimeRange => format!("{SWE}TimeRange.json"),
-            Self::SweRecord => format!("{SWE}DataRecord.json"),
+            Self::DataRecord | Self::SweRecord => format!("{SWE}DataRecord.json"),
+            Self::Vector => format!("{SWE}Vector.json"),
             Self::PhysicalSystem => format!("{PIN}sensorml/schemas/json/PhysicalSystem.json"),
             Self::ObservationSwe => {
                 format!("{PIN}api/part2/openapi/schemas/json/observationSchemaSwe.json")
@@ -280,6 +283,20 @@ fn compile_with_denial(
     uri: &str,
     deny: DenyRetrieval,
 ) -> Result<jsonschema::Validator, String> {
+    compile_with_formats(
+        catalog,
+        uri,
+        deny,
+        uri == format!("{SWE}Time.json") || uri == format!("{SWE}TimeRange.json"),
+    )
+}
+
+fn compile_with_formats(
+    catalog: &BTreeMap<String, Value>,
+    uri: &str,
+    deny: DenyRetrieval,
+    validate_formats: bool,
+) -> Result<jsonschema::Validator, String> {
     // Originals retain their retrieval bases; the tiny wrapper selects a named
     // fragment without cloning it and accidentally changing relative references.
     let mut builder = jsonschema::Registry::new().retriever(deny.clone());
@@ -296,9 +313,7 @@ fn compile_with_denial(
         // Time/TimeRange's DateTimeNumberOrSpecial oneOf needs date-time assertion to
         // distinguish calendar strings from named numeric specials. Originals
         // remain unchanged; semantic frame/calendar checks still run separately.
-        .should_validate_formats(
-            uri == format!("{SWE}Time.json") || uri == format!("{SWE}TimeRange.json"),
-        )
+        .should_validate_formats(validate_formats)
         .with_pattern_options(
             jsonschema::PatternOptions::fancy_regex()
                 .backtrack_limit(20_000)
@@ -325,6 +340,8 @@ impl StructuralValidator {
             Contract::CountRange,
             Contract::QuantityRange,
             Contract::TimeRange,
+            Contract::DataRecord,
+            Contract::Vector,
             Contract::SweRecord,
             Contract::PhysicalSystem,
             Contract::ObservationSwe,
@@ -333,7 +350,14 @@ impl StructuralValidator {
             Contract::TextEncoding,
             Contract::BinaryEncoding,
         ] {
-            validators.insert(contract, compile(&catalog, &contract.uri())?);
+            let validator = if matches!(contract, Contract::DataRecord | Contract::Vector) {
+                // Nested Time schemas need the same format assertion as their
+                // direct entry points. SweRecord keeps its earlier baseline.
+                compile_with_formats(&catalog, &contract.uri(), DenyRetrieval::default(), true)?
+            } else {
+                compile(&catalog, &contract.uri())?
+            };
+            validators.insert(contract, validator);
         }
         Ok(Self { validators })
     }

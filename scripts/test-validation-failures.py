@@ -23,6 +23,7 @@ SCALAR_DOMAIN = Path("crates/glaux-domain/src/scalar.rs")
 NUMERIC_SCALAR = Path("crates/glaux-standards/src/scalar/numeric.rs")
 TIME_SCALAR = Path("crates/glaux-standards/src/scalar/time.rs")
 RANGE = Path("crates/glaux-standards/src/range.rs")
+AGGREGATE = Path("crates/glaux-standards/src/aggregate.rs")
 TIMEOUT_SECONDS = 180
 
 
@@ -128,7 +129,22 @@ def accept_extra_range_endpoint(root):
     replace(root / RANGE, "if values.len() != 2 {", "if values.len() < 2 {")
 
 
+def sort_record_fields(root):
+    replace(root / AGGREGATE, "        for child in raw_children {",
+            """        let mut raw_children = raw_children;
+        if contract == Contract::DataRecord {
+            raw_children.sort_by_key(|child| {
+                let value: serde_json::Value = serde_json::from_str(child.get()).unwrap();
+                value["name"].as_str().unwrap().to_owned()
+            });
+        }
+        for child in raw_children {""")
+
+
 CASES = [
+    ("record-fields-sorted", "aggregate::tests::aggregate_record_preserves_declared_field_order",
+     sort_record_fields, ['left: ["aBand", "mNested", "zCount"]',
+                          'right: ["zCount", "aBand", "mNested"]']),
     ("range-extra-endpoint", "range::tests::range_pair_cardinality_rejects_extra_values",
      accept_extra_range_endpoint, ["left: None", "right: Some(Cardinality)"]),
     ("time-fraction-truncated", "scalar::time_tests::time_calendar_defaults_preserve_exact_instants",
