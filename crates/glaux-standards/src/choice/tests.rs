@@ -96,9 +96,14 @@ fn choice_declared_order_and_source_are_preserved() {
         AggregateComponent::Choice { .. }
     ));
     assert_eq!(nested.children()[1].name(), "aHigh");
-    let selection = [named("aHigh", ComponentValue::ScalarJson(b"9007199254740993"))];
+    let selection = [named(
+        "aHigh",
+        ComponentValue::ScalarJson(b"9007199254740993"),
+    )];
     let fields = [named("selection", ComponentValue::Choice(&selection))];
-    let checked = record.check_value(&ComponentValue::Record(&fields)).unwrap();
+    let checked = record
+        .check_value(&ComponentValue::Record(&fields))
+        .unwrap();
     let CheckedComponentValue::Record(fields) = checked else {
         panic!("record-root value")
     };
@@ -115,7 +120,10 @@ fn choice_declared_order_and_source_are_preserved() {
     };
     assert_eq!(value.try_to_u64(), Ok(9_007_199_254_740_993));
     assert_eq!(value.number().decimal_lexeme(), Some("9007199254740993"));
-    let wrong_arm = [named("zLow", ComponentValue::ScalarJson(b"9007199254740993"))];
+    let wrong_arm = [named(
+        "zLow",
+        ComponentValue::ScalarJson(b"9007199254740993"),
+    )];
     let fields = [named("selection", ComponentValue::Choice(&wrong_arm))];
     let error = record
         .check_value(&ComponentValue::Record(&fields))
