@@ -4,6 +4,7 @@
 //! pinned original schemas; codecs and resource semantics remain later work.
 
 pub mod aggregate;
+pub mod choice;
 pub mod projection;
 pub mod range;
 pub mod scalar;

@@ -475,7 +475,6 @@ fn aggregate_invalid_children_and_references_fail_explicitly() {
         );
     }
     for kind in [
-        "DataChoice",
         "DataArray",
         "Matrix",
         "Geometry",

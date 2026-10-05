@@ -1,0 +1,67 @@
+{
+  "type": "DataChoice",
+  "id": "CHOICE",
+  "label": " Mixed alternatives ",
+  "description": "Independent named selection fixture",
+  "optional": true,
+  "choiceValue": {
+    "type": "Category",
+    "definition": "urn:example:choice-selector",
+    "label": "Selected alternative",
+    "constraint": {"values": ["aHigh", "zLow", "mBand", "rStatus", "vPosition", "cNested"]}
+  },
+  "items": [
+    {
+      "name": "zLow",
+      "type": "Count",
+      "definition": "urn:example:small-count",
+      "label": "Small count",
+      "constraint": {"intervals": [[0, 9]]}
+    },
+    {
+      "name": "aHigh",
+      "type": "Count",
+      "definition": "urn:example:exact-count",
+      "label": "Exact count",
+      "constraint": {"intervals": [[9007199254740992, 9007199254740994]]}
+    },
+    {
+      "name": "mBand",
+      "type": "QuantityRange",
+      "definition": "urn:example:length-band",
+      "label": "Length band",
+      "uom": {"code": "cm"},
+      "constraint": {"intervals": [[0, 200]]},
+      "nilValues": [{"reason": "urn:example:nil:missing", "value": -999.00}]
+    },
+    {
+      "name": "rStatus",
+      "type": "DataRecord",
+      "fields": [
+        {"name": "zFlag", "type": "Boolean", "definition": "urn:example:flag", "label": "Flag"},
+        {"name": "aNote", "type": "Text", "definition": "urn:example:note", "label": "Note", "optional": true}
+      ]
+    },
+    {
+      "name": "vPosition",
+      "type": "Vector",
+      "definition": "urn:example:position",
+      "label": "Position",
+      "referenceFrame": "urn:example:unknown-frame",
+      "localFrame": "#platform",
+      "coordinates": [
+        {"name": "zIndex", "type": "Count", "definition": "urn:example:index", "label": "Index", "axisID": "I"},
+        {"name": "aTime", "type": "Time", "definition": "urn:example:time", "label": "Time", "axisID": "T", "uom": {"href": "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian"}}
+      ]
+    },
+    {
+      "name": "cNested",
+      "type": "DataChoice",
+      "items": [
+        {"name": "yes", "type": "Boolean", "definition": "urn:example:answer", "label": "Answer"},
+        {"name": "note", "type": "Text", "definition": "urn:example:note", "label": "Note"}
+      ]
+    }
+  ],
+  "vendor:note": "Preserve source, item identity and declaration order"
+}

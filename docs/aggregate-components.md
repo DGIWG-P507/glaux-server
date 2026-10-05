@@ -3,7 +3,8 @@
 [Task #31](https://github.com/DGIWG-P507/glaux-server/issues/31) adds bounded,
 immutable component descriptions under Guide §4.3. It does not add HTTP routes,
 storage, record payload encoders, coordinate transformations or a reference-graph
-resolver. Choices, arrays, matrices, geometry and quality remain their owning
+resolver. [Task #32](choice-components.md) adds choices and model-level selected
+value checking. Arrays, matrices, geometry and quality remain their owning
 tasks' work, not silently accepted typed components.
 
 ## What the contract preserves and checks
@@ -14,8 +15,8 @@ DataRecord fields from Vector coordinates. Both use ordered named children, not
 a map whose sorting could change the data layout. Child identity is scoped to
 its parent; the same name may occur in different nested records.
 
-Records can contain the implemented scalar and range families, records and
-vectors. Child compilation reuses scalar/range validation, including exact
+Records can contain the implemented scalar and range families, records, vectors
+and choices. Child compilation reuses scalar/range validation, including exact
 numbers, units, constraints, time context and declared nil reasons. Root and
 child `source()` retain the original bytes, including numeric spelling and
 extensions. `children()` exposes immutable child contracts so callers can inspect

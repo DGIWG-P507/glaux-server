@@ -24,6 +24,7 @@ NUMERIC_SCALAR = Path("crates/glaux-standards/src/scalar/numeric.rs")
 TIME_SCALAR = Path("crates/glaux-standards/src/scalar/time.rs")
 RANGE = Path("crates/glaux-standards/src/range.rs")
 AGGREGATE = Path("crates/glaux-standards/src/aggregate.rs")
+CHOICE_VALUE = Path("crates/glaux-standards/src/choice/value.rs")
 TIMEOUT_SECONDS = 180
 
 
@@ -141,7 +142,19 @@ def sort_record_fields(root):
         for child in raw_children {""")
 
 
+def accept_another_choice_arm(root):
+    replace(root / CHOICE_VALUE,
+            "let value = check_child(child, &selected.value).map_err(|error| error.at(index))?;",
+            """let value = check_child(child, &selected.value).or_else(|original| {
+                contract.children().iter()
+                    .find_map(|alternative| check_child(alternative, &selected.value).ok())
+                    .ok_or(original)
+            }).map_err(|error| error.at(index))?;""")
+
+
 CASES = [
+    ("choice-wrong-arm-fallback", "choice::tests::choice_dispatches_exact_selected_arm",
+     accept_another_choice_arm, ["left: None", "right: Some(Scalar(ConstraintViolation))"]),
     ("record-fields-sorted", "aggregate::tests::aggregate_record_preserves_declared_field_order",
      sort_record_fields, ['left: ["aBand", "mNested", "zCount"]',
                           'right: ["zCount", "aBand", "mNested"]']),
