@@ -342,11 +342,19 @@ impl Index<'_> {
             }
         }
         if let Some(quality) = raw_members.get("quality") {
-            if !matches!(kind, Contract::Boolean | Contract::Text | Contract::Category
-                | Contract::Count | Contract::Quantity | Contract::Time
-                | Contract::CategoryRange | Contract::CountRange | Contract::QuantityRange
-                | Contract::TimeRange)
-            {
+            if !matches!(
+                kind,
+                Contract::Boolean
+                    | Contract::Text
+                    | Contract::Category
+                    | Contract::Count
+                    | Contract::Quantity
+                    | Contract::Time
+                    | Contract::CategoryRange
+                    | Contract::CountRange
+                    | Contract::QuantityRange
+                    | Contract::TimeRange
+            ) {
                 return Err(ReferenceError::Quality(QualityError::UnsupportedComponent));
             }
             // Upstream leaves this member open. Do not confuse that structural
@@ -362,9 +370,17 @@ impl Index<'_> {
                 let target = if value.get("href").is_some() {
                     self.reference(node, &value, raw, path, ReferenceKind::Quality)?
                 } else {
-                    EdgeTarget::Component(self.component(&value, raw, path, component_kind(&value)?)?)
+                    EdgeTarget::Component(self.component(
+                        &value,
+                        raw,
+                        path,
+                        component_kind(&value)?,
+                    )?)
                 };
-                self.edges[node].push(Edge { target, slot: Slot::Quality });
+                self.edges[node].push(Edge {
+                    target,
+                    slot: Slot::Quality,
+                });
             }
         }
         Ok(node)
@@ -466,8 +482,13 @@ impl Index<'_> {
                     return Err(ReferenceError::InvalidTarget);
                 }
                 if reference.kind == ReferenceKind::Quality
-                    && !matches!(self.components[target].kind,
-                        Contract::Quantity | Contract::QuantityRange | Contract::Category | Contract::Text)
+                    && !matches!(
+                        self.components[target].kind,
+                        Contract::Quantity
+                            | Contract::QuantityRange
+                            | Contract::Category
+                            | Contract::Text
+                    )
                 {
                     return Err(ReferenceError::InvalidTarget);
                 }

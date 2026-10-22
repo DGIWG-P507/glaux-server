@@ -451,10 +451,15 @@ fn scalar_bounded_inputs_and_unsupported_features() {
     // claim an eligible target or a supplied per-record quality value.
     let source = json!({"type":"Text","definition":"urn:example:property","label":"Property",
         "quality":[{"href":"#quality"}]});
-    let contract = ScalarContract::compile(validator(), &serde_json::to_vec(&source).unwrap()).unwrap();
-    let crate::quality::InlineQuality::Reference(reference) = &contract.quality().entries()[0] else {
+    let contract =
+        ScalarContract::compile(validator(), &serde_json::to_vec(&source).unwrap()).unwrap();
+    let crate::quality::InlineQuality::Reference(reference) = &contract.quality().entries()[0]
+    else {
         panic!("unresolved reference metadata")
     };
     assert_eq!(reference.href, "#quality");
-    assert_eq!(contract.quality().entries()[0].availability(), crate::quality::QualityAvailability::Missing);
+    assert_eq!(
+        contract.quality().entries()[0].availability(),
+        crate::quality::QualityAvailability::Missing
+    );
 }

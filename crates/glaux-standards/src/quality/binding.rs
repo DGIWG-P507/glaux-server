@@ -8,8 +8,8 @@ use crate::{
     choice::{ComponentValue, NamedValue},
     range::{CheckedRangeValue, RangeContract, RangeOptions},
     references::{
-        ComponentGraph, Edge, EdgeTarget, ReferenceError, ReferenceKind, ReferenceTarget, Slot,
-        MAX_TRAVERSAL_DEPTH, MAX_TRAVERSAL_STEPS,
+        ComponentGraph, Edge, EdgeTarget, MAX_TRAVERSAL_DEPTH, MAX_TRAVERSAL_STEPS, ReferenceError,
+        ReferenceKind, ReferenceTarget, Slot,
     },
     scalar::{CheckedScalarValue, ScalarContract},
     validation::{Contract, StructuralValidator},
@@ -49,7 +49,12 @@ impl QualityReferenceValue {
         match self {
             Self::Missing | Self::Nonlocal => QualityAvailability::Missing,
             Self::Scalar(value) if value.nil_reason.is_some() => QualityAvailability::Nil,
-            Self::Range(value) if value.endpoints.iter().any(|value| value.nil_reason.is_some()) => {
+            Self::Range(value)
+                if value
+                    .endpoints
+                    .iter()
+                    .any(|value| value.nil_reason.is_some()) =>
+            {
                 QualityAvailability::Nil
             }
             Self::Scalar(_) | Self::Range(_) => QualityAvailability::Supplied,
@@ -100,7 +105,9 @@ impl QualityReferencePlan {
                 }
             }
         }
-        let mut targets = (0..graph.components().len()).map(|_| None).collect::<Vec<_>>();
+        let mut targets = (0..graph.components().len())
+            .map(|_| None)
+            .collect::<Vec<_>>();
         for reference in graph.references() {
             if reference.kind != ReferenceKind::Quality {
                 continue;
@@ -115,11 +122,15 @@ impl QualityReferencePlan {
             if targets[node].is_some() {
                 continue;
             }
-            let source = graph.component_source(node).ok_or(QualityBindingError::InvalidTarget)?;
+            let source = graph
+                .component_source(node)
+                .ok_or(QualityBindingError::InvalidTarget)?;
             targets[node] = Some(match graph.components()[node].kind {
                 Contract::Quantity | Contract::Category | Contract::Text => {
-                    TargetContract::Scalar(Box::new(ScalarContract::compile(validator, source)
-                        .map_err(|_| QualityBindingError::InvalidTarget)?))
+                    TargetContract::Scalar(Box::new(
+                        ScalarContract::compile(validator, source)
+                            .map_err(|_| QualityBindingError::InvalidTarget)?,
+                    ))
                 }
                 Contract::QuantityRange => TargetContract::Range(Box::new(
                     RangeContract::compile(validator, source, RangeOptions::default())
@@ -146,7 +157,11 @@ impl QualityReferencePlan {
                 }
             }
         }
-        Ok(Self { graph, targets, attached })
+        Ok(Self {
+            graph,
+            targets,
+            attached,
+        })
     }
 
     pub fn graph(&self) -> &ComponentGraph {
@@ -155,7 +170,10 @@ impl QualityReferencePlan {
 
     /// Does not mutate or fill the input, fall back to static descriptor values,
     /// fetch references, aggregate quality, or convert an unavailable value to pass.
-    pub fn bind(&self, input: &ComponentValue<'_>) -> Result<Vec<BoundQualityReference>, QualityBindingError> {
+    pub fn bind(
+        &self,
+        input: &ComponentValue<'_>,
+    ) -> Result<Vec<BoundQualityReference>, QualityBindingError> {
         crate::choice::value::budget(input).map_err(|_| QualityBindingError::Limit)?;
         let mut occurrences = Vec::new();
         self.walk(0, Some(input), Vec::new(), Vec::new(), &mut occurrences)?;
@@ -178,7 +196,9 @@ impl QualityReferencePlan {
                             return Err(QualityBindingError::AmbiguousOccurrence);
                         }
                         match candidate {
-                            Some(candidate) => (Some(candidate.address.clone()), candidate.value.clone()),
+                            Some(candidate) => {
+                                (Some(candidate.address.clone()), candidate.value.clone())
+                            }
                             None => (None, QualityReferenceValue::Missing),
                         }
                     }
@@ -209,18 +229,33 @@ impl QualityReferencePlan {
             return Err(QualityBindingError::Limit);
         }
         let kind = self.graph.components()[node].kind;
-        let address = ComponentOccurrence { component: node, path: path.clone() };
+        let address = ComponentOccurrence {
+            component: node,
+            path: path.clone(),
+        };
         let value = match (self.targets[node].as_ref(), input) {
             (Some(TargetContract::Scalar(contract)), Some(ComponentValue::ScalarJson(raw))) => {
-                QualityReferenceValue::Scalar(contract.check_value(raw).map_err(|_| QualityBindingError::InvalidValue)?)
+                QualityReferenceValue::Scalar(
+                    contract
+                        .check_value(raw)
+                        .map_err(|_| QualityBindingError::InvalidValue)?,
+                )
             }
             (Some(TargetContract::Range(contract)), Some(ComponentValue::RangeJson(raw))) => {
-                QualityReferenceValue::Range(contract.check_value(raw).map_err(|_| QualityBindingError::InvalidValue)?)
+                QualityReferenceValue::Range(
+                    contract
+                        .check_value(raw)
+                        .map_err(|_| QualityBindingError::InvalidValue)?,
+                )
             }
             (Some(_), Some(_)) => return Err(QualityBindingError::ValueShape),
             _ => QualityReferenceValue::Missing,
         };
-        occurrences.push(Occurrence { address: address.clone(), context: context.clone(), value });
+        occurrences.push(Occurrence {
+            address: address.clone(),
+            context: context.clone(),
+            value,
+        });
         match kind {
             Contract::DataRecord | Contract::Vector | Contract::DataChoice => {
                 let values = match (kind, input) {
@@ -241,7 +276,9 @@ impl QualityReferencePlan {
                         continue;
                     }
                     let Some(child) = target(&self.graph, edge) else {
-                        if value.is_some() { return Err(QualityBindingError::ValueShape); }
+                        if value.is_some() {
+                            return Err(QualityBindingError::ValueShape);
+                        }
                         continue;
                     };
                     let mut child_path = path.clone();
@@ -255,7 +292,9 @@ impl QualityReferencePlan {
                     Some(ComponentValue::Array(values)) => *values,
                     _ => return Err(QualityBindingError::ValueShape),
                 };
-                let edge = payload_edges(&self.graph, node).next().ok_or(QualityBindingError::ValueShape)?;
+                let edge = payload_edges(&self.graph, node)
+                    .next()
+                    .ok_or(QualityBindingError::ValueShape)?;
                 let child = target(&self.graph, edge);
                 for (index, value) in values.iter().enumerate() {
                     let child = child.ok_or(QualityBindingError::ValueShape)?;
@@ -264,19 +303,29 @@ impl QualityReferencePlan {
                     let mut child_context = context.clone();
                     // Each repetition is its own context, not just the array's
                     // container address. Otherwise adjacent records could mix.
-                    child_context.push(ComponentOccurrence { component: node, path: child_path.clone() });
+                    child_context.push(ComponentOccurrence {
+                        component: node,
+                        path: child_path.clone(),
+                    });
                     self.walk(child, Some(value), child_path, child_context, occurrences)?;
                 }
             }
             _ => {
                 let shape = match kind {
-                    Contract::CategoryRange | Contract::CountRange | Contract::QuantityRange | Contract::TimeRange => {
+                    Contract::CategoryRange
+                    | Contract::CountRange
+                    | Contract::QuantityRange
+                    | Contract::TimeRange => {
                         input.is_none() || matches!(input, Some(ComponentValue::RangeJson(_)))
                     }
-                    Contract::Geometry => input.is_none() || matches!(input, Some(ComponentValue::GeometryJson(_))),
+                    Contract::Geometry => {
+                        input.is_none() || matches!(input, Some(ComponentValue::GeometryJson(_)))
+                    }
                     _ => input.is_none() || matches!(input, Some(ComponentValue::ScalarJson(_))),
                 };
-                if !shape { return Err(QualityBindingError::ValueShape); }
+                if !shape {
+                    return Err(QualityBindingError::ValueShape);
+                }
             }
         }
         Ok(())
@@ -287,10 +336,15 @@ impl QualityReferencePlan {
         edges: &[&Edge],
         values: &'a [NamedValue<'b>],
     ) -> Result<Vec<Option<&'a ComponentValue<'b>>>, QualityBindingError> {
-        let names = edges.iter().map(|edge| match edge.target {
-            EdgeTarget::Component(node) => self.graph.components()[node].name.as_deref(),
-            EdgeTarget::Reference(reference) => self.graph.references()[reference].name.as_deref(),
-        }).collect::<Vec<_>>();
+        let names = edges
+            .iter()
+            .map(|edge| match edge.target {
+                EdgeTarget::Component(node) => self.graph.components()[node].name.as_deref(),
+                EdgeTarget::Reference(reference) => {
+                    self.graph.references()[reference].name.as_deref()
+                }
+            })
+            .collect::<Vec<_>>();
         for (index, name) in names.iter().enumerate() {
             if name.is_none() || names[..index].contains(name) {
                 return Err(QualityBindingError::ValueShape);
@@ -298,7 +352,10 @@ impl QualityReferencePlan {
         }
         let mut slots = vec![None; edges.len()];
         for value in values {
-            let index = names.iter().position(|name| *name == Some(value.name)).ok_or(QualityBindingError::ValueShape)?;
+            let index = names
+                .iter()
+                .position(|name| *name == Some(value.name))
+                .ok_or(QualityBindingError::ValueShape)?;
             if slots[index].replace(&value.value).is_some() {
                 return Err(QualityBindingError::ValueShape);
             }
@@ -314,7 +371,9 @@ struct Occurrence {
 }
 
 fn payload_edges(graph: &ComponentGraph, node: usize) -> impl Iterator<Item = &Edge> {
-    graph.edges[node].iter().filter(|edge| matches!(edge.slot, Slot::Component | Slot::ElementType))
+    graph.edges[node]
+        .iter()
+        .filter(|edge| matches!(edge.slot, Slot::Component | Slot::ElementType))
 }
 
 fn target(graph: &ComponentGraph, edge: &Edge) -> Option<usize> {
@@ -330,9 +389,11 @@ fn target(graph: &ComponentGraph, edge: &Edge) -> Option<usize> {
 fn compatible(subject: &[ComponentOccurrence], target: &[ComponentOccurrence]) -> bool {
     // A common container definition must denote the same occurrence. Merely
     // sharing an ID or the final field name is insufficient across repetitions.
-    subject.iter().all(|left| target.iter().all(|right| {
-        left.component != right.component || left.path == right.path
-    }))
+    subject.iter().all(|left| {
+        target
+            .iter()
+            .all(|right| left.component != right.component || left.path == right.path)
+    })
 }
 
 #[cfg(test)]

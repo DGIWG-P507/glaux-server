@@ -68,9 +68,15 @@ impl QualityReference {
             return Err(QualityError::InvalidReference);
         }
         let string = |key: &str| -> Result<Option<String>, QualityError> {
-            object.get(key).map(|value| {
-                value.as_str().map(str::to_owned).ok_or(QualityError::InvalidReference)
-            }).transpose()
+            object
+                .get(key)
+                .map(|value| {
+                    value
+                        .as_str()
+                        .map(str::to_owned)
+                        .ok_or(QualityError::InvalidReference)
+                })
+                .transpose()
         };
         let href = string("href")?.ok_or(QualityError::InvalidReference)?;
         if href.is_empty() || href == "#" {
@@ -81,14 +87,19 @@ impl QualityReference {
         let role = string("role")?;
         let arcrole = string("arcrole")?;
         for uri in role.iter().chain(arcrole.iter()) {
-            crate::scalar::check_format(uri, "uri")
-                .map_err(|_| QualityError::InvalidReference)?;
+            crate::scalar::check_format(uri, "uri").map_err(|_| QualityError::InvalidReference)?;
         }
         let title = string("title")?;
         if title.as_ref().is_some_and(String::is_empty) {
             return Err(QualityError::InvalidReference);
         }
-        Ok(Self { href, role, arcrole, title, source: raw.get().as_bytes().to_vec() })
+        Ok(Self {
+            href,
+            role,
+            arcrole,
+            title,
+            source: raw.get().as_bytes().to_vec(),
+        })
     }
 }
 

@@ -245,7 +245,11 @@ fn quality_rejects_unsupported_types_and_preserves_reference_entries_without_cla
             "malformed or mixed references cannot masquerade as quality"
         );
     }
-    for href in ["#PRESS_QC", "https://example.test/quality", "file:///not-fetched"] {
+    for href in [
+        "#PRESS_QC",
+        "https://example.test/quality",
+        "file:///not-fetched",
+    ] {
         let source = quality_source(json!([{"href":href}]));
         let contract = compile(&source);
         let entry = &contract.quality().entries()[0];
@@ -255,7 +259,10 @@ fn quality_rejects_unsupported_types_and_preserves_reference_entries_without_cla
         assert_eq!(reference.href, href);
         assert_eq!(entry.availability(), QualityAvailability::Missing);
         assert_eq!(contract.source(), source);
-        assert_eq!(serde_json::from_slice::<Value>(entry.source()).unwrap(), json!({"href":href}));
+        assert_eq!(
+            serde_json::from_slice::<Value>(entry.source()).unwrap(),
+            json!({"href":href})
+        );
     }
 }
 
