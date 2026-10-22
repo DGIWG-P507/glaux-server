@@ -58,7 +58,12 @@ impl InlineQuality {
             }
             Self::QuantityRange(value) => match value.inline_value() {
                 None => QualityAvailability::Missing,
-                Some(value) if value.endpoints.iter().any(|value| value.nil_reason.is_some()) => {
+                Some(value)
+                    if value
+                        .endpoints
+                        .iter()
+                        .any(|value| value.nil_reason.is_some()) =>
+                {
                     QualityAvailability::Nil
                 }
                 Some(_) => QualityAvailability::Supplied,
@@ -98,7 +103,8 @@ impl QualityAssertions {
             serde_json::from_str(raw.get()).map_err(|_| QualityError::Shape)?;
         let mut compiled = Vec::with_capacity(entries.len());
         for entry in entries {
-            let source: Value = serde_json::from_str(entry.get()).map_err(|_| QualityError::Shape)?;
+            let source: Value =
+                serde_json::from_str(entry.get()).map_err(|_| QualityError::Shape)?;
             let source = source.as_object().ok_or(QualityError::Shape)?;
             // Reference binding belongs to the next task. Do not silently accept
             // it as an inline component, even when a type is supplied as well.

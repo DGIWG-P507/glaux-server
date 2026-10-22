@@ -149,7 +149,8 @@ impl ScalarContract {
                 .finish(validator, &source, input);
         }
         if matches!(kind, Contract::Count | Contract::Quantity) {
-            return numeric::compile(kind, metadata, &source, input)?.finish(validator, &source, input);
+            return numeric::compile(kind, metadata, &source, input)?
+                .finish(validator, &source, input);
         }
         let constraint = token_constraint(&source)?;
         let tokens = match &constraint {
@@ -214,9 +215,9 @@ impl ScalarContract {
             serde_json::from_slice(input).map_err(|_| ScalarError::Structure)?;
         self.quality = QualityAssertions::compile(validator, raw.get("quality").map(Box::as_ref))
             .map_err(|error| match error {
-                QualityError::ReferenceUnsupported => ScalarError::UnsupportedFeature,
-                error => ScalarError::Quality(error),
-            })?;
+            QualityError::ReferenceUnsupported => ScalarError::UnsupportedFeature,
+            error => ScalarError::Quality(error),
+        })?;
         self.nil_declarations = nil::compile(&self, source, &raw)?;
         if let Some(value) = source.get("value") {
             let checked = self.check_with_nil(
