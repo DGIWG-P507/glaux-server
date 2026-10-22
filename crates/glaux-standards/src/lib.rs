@@ -8,6 +8,7 @@ pub mod array;
 pub mod choice;
 pub mod geometry;
 pub mod projection;
+pub mod quality;
 pub mod range;
 pub mod references;
 pub mod scalar;

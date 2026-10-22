@@ -1,6 +1,19 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "quality::tests::quality_all_four_types_preserve_independent_facts_after_source_round_trip",
+    "quality::tests::quality_malformed_arrays_are_not_schema_success",
+    "quality::tests::quality_rejects_unsupported_types_and_reference_entries_without_claiming_resolution",
+    "quality::tests::quality_units_constraints_and_supplied_values_are_checked",
+    "quality::tests::quality_missing_nil_and_supplied_are_distinct",
+    "quality::tests::quality_range_and_token_nils_do_not_become_available_quality",
+    "quality::tests::quality_aggregate_paths_keep_assertions_on_their_distinct_subjects",
+    "quality::tests::quality_range_owner_and_nested_assertions_are_preserved",
+    "quality::tests::quality_exact_source_retains_lexemes_and_supplied_context_without_normalization",
+    "quality::tests::quality_does_not_invent_a_universal_probability_or_rewrite_units",
+    "quality::tests::quality_static_array_element_assertion_is_not_an_inline_payload_value",
+    "quality::tests::quality_bounded_generated_nested_values_are_checked_not_only_outer_entries",
+    "quality::tests::quality_uses_whole_document_depth_size_and_node_budgets",
     "references::tests::reference_local_ids_resolve_exact_targets",
     "references::tests::reference_fragments_decode_once_without_name_paths",
     "references::tests::reference_nonlocal_metadata_preserved_without_fetch",

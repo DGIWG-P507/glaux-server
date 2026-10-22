@@ -38,6 +38,7 @@ pub(super) fn compile(
         tokens: None,
         nil_declarations: Vec::new(),
         inline: None,
+        quality: super::QualityAssertions::default(),
     })
 }
 

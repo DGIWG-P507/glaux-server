@@ -6,7 +6,8 @@ storage, record payload encoders, coordinate transformations or a reference-grap
 resolver. [Task #32](choice-components.md) adds choices and model-level selected
 value checking. [Task #33](array-components.md) adds array/matrix descriptions,
 not their payload values. [Task #34](geometry-components.md) adds distinct
-Geometry children; quality remains its owning task's work.
+Geometry children. [Task #36](inline-quality.md) adds inline quality on scalar
+and range children through their checked contracts, not on aggregate roots.
 
 ## What the contract preserves and checks
 

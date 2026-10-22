@@ -56,8 +56,9 @@ every scalar constraint, runtime value or encoding rule. The owning
 [compiled-contract task #38](https://github.com/DGIWG-P507/glaux-server/issues/38)
 composes these stages into the complete immutable validation/codec description.
 The existing Array/Aggregate APIs do not silently change their acceptance or
-pretend to compile reference-bearing payloads. Inline and dynamic quality
-semantics belong to #36/#37; binary member-name paths and payload execution
+pretend to compile reference-bearing payloads. [Inline quality](inline-quality.md)
+is validated by the scalar/range contracts; dynamic quality references remain
+with #37. Binary member-name paths and payload execution
 belong to their codec tasks.
 
 The original enclosing schema is checked, not merely each referenced object.

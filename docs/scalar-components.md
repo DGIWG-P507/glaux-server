@@ -51,9 +51,10 @@ The accepted IDR-022 scalar/constraint analysis is supporting research, not a
 replacement for these sources. The vendored originals are unchanged.
 
 Task 2.1.4 adds [declared nil semantics](range-components.md) and the checked
-`nil_reason` distinction for supported scalars. Quality remains owned by a later
-task and returns `UnsupportedFeature`; it is not silently discarded. Boolean constraints also
-return that result: this task invents no Boolean constraint form and does not
+`nil_reason` distinction for supported scalars. Task 2.1.10 adds separately
+checked [inline quality assertions](inline-quality.md) on the contract; quality
+references remain explicitly unsupported until 2.1.11. Boolean constraints
+return `UnsupportedFeature`: this task invents no Boolean constraint form and does not
 claim that the inherited open schema universally prohibits extensions.
 
 Regex behavior is bounded, not a full ECMAScript implementation. The pinned

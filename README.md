@@ -79,6 +79,12 @@ links to exact component IDs, preserve original descriptions and reject cycles
 or excessive traversal. Nonlocal links remain metadata and are never fetched.
 This is the reference stage of the shared model, not a runtime payload decoder.
 
+[Inline quality assertions](docs/inline-quality.md) retain and validate supplied
+numeric, interval, category and text assessments on the component they describe.
+Missing or nil quality remains unavailable, not zero uncertainty or a pass.
+This uses the Guide's explicit JSON interpretation without changing upstream
+schemas; per-record quality references and payload codecs remain later work.
+
 [Typed resource identities](docs/resource-identities.md) now separate UUIDv7 local
 locators, URI-form published UIDs and authority-qualified source identifiers.
 Strict parsing, fallible generation and type-boundary checks prevent accidental

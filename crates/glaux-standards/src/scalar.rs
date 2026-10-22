@@ -10,7 +10,10 @@ use glaux_domain::scalar::{
 };
 use serde_json::{Value, json, value::RawValue};
 
-use crate::validation::{self, Contract, StructuralValidator};
+use crate::{
+    quality::{QualityAssertions, QualityError},
+    validation::{self, Contract, StructuralValidator},
+};
 use glaux_domain::numeric::NumericError;
 
 mod nil;
@@ -46,6 +49,7 @@ pub enum ScalarError {
     NilDeclaration,
     DuplicateNilValue,
     NilLimit,
+    Quality(QualityError),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -81,6 +85,7 @@ pub struct ScalarContract {
     tokens: Option<jsonschema::Validator>,
     nil_declarations: Vec<NilDeclaration>,
     inline: Option<CheckedScalarValue>,
+    quality: QualityAssertions,
 }
 
 impl ScalarContract {
@@ -134,20 +139,18 @@ impl ScalarContract {
         validator
             .validate(kind, input)
             .map_err(|_| ScalarError::Structure)?;
-        // Known semantics owned by later leaves must not disappear as extensions.
         // This does not claim the open upstream Boolean schema forbids constraint.
-        if source.get("quality").is_some()
-            || (kind == Contract::Boolean && source.get("constraint").is_some())
-        {
+        if kind == Contract::Boolean && source.get("constraint").is_some() {
             return Err(ScalarError::UnsupportedFeature);
         }
         let metadata = metadata(&source)?;
         if kind == Contract::Time {
             return time::compile(metadata, &source, input, context, inherited_frame)?
-                .finish(&source, input);
+                .finish(validator, &source, input);
         }
         if matches!(kind, Contract::Count | Contract::Quantity) {
-            return numeric::compile(kind, metadata, &source, input)?.finish(&source, input);
+            return numeric::compile(kind, metadata, &source, input)?
+                .finish(validator, &source, input);
         }
         let constraint = token_constraint(&source)?;
         let tokens = match &constraint {
@@ -195,15 +198,26 @@ impl ScalarContract {
             tokens,
             nil_declarations: Vec::new(),
             inline: None,
+            quality: QualityAssertions::default(),
         };
-        compiled.finish(&source, input)
+        compiled.finish(validator, &source, input)
     }
 
-    fn finish(mut self, source: &Value, input: &[u8]) -> Result<Self, ScalarError> {
+    fn finish(
+        mut self,
+        validator: &StructuralValidator,
+        source: &Value,
+        input: &[u8],
+    ) -> Result<Self, ScalarError> {
         // RawValue preserves source decimal spelling, including the sign of -0,
         // both for inline values and every declared sentinel.
         let raw: BTreeMap<String, Box<RawValue>> =
             serde_json::from_slice(input).map_err(|_| ScalarError::Structure)?;
+        self.quality = QualityAssertions::compile(validator, raw.get("quality").map(Box::as_ref))
+            .map_err(|error| match error {
+            QualityError::ReferenceUnsupported => ScalarError::UnsupportedFeature,
+            error => ScalarError::Quality(error),
+        })?;
         self.nil_declarations = nil::compile(&self, source, &raw)?;
         if let Some(value) = source.get("value") {
             let checked = self.check_with_nil(
@@ -246,6 +260,12 @@ impl ScalarContract {
 
     pub fn nil_declarations(&self) -> &[NilDeclaration] {
         &self.nil_declarations
+    }
+
+    /// Inline assertions about this component. Static availability is not a
+    /// quality verdict; per-record reference binding is a separate stage.
+    pub fn quality(&self) -> &QualityAssertions {
+        &self.quality
     }
 
     /// Inline meaning includes any reserved-nil reason; absence stays absent.
