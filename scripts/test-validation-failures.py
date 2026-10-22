@@ -28,6 +28,7 @@ CHOICE_VALUE = Path("crates/glaux-standards/src/choice/value.rs")
 ARRAY = Path("crates/glaux-standards/src/array.rs")
 GEOMETRY_VALUE = Path("crates/glaux-standards/src/geometry/value.rs")
 REFERENCES = Path("crates/glaux-standards/src/references.rs")
+QUALITY = Path("crates/glaux-standards/src/quality.rs")
 TIMEOUT_SECONDS = 180
 
 
@@ -172,7 +173,27 @@ def select_similarly_named_component(root):
                 let target = *self.ids.get(&id).ok_or(ReferenceError::UnresolvedLocal)?;""")
 
 
+def bypass_quality_semantics(root):
+    replace(root / SCALAR,
+            'QualityAssertions::compile(validator, raw.get("quality").map(Box::as_ref))',
+            'QualityAssertions::compile(validator, None)')
+
+
+def invent_supplied_quality(root):
+    # Change the scalar arm only. The identical range arm is deliberately not
+    # selected by global replacement; source shape drift is fatal.
+    path = root / QUALITY
+    original = path.read_text()
+    old = "None => QualityAvailability::Missing,"
+    require(original.count(old) == 2, "Fault target changed: quality availability arms.")
+    path.write_text(original.replace(old, "None => QualityAvailability::Supplied,", 1))
+
+
 CASES = [
+    ("quality-semantic-bypass", "quality::tests::quality_malformed_arrays_are_not_schema_success",
+     bypass_quality_semantics, ["left: None", "right: Some(Quality(Shape))"]),
+    ("quality-missing-reported-supplied", "quality::tests::quality_missing_nil_and_supplied_are_distinct",
+     invent_supplied_quality, ["left: Supplied", "right: Missing"]),
     ("reference-wrong-local-target", "references::tests::reference_local_ids_resolve_exact_targets",
      select_similarly_named_component, ["left: Local(1)", "right: Local(3)"]),
     ("geometry-height-dropped", "geometry::tests::geometry_height_and_exact_source_are_preserved",

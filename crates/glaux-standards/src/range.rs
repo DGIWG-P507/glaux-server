@@ -12,6 +12,7 @@ use glaux_domain::{
 use serde_json::{Value, value::RawValue};
 
 use crate::{
+    quality::{QualityAssertions, QualityError},
     scalar::{CheckedScalarValue, ScalarContract, ScalarError},
     validation::{self, Contract, StructuralValidator},
 };
@@ -26,6 +27,7 @@ pub enum RangeError {
     ReversedBounds,
     CategoryOrder,
     AdaptationSourceChanged,
+    Quality(QualityError),
 }
 
 /// Caller-supplied, local ordering evidence, not a fetched dictionary or a claim
@@ -80,6 +82,7 @@ pub struct RangeContract {
     source_validation: SourceValidation,
     category_order: Option<CategoryOrder>,
     inline: Option<CheckedRangeValue>,
+    quality: QualityAssertions,
 }
 
 impl RangeContract {
@@ -112,6 +115,9 @@ impl RangeContract {
         let mut raw: BTreeMap<String, Box<RawValue>> =
             serde_json::from_slice(input).map_err(|_| RangeError::Structure)?;
         let inline = raw.remove("value");
+        // Quality describes the range, not each generated endpoint descriptor.
+        let quality = QualityAssertions::compile(validator, raw.remove("quality").as_deref())
+            .map_err(RangeError::Quality)?;
         raw.insert(
             "type".into(),
             RawValue::from_string(format!("\"{scalar}\"")).map_err(|_| RangeError::Structure)?,
@@ -133,6 +139,7 @@ impl RangeContract {
             source_validation,
             category_order,
             inline: None,
+            quality,
         };
         if let Some(inline) = inline {
             let checked = compiled.check_value(inline.get().as_bytes())?;
@@ -157,6 +164,11 @@ impl RangeContract {
     }
     pub fn inline_value(&self) -> Option<&CheckedRangeValue> {
         self.inline.as_ref()
+    }
+
+    /// Inline assertions whose subject is this range as a whole.
+    pub fn quality(&self) -> &QualityAssertions {
+        &self.quality
     }
 
     /// Checks a supplied pair. No value is a separate Option state; JSON null is
