@@ -24,7 +24,8 @@ components fail, even when the unmodified parent schema accepts them.
 
 The checked contract's `quality()` accessor returns `QualityAssertions`;
 `is_present()` distinguishes an absent member from a supplied empty array, and
-`entries()` exposes the checked inline contracts. The containing component is
+`entries()` exposes the checked inline contracts or preserved reference entries.
+The containing component is
 the subject. For a record member, its containing child and name retain that
 association; no new mandatory `subject` JSON field is invented. A range owns
 its assertions once, not once per endpoint.
@@ -49,9 +50,11 @@ not an implemented observation/command payload codec.
 
 ## Boundaries and evidence
 
-Reference entries fail explicitly as unsupported at this stage; they are not
-ignored or fetched. Per-record binding and retained nonlocal quality-reference
-metadata belong to [#37](https://github.com/DGIWG-P507/glaux-server/issues/37).
+Reference entries retain their metadata without being treated as supplied inline
+values. [Per-record quality binding](quality-references.md), added by
+[#37](https://github.com/DGIWG-P507/glaux-server/issues/37), resolves local targets
+and selects their record occurrences. Compiling a scalar description alone does
+not establish that resolution. Nonlocal references are never fetched.
 Complete component/reference assembly belongs to
 [#38](https://github.com/DGIWG-P507/glaux-server/issues/38). This change does not
 add aggregate-root or Geometry quality, endpoints, payload fields, uncertainty

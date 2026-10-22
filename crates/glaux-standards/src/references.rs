@@ -3,8 +3,8 @@
 //! This stage checks structure and reference topology, not complete component
 //! semantics or payload occurrence rules. The scalar/aggregate compilers remain
 //! separate; immutable contract assembly composes those stages in task 2.1.12.
-//! Only published component association slots are followed. Quality, encoding
-//! paths, units, reference frames and arbitrary extension links are not resolved.
+//! Component association slots and Glaux's separate quality interpretation are
+//! followed. Encoding paths, units, frames and extension links are not resolved.
 //! No network or filesystem resolver is exposed or used.
 use std::{collections::BTreeMap, ops::Range};
 
@@ -13,6 +13,7 @@ use serde_json::{Value, value::RawValue};
 use crate::{
     aggregate::AggregateError,
     array::{self, ArrayOptions, CountReferenceSchema, SourceValidation},
+    quality::{QualityAssertions, QualityError},
     validation::{self, Contract, StructuralValidator},
 };
 
@@ -41,6 +42,7 @@ pub enum ReferenceError {
     DepthLimit,
     TraversalLimit,
     AdaptationSourceChanged,
+    Quality(QualityError),
 }
 
 /// One inline declaration, indexed in declaration order. An inline elementCount
@@ -60,6 +62,7 @@ pub struct ComponentNode {
 pub enum ReferenceKind {
     Component,
     ElementCount,
+    Quality,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -91,6 +94,7 @@ pub struct ComponentGraph {
     components: Vec<ComponentNode>,
     references: Vec<ComponentReference>,
     traversal: Vec<usize>,
+    pub(crate) edges: Vec<Vec<Edge>>,
 }
 
 impl ComponentGraph {
@@ -131,6 +135,7 @@ impl ComponentGraph {
             components: index.components,
             references: index.references,
             traversal,
+            edges: index.edges,
         })
     }
 
@@ -171,22 +176,25 @@ impl ComponentGraph {
     }
 }
 
-#[derive(Clone, Copy)]
-enum EdgeTarget {
+#[derive(Clone, Copy, Debug)]
+pub(crate) enum EdgeTarget {
     Component(usize),
     Reference(usize),
 }
 
-struct Edge {
-    target: EdgeTarget,
-    slot: Slot,
+#[derive(Debug)]
+pub(crate) struct Edge {
+    pub(crate) target: EdgeTarget,
+    pub(crate) slot: Slot,
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
-enum Slot {
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum Slot {
     Component,
     ElementType,
     ElementCount,
+    Selector,
+    Quality,
 }
 
 struct Index<'a> {
@@ -247,7 +255,7 @@ impl Index<'_> {
             )?;
             self.edges[node].push(Edge {
                 target: EdgeTarget::Component(child),
-                slot: Slot::Component,
+                slot: Slot::Selector,
             });
         }
         if matches!(kind, Contract::DataArray | Contract::Matrix) {
@@ -330,6 +338,48 @@ impl Index<'_> {
                 self.edges[node].push(Edge {
                     target,
                     slot: Slot::Component,
+                });
+            }
+        }
+        if let Some(quality) = raw_members.get("quality") {
+            if !matches!(
+                kind,
+                Contract::Boolean
+                    | Contract::Text
+                    | Contract::Category
+                    | Contract::Count
+                    | Contract::Quantity
+                    | Contract::Time
+                    | Contract::CategoryRange
+                    | Contract::CountRange
+                    | Contract::QuantityRange
+                    | Contract::TimeRange
+            ) {
+                return Err(ReferenceError::Quality(QualityError::UnsupportedComponent));
+            }
+            // Upstream leaves this member open. Do not confuse that structural
+            // verdict with validation of the selected Glaux interpretation.
+            QualityAssertions::compile(self.validator, Some(quality))
+                .map_err(ReferenceError::Quality)?;
+            let entries: Vec<&RawValue> = serde_json::from_str(quality.get())
+                .map_err(|_| ReferenceError::Quality(QualityError::Shape))?;
+            for (offset, raw) in entries.into_iter().enumerate() {
+                let value: Value = serde_json::from_str(raw.get())
+                    .map_err(|_| ReferenceError::Quality(QualityError::Shape))?;
+                let path = format!("{path}/quality/{offset}");
+                let target = if value.get("href").is_some() {
+                    self.reference(node, &value, raw, path, ReferenceKind::Quality)?
+                } else {
+                    EdgeTarget::Component(self.component(
+                        &value,
+                        raw,
+                        path,
+                        component_kind(&value)?,
+                    )?)
+                };
+                self.edges[node].push(Edge {
+                    target,
+                    slot: Slot::Quality,
                 });
             }
         }
@@ -431,6 +481,17 @@ impl Index<'_> {
                 {
                     return Err(ReferenceError::InvalidTarget);
                 }
+                if reference.kind == ReferenceKind::Quality
+                    && !matches!(
+                        self.components[target].kind,
+                        Contract::Quantity
+                            | Contract::QuantityRange
+                            | Contract::Category
+                            | Contract::Text
+                    )
+                {
+                    return Err(ReferenceError::InvalidTarget);
+                }
                 reference.target = ReferenceTarget::Local(target);
             }
         }
@@ -477,9 +538,9 @@ impl Index<'_> {
             // Fixed counts are metadata, not inline element values. An array
             // nested in an element descriptor may still declare its own size.
             let element = match edge.slot {
-                Slot::Component => frame.element,
+                Slot::Component | Slot::Selector => frame.element,
                 Slot::ElementType => true,
-                Slot::ElementCount => false,
+                Slot::ElementCount | Slot::Quality => false,
             };
             if element && self.has_value[target] {
                 return Err(ReferenceError::InlineElementValue);

@@ -29,6 +29,7 @@ ARRAY = Path("crates/glaux-standards/src/array.rs")
 GEOMETRY_VALUE = Path("crates/glaux-standards/src/geometry/value.rs")
 REFERENCES = Path("crates/glaux-standards/src/references.rs")
 QUALITY = Path("crates/glaux-standards/src/quality.rs")
+QUALITY_BINDING = Path("crates/glaux-standards/src/quality/binding.rs")
 TIMEOUT_SECONDS = 180
 
 
@@ -189,7 +190,17 @@ def invent_supplied_quality(root):
     path.write_text(original.replace(old, "None => QualityAvailability::Supplied,", 1))
 
 
+def select_neighbor_quality_value(root):
+    # Keep the selected address correct but substitute another occurrence's
+    # valid value. Identity/count-only checks would not detect this mistake.
+    replace(root / QUALITY_BINDING, "candidate.value.clone()",
+            "occurrences.iter().rfind(|other| other.address.component == node).unwrap().value.clone()")
+
+
 CASES = [
+    ("quality-wrong-record-value",
+     "quality::binding::tests::quality_references_nested_records_select_exact_neighbor_values",
+     select_neighbor_quality_value, ['left: Some("0.875")', 'right: Some("0.125")']),
     ("quality-semantic-bypass", "quality::tests::quality_malformed_arrays_are_not_schema_success",
      bypass_quality_semantics, ["left: None", "right: Some(Quality(Shape))"]),
     ("quality-missing-reported-supplied", "quality::tests::quality_missing_nil_and_supplied_are_distinct",

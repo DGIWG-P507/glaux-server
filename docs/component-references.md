@@ -18,6 +18,10 @@ DataArray/Matrix element types and array element counts. Vector coordinates and
 DataChoice selectors are inline components, not additional association slots.
 Unknown extension objects, semantic definition URIs, unit references and frame
 identifiers never become graph edges or alternative sources of component IDs.
+[Quality references](quality-references.md) additionally use the Guide's explicit
+Glaux interpretation; they are not a new published component-association slot.
+Their edges participate in duplicate-ID, target, cycle and traversal checks, but
+quality descriptions do not become encoded fields.
 
 A fragment-only link such as `#SAMPLE_COUNT` resolves within this document.
 Percent-encoded fragment bytes are decoded once as UTF-8; IDs remain
@@ -57,8 +61,9 @@ every scalar constraint, runtime value or encoding rule. The owning
 composes these stages into the complete immutable validation/codec description.
 The existing Array/Aggregate APIs do not silently change their acceptance or
 pretend to compile reference-bearing payloads. [Inline quality](inline-quality.md)
-is validated by the scalar/range contracts; dynamic quality references remain
-with #37. Binary member-name paths and payload execution
+is validated by the scalar/range contracts; the separate
+[quality-binding stage](quality-references.md) now handles dynamic references
+against already-decoded record occurrences. Binary member-name paths and payload execution
 belong to their codec tasks.
 
 The original enclosing schema is checked, not merely each referenced object.

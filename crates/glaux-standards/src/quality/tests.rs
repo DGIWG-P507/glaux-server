@@ -206,7 +206,7 @@ fn quality_malformed_arrays_are_not_schema_success() {
 }
 
 #[test]
-fn quality_rejects_unsupported_types_and_reference_entries_without_claiming_resolution() {
+fn quality_rejects_unsupported_types_and_preserves_reference_entries_without_claiming_resolution() {
     for kind in [
         "Boolean",
         "Count",
@@ -229,14 +229,39 @@ fn quality_rejects_unsupported_types_and_reference_entries_without_claiming_reso
     for entry in [
         json!({}),
         json!({"type":null}),
-        json!({"href":"#PRESS_QC"}),
-        json!({"href":"https://example.test/quality"}),
-        json!({"href":"file:///not-fetched"}),
+        json!({"href":null}),
+        json!({"href":7}),
+        json!({"href":""}),
+        json!({"href":"#"}),
+        json!({"href":"not a URI reference"}),
+        json!({"href":"#PRESS_QC","role":"relative-role"}),
+        json!({"href":"#PRESS_QC","arcrole":false}),
+        json!({"href":"#PRESS_QC","title":""}),
+        json!({"href":"#PRESS_QC","value":"GOOD"}),
         json!({"type":"Text","definition":"urn:example:q","label":"Q","value":"GOOD","href":"#PRESS_QC"}),
     ] {
         assert!(
             ScalarContract::compile(validator(), &quality_source(json!([entry]))).is_err(),
-            "reference binding is deferred explicitly, never reported as checked inline quality"
+            "malformed or mixed references cannot masquerade as quality"
+        );
+    }
+    for href in [
+        "#PRESS_QC",
+        "https://example.test/quality",
+        "file:///not-fetched",
+    ] {
+        let source = quality_source(json!([{"href":href}]));
+        let contract = compile(&source);
+        let entry = &contract.quality().entries()[0];
+        let InlineQuality::Reference(reference) = entry else {
+            panic!("preserved reference metadata")
+        };
+        assert_eq!(reference.href, href);
+        assert_eq!(entry.availability(), QualityAvailability::Missing);
+        assert_eq!(contract.source(), source);
+        assert_eq!(
+            serde_json::from_slice::<Value>(entry.source()).unwrap(),
+            json!({"href":href})
         );
     }
 }
