@@ -19,7 +19,7 @@ pub(super) fn check(
 
 // This checks the complete borrowed model before semantic recursion/output.
 // Raw leaf JSON additionally uses the existing lexical and numeric budgets.
-fn budget(input: &ComponentValue<'_>) -> Result<(), ComponentError> {
+pub(crate) fn budget(input: &ComponentValue<'_>) -> Result<(), ComponentError> {
     let limit = || ComponentError::new(ComponentErrorKind::Limit);
     let mut pending = vec![(input, 1_usize)];
     let mut nodes = 0_usize;
@@ -30,6 +30,14 @@ fn budget(input: &ComponentValue<'_>) -> Result<(), ComponentError> {
             return Err(limit());
         }
         match value {
+            ComponentValue::Array(values) => {
+                if values.len() > validation::MAX_MEMBERS {
+                    return Err(limit());
+                }
+                for value in *values {
+                    pending.push((value, depth + 1));
+                }
+            }
             ComponentValue::ScalarJson(raw)
             | ComponentValue::RangeJson(raw)
             | ComponentValue::GeometryJson(raw) => {

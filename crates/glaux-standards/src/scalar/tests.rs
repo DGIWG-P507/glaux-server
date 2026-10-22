@@ -441,16 +441,20 @@ fn scalar_bounded_inputs_and_unsupported_features() {
             "unsupported pattern must not be silently reinterpreted: {pattern}"
         );
     }
-    for unsupported in [
-        json!({"type": "Boolean", "constraint": {"values": [true]}}),
-        json!({"type": "Text", "quality": [{"href": "#quality"}]}),
-    ] {
-        let mut source = unsupported;
-        source["definition"] = json!("urn:example:property");
-        source["label"] = json!("Property");
-        assert_eq!(
-            ScalarContract::compile(validator(), &serde_json::to_vec(&source).unwrap()).err(),
-            Some(ScalarError::UnsupportedFeature)
-        );
-    }
+    let source = json!({"type": "Boolean", "constraint": {"values": [true]},
+        "definition":"urn:example:property","label":"Property"});
+    assert_eq!(
+        ScalarContract::compile(validator(), &serde_json::to_vec(&source).unwrap()).err(),
+        Some(ScalarError::UnsupportedFeature)
+    );
+    // References now retain metadata; this scalar-only stage still cannot
+    // claim an eligible target or a supplied per-record quality value.
+    let source = json!({"type":"Text","definition":"urn:example:property","label":"Property",
+        "quality":[{"href":"#quality"}]});
+    let contract = ScalarContract::compile(validator(), &serde_json::to_vec(&source).unwrap()).unwrap();
+    let crate::quality::InlineQuality::Reference(reference) = &contract.quality().entries()[0] else {
+        panic!("unresolved reference metadata")
+    };
+    assert_eq!(reference.href, "#quality");
+    assert_eq!(contract.quality().entries()[0].availability(), crate::quality::QualityAvailability::Missing);
 }

@@ -10,7 +10,7 @@ use crate::{
     validation::{self, StructuralValidator},
 };
 
-mod value;
+pub(crate) mod value;
 
 /// Already-decoded model input. No aggregate JSON/Text/Binary framing is implied.
 /// Missing record members are distinct from supplied null or a nil sentinel.
@@ -21,6 +21,9 @@ pub enum ComponentValue<'a> {
     Record(&'a [NamedValue<'a>]),
     Vector(&'a [NamedValue<'a>]),
     Choice(&'a [NamedValue<'a>]),
+    /// Occurrences already decoded by a caller. This does not add a wire codec
+    /// or make AggregateContract's deferred array-value validation available.
+    Array(&'a [ComponentValue<'a>]),
 }
 
 pub struct NamedValue<'a> {

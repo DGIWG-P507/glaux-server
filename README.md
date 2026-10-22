@@ -83,7 +83,10 @@ This is the reference stage of the shared model, not a runtime payload decoder.
 numeric, interval, category and text assessments on the component they describe.
 Missing or nil quality remains unavailable, not zero uncertainty or a pass.
 This uses the Guide's explicit JSON interpretation without changing upstream
-schemas; per-record quality references and payload codecs remain later work.
+schemas. [Per-record quality references](docs/quality-references.md) connect a
+measurement to the quality field in its own record occurrence, including nested
+and repeated records. Missing values are not borrowed from a neighbouring record;
+ambiguous links fail. This is model-level binding, not a payload codec.
 
 [Typed resource identities](docs/resource-identities.md) now separate UUIDv7 local
 locators, URI-form published UIDs and authority-qualified source identifiers.
