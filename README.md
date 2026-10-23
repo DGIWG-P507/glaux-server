@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial foundations, minimal System operations and restore, and SWE component models — 22 October 2026.**
+**Initial foundations, minimal System operations and restore, SWE component models and common SensorML descriptions — 23 October 2026.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **304 implementation tasks**, each linked to its published issue: the original 286, 16 experimental Protobuf tasks, and Phase 1 review follow-ups 1.1.5 and 1.5.4. These are planned tasks, not completed software.
@@ -206,6 +206,13 @@ SHA-256 alongside bounded, read-only component/reference/quality plans and
 checked enclosing descriptors. Invalid later components cannot publish a
 partial contract, and compiling a new description cannot change an earlier one.
 Payload codecs, stream registration and historical-value storage remain later work.
+
+[Common SensorML descriptions](docs/sensorml-common.md) preserve identifiers and
+their code spaces, classifications, contacts, documentation links and validity.
+Typed meaning and generated JSON remain separate from the exact original bytes
+and digest. Descriptive links are not fetched, and extensions cannot overwrite
+reserved fields through the extension helper. Complete resource-family mappings
+and their HTTP integration remain later work.
 
 ## Planned capabilities
 

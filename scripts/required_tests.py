@@ -1,6 +1,22 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "sensorml::tests::sensorml_common_minimal_description_has_no_invented_metadata",
+    "sensorml::tests::sensorml_common_generated_fields_match_independent_oracle",
+    "sensorml::tests::sensorml_common_source_bytes_digest_and_owned_state_are_separate",
+    "sensorml::tests::sensorml_common_reordered_members_preserve_meaning_not_source_digest",
+    "sensorml::tests::sensorml_common_identifier_authorities_and_classifier_definitions_are_distinct",
+    "sensorml::tests::sensorml_common_contacts_keep_inline_linked_and_organization_forms",
+    "sensorml::tests::sensorml_common_validity_keeps_precision_offsets_and_now_symbolic",
+    "sensorml::tests::sensorml_common_reversed_or_malformed_validity_is_rejected",
+    "sensorml::tests::sensorml_common_malformed_typed_fields_fail_not_become_extensions",
+    "sensorml::tests::sensorml_common_extension_content_is_retained_without_identity_promotion",
+    "sensorml::tests::sensorml_common_extensions_cannot_replace_reserved_or_existing_members",
+    "sensorml::tests::sensorml_common_extension_preflight_and_combined_output_are_bounded",
+    "sensorml::tests::sensorml_common_duplicate_identity_and_input_limits_fail_safely",
+    "sensorml::tests::sensorml_common_empty_optional_lists_remain_distinct_from_absence",
+    "sensorml::tests::sensorml_common_links_and_reference_shaped_extensions_never_fetch",
+    "sensorml::tests::sensorml_common_oracle_detects_contact_extension_and_identifier_corruption",
     "compiled::tests::compiled_contract_element_count_aliases_keep_declaration_semantics",
     "compiled::tests::compiled_contract_preserves_uninterpreted_aggregate_frame_extensions",
     "compiled::tests::compiled_contract_bounds_cumulative_context_source_work",
