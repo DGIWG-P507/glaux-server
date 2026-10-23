@@ -1,0 +1,91 @@
+{
+  "type": "SimpleProcess",
+  "id": "local-A",
+  "uniqueId": "urn:example:sensor:alpha",
+  "label": " Alpha sensor ",
+  "description": "Synthetic common metadata, not a complete family mapping",
+  "lang": "en",
+  "keywords": ["temperature", "calibration"],
+  "identifiers": [
+    {
+      "definition": "urn:example:term:serial-number",
+      "label": "Serial",
+      "codeSpace": "urn:example:authority:manufacturer-a",
+      "value": "000042"
+    },
+    {
+      "definition": "urn:example:term:serial-number",
+      "label": "Serial",
+      "codeSpace": "urn:example:authority:operator-b",
+      "value": "000042"
+    }
+  ],
+  "classifiers": [
+    {
+      "definition": "urn:example:term:sensor-kind",
+      "label": "Kind",
+      "codeSpace": "urn:example:classification:local",
+      "value": "thermometer"
+    }
+  ],
+  "validTime": ["2026-10-01T00:00:00.000000001Z", "2026-10-31T00:00:00.000000002Z"],
+  "contacts": [
+    {
+      "individualName": "Synthetic Operator",
+      "positionName": "Test custodian",
+      "role": "urn:example:role:custodian",
+      "contactInfo": {
+        "phone": {"voice": "000-555-0100", "facsimile": "000-555-0101"},
+        "address": {
+          "deliveryPoint": "1 Example Road",
+          "city": "Test City",
+          "administrativeArea": "Example Region",
+          "postalCode": "00000",
+          "country": "Test Country",
+          "electronicMailAddress": "operator@example.invalid"
+        },
+        "website": "https://example.invalid/operator",
+        "hoursOfService": "Synthetic fixture only",
+        "contactInstructions": "Do not contact"
+      }
+    },
+    {
+      "role": "urn:example:role:manufacturer",
+      "name": "Synthetic Manufacturer",
+      "link": {
+        "href": "https://example.invalid/contact/A",
+        "rel": "related",
+        "type": "application/json",
+        "hreflang": "en",
+        "title": "Manufacturer record",
+        "uid": "urn:example:contact:manufacturer-a",
+        "rt": "urn:example:class:organization",
+        "if": "urn:example:interface:contact",
+        "ex:assertion": {"verified": false}
+      }
+    }
+  ],
+  "documents": [
+    {
+      "role": "urn:example:role:calibration-report",
+      "name": "Calibration report A",
+      "description": "Synthetic and not fetched",
+      "link": {
+        "href": "https://example.invalid/document/A.pdf",
+        "rel": "describedby",
+        "type": "application/pdf",
+        "title": "Report A",
+        "uid": "urn:example:document:calibration-a"
+      }
+    }
+  ],
+  "ex:calibration": {
+    "version": "v1",
+    "id": "asserted-not-resource-id",
+    "contacts": ["asserted-not-verified-actor"],
+    "coefficient": 9007199254740993,
+    "enabled": false,
+    "unknown": null
+  },
+  "additionalInfo": ["permitted open descriptive member", {"revision": "r1"}]
+}

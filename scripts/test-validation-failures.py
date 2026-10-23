@@ -31,6 +31,7 @@ REFERENCES = Path("crates/glaux-standards/src/references.rs")
 QUALITY = Path("crates/glaux-standards/src/quality.rs")
 QUALITY_BINDING = Path("crates/glaux-standards/src/quality/binding.rs")
 COMPILED = Path("crates/glaux-standards/src/compiled.rs")
+SENSORML = Path("crates/glaux-standards/src/sensorml.rs")
 TIMEOUT_SECONDS = 180
 
 
@@ -205,7 +206,27 @@ def publish_partial_contract(root):
             "if let Ok(plan) = result { plans.push(plan); } // Fault: publish partial roots.")
 
 
+def omit_descriptive_contacts(root):
+    # The generated response must retain actual descriptive content, not just
+    # remain schema-valid after silently dropping an optional list.
+    path = root / SENSORML
+    original = path.read_text()
+    start = "    pub fn generated_json(&self) -> Value {"
+    end = "    /// Explicit Glaux helper"
+    require(original.count(start) == 1 and original.count(end) == 1,
+            "Fault target changed: common-description generation boundaries.")
+    before, function = original.split(start)
+    function, after = function.split(end)
+    old = "self.contacts.as_deref()"
+    require(function.count(old) == 1, "Fault target changed: generated contacts.")
+    function = function.replace(old, "None::<&[Contact]>")
+    path.write_text(before + start + function + end + after)
+
+
 CASES = [
+    ("sensorml-contacts-omitted",
+     "sensorml::tests::sensorml_common_generated_fields_match_independent_oracle",
+     omit_descriptive_contacts, ['left: ["/contacts"]', 'right: []']),
     ("compiled-partial-wrapper",
      "compiled::tests::compiled_contract_rejects_partial_wrapper_publication",
      publish_partial_contract,
