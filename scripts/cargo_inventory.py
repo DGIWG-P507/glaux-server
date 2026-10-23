@@ -42,6 +42,7 @@ DIRECT_DEPENDENCIES = {
                   "features": ["macros", "net", "rt", "signal", "sync", "time"]},
     },
     "glaux-standards": {
+        "sha2": {"version": "=0.11.0", "default_features": False, "features": []},
         "jsonschema": {"version": "=0.56.0", "default_features": False,
                        "features": ["arbitrary-precision"]},
         "serde_json": {"version": "=1.0.151", "default_features": True,

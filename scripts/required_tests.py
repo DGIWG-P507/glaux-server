@@ -1,6 +1,21 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "compiled::tests::compiled_contract_distinguishes_shared_target_frame_contexts",
+    "compiled::tests::compiled_contract_enforces_shallow_aggregate_semantics",
+    "compiled::tests::compiled_contract_retains_embedded_array_encoding_without_accepting_values",
+    "compiled::tests::compiled_contract_covers_every_implemented_component_family",
+    "compiled::tests::compiled_contract_owns_exact_source_media_digest_and_prior_meaning",
+    "compiled::tests::compiled_contract_keeps_order_metadata_and_exact_numeric_meaning",
+    "compiled::tests::compiled_contract_reuses_exact_local_targets_without_expanding_sources",
+    "compiled::tests::compiled_contract_preserves_vector_and_matrix_inherited_frames",
+    "compiled::tests::compiled_contract_composes_per_record_quality_bindings",
+    "compiled::tests::compiled_contract_checks_every_ordinary_wrapper_member",
+    "compiled::tests::compiled_contract_rejects_partial_wrapper_publication",
+    "compiled::tests::compiled_contract_checks_swe_wrapper_formats_without_claiming_codecs",
+    "compiled::tests::compiled_contract_rejects_invalid_reference_quality_and_wrapper_atomically",
+    "compiled::tests::compiled_contract_keeps_nonlocal_and_count_schema_qualification_explicit",
+    "compiled::tests::compiled_contract_enforces_input_limits_and_media_before_publication",
     "quality::binding::tests::quality_references_nested_records_select_exact_neighbor_values",
     "quality::binding::tests::quality_references_shared_record_definitions_keep_occurrences_separate",
     "quality::binding::tests::quality_references_missing_nil_and_neighbor_values_remain_distinct",

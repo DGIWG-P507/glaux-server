@@ -195,6 +195,10 @@ fn corrected_validators()
             Contract::DataRecord,
             Contract::Vector,
             Contract::DataChoice,
+            Contract::ObservationJson,
+            Contract::CommandJson,
+            Contract::ObservationSwe,
+            Contract::CommandSwe,
         ]
         .into_iter()
         .map(|contract| {

@@ -6,7 +6,7 @@ This repository is home to the server implementation. Research and planning docu
 
 ## Current status
 
-**Initial foundations, minimal System operations and restore, and SWE component models — 5 October 2026 UTC.**
+**Initial foundations, minimal System operations and restore, and SWE component models — 22 October 2026.**
 
 - Initial design research, implementation planning and the pre-implementation review are complete.
 - The approved technical follow-ups and subsequent Part 5 scope adjustment are documented. The Roadmap now defines **304 implementation tasks**, each linked to its published issue: the original 286, 16 experimental Protobuf tasks, and Phase 1 review follow-ups 1.1.5 and 1.5.4. These are planned tasks, not completed software.
@@ -199,6 +199,13 @@ access. Independent two-source listener/database checks exercise this shared
 boundary. The production creation route uses these permissions; health and
 explicitly enabled discovery remain public, and other resource routes remain
 later work.
+
+[Immutable compiled contracts](docs/compiled-contracts.md) bring the shared SWE
+component model together. They preserve exact source bytes, media type and
+SHA-256 alongside bounded, read-only component/reference/quality plans and
+checked enclosing descriptors. Invalid later components cannot publish a
+partial contract, and compiling a new description cannot change an earlier one.
+Payload codecs, stream registration and historical-value storage remain later work.
 
 ## Planned capabilities
 
