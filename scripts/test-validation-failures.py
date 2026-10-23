@@ -201,8 +201,8 @@ def select_neighbor_quality_value(root):
 def publish_partial_contract(root):
     # A valid first root must not hide a later root's semantic failure.
     replace(root / COMPILED,
-            "Err(error) => return Err(error), // No partially compiled wrapper escapes.",
-            "Err(_error) => continue, // Fault: publish only the successful roots.")
+            "plans.push(result?); // No partially compiled wrapper escapes.",
+            "if let Ok(plan) = result { plans.push(plan); } // Fault: publish partial roots.")
 
 
 CASES = [

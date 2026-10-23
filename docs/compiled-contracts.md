@@ -52,6 +52,12 @@ or advertise an implemented encoding class. Those are later codec tasks.
 Existing schema corrections are opt-in and retain their qualified source
 verdict; this task does not edit the standards corpus.
 
+The compiled entry point exposes the existing array-count reference correction.
+It currently uses original CountRange schema behavior and retains unresolved
+category ordering as such; the optional integer-nil correction and caller-supplied
+category ordering evidence remain options of the standalone `RangeContract` API,
+not choices silently enabled by assembly.
+
 ## Verification and limits
 
 Source-attributed tests cover every implemented component family, declared

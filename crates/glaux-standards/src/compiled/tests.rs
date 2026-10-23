@@ -919,3 +919,113 @@ fn compiled_contract_enforces_input_limits_and_media_before_publication() {
     assert_eq!(first.source(), A);
     assert_eq!(count_value(&first), "9007199254740993");
 }
+
+#[test]
+fn compiled_contract_element_count_aliases_keep_declaration_semantics() {
+    // The graph's established ElementCount form may omit scalar type/label.
+    let source = bytes(&json!({"type":"DataRecord","fields":[
+        {"type":"DataArray","name":"samples","elementCount":{"id":"DIM","value":3},
+            "elementType":scalar("Count","sample")},
+        {"name":"dimension","href":"#DIM"},
+        {"type":"DataArray","name":"other","elementCount":{"href":"#DIM"},
+            "elementType":scalar("Count","another")}
+    ]}));
+    let contract = CompiledContract::compile(
+        validator(),
+        &source,
+        "application/json",
+        Descriptor::Component,
+        ArrayOptions { count_reference_schema: CountReferenceSchema::DisjointReferenceCorrection },
+    ).unwrap();
+    let plan = &contract.plans()[0];
+    let root = plan.nodes()[0].bindings();
+    let first = &plan.nodes()[local(root[0].target())];
+    let second = &plan.nodes()[local(root[2].target())];
+    let count_target = |node: &super::CompiledNode| {
+        node.bindings().iter().find(|binding| binding.slot() == BindingSlot::ElementCount)
+            .unwrap().target()
+    };
+    let target = count_target(first);
+    assert_eq!(target, root[1].target());
+    assert_eq!(target, count_target(second));
+    let CompiledSemantics::ElementCount(glaux_domain::array::ElementCount::Inline(count)) =
+        plan.nodes()[local(target)].semantics() else { panic!("retained ElementCount declaration") };
+    assert_eq!(count.value.as_ref().unwrap().try_to_u64(), Ok(3));
+    assert_eq!(contract.source(), source);
+}
+
+#[test]
+fn compiled_contract_preserves_uninterpreted_aggregate_frame_extensions() {
+    for mut source in [
+        json!({"type":"DataRecord","fields":[scalar("Count","count")]}),
+        json!({"type":"DataChoice","items":[scalar("Text","text"),scalar("Boolean","flag")]}),
+        json!({"type":"DataArray","elementCount":{"value":2},"elementType":scalar("Count","count")}),
+    ] {
+        // Only Vector/Matrix interpret this member as aggregate frame metadata.
+        source["referenceFrame"] = json!({"applicationExtension":"retained"});
+        let source = bytes(&source);
+        let contract = compile(&source, Descriptor::Component);
+        let CompiledSemantics::Aggregate(meaning) = contract.plans()[0].nodes()[0].semantics()
+            else { panic!("aggregate meaning") };
+        assert_eq!(meaning.reference_frame, None);
+        assert_eq!(contract.source(), source);
+    }
+}
+
+#[test]
+fn compiled_contract_bounds_cumulative_context_source_work() {
+    fn fixture(frames: usize) -> Vec<u8> {
+        let mut shared = scalar("Time", "time");
+        for dimension in 0..6 {
+            shared = json!({
+                "type":"Matrix", "name":format!("dimension{dimension}"),
+                "description":"x".repeat(16_000),
+                "elementCount":{"value":1}, "elementType":shared
+            });
+        }
+        shared["id"] = json!("SHARED");
+        shared["name"] = json!("shared");
+        let mut fields = vec![shared];
+        for frame in 0..frames {
+            fields.push(json!({
+                "type":"Matrix", "name":format!("frame{frame}"),
+                "referenceFrame":format!("urn:example:frame:{frame}"),
+                "elementCount":{"value":1},
+                "elementType":{"name":"samples","href":"#SHARED"}
+            }));
+        }
+        bytes(&json!({"type":"DataRecord","fields":fields}))
+    }
+
+    let control = fixture(1);
+    let accepted = compile(&control, Descriptor::Component);
+    assert_eq!(accepted.source(), control);
+    assert_eq!(accepted.plans()[0].graph().components().len(), 16);
+    assert_eq!(accepted.plans()[0].graph().traversal().len(), 29);
+
+    let source = fixture(26);
+    assert!(source.len() < validation::MAX_BYTES);
+    // Six shared matrices + their six counts + one Time = 13 declarations.
+    // Each referring matrix adds itself and its count: 1 + 13 + 26*2 = 66.
+    // Traversal includes all 13 shared nodes per reference: 1+13+26*15 = 404.
+    // Successful graph resolution also proves the ordinary syntax/depth/node,
+    // component/reference and traversal budgets are not the rejecting layer.
+    let graph = ComponentGraph::resolve(validator(), &source, ArrayOptions::default()).unwrap();
+    assert_eq!(graph.components().len(), 66);
+    assert_eq!(graph.traversal().len(), 404);
+    // Every distinct frame requires the six nested source slices again. Their
+    // descriptions alone contribute 16,000*(6+5+4+3+2+1) bytes per frame.
+    // 26*336,000 = 8,736,000 exceeds the compilation-wide 8,388,608-byte
+    // work budget, despite the single received document being about 102 KB.
+    assert_eq!(
+        CompiledContract::compile(
+            validator(),
+            &source,
+            "application/json",
+            Descriptor::Component,
+            ArrayOptions::default(),
+        )
+        .err(),
+        Some(CompileError::Limit)
+    );
+}

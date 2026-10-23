@@ -1,6 +1,9 @@
 """Named behavioral checks that must be discovered AND actually execute."""
 
 REQUIRED_RUST_TESTS = [
+    "compiled::tests::compiled_contract_element_count_aliases_keep_declaration_semantics",
+    "compiled::tests::compiled_contract_preserves_uninterpreted_aggregate_frame_extensions",
+    "compiled::tests::compiled_contract_bounds_cumulative_context_source_work",
     "compiled::tests::compiled_contract_distinguishes_shared_target_frame_contexts",
     "compiled::tests::compiled_contract_enforces_shallow_aggregate_semantics",
     "compiled::tests::compiled_contract_retains_embedded_array_encoding_without_accepting_values",

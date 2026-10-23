@@ -150,10 +150,7 @@ impl CompiledContract {
                     );
                     // A failing later member must not publish the earlier,
                     // otherwise valid plans as a usable partial contract.
-                    match result {
-                        Ok(plan) => plans.push(plan),
-                        Err(error) => return Err(error), // No partially compiled wrapper escapes.
-                    }
+                    plans.push(result?); // No partially compiled wrapper escapes.
                 }
             }
         }
@@ -261,7 +258,7 @@ impl ComponentPlan {
             indices: BTreeMap::new(),
             budget,
         };
-        builder.node(0, None, false)?;
+        builder.node(0, None)?;
         let nodes = builder.nodes;
         Ok(Self {
             member,
@@ -398,7 +395,7 @@ struct Builder<'a> {
     validator: &'a StructuralValidator,
     graph: &'a ComponentGraph,
     nodes: Vec<CompiledNode>,
-    indices: BTreeMap<(usize, Option<String>, bool), usize>,
+    indices: BTreeMap<(usize, Option<String>), usize>,
     budget: &'a mut Budget,
 }
 
@@ -407,9 +404,8 @@ impl Builder<'_> {
         &mut self,
         declaration: usize,
         inherited: Option<&str>,
-        count: bool,
     ) -> Result<usize, CompileError> {
-        let key = (declaration, inherited.map(str::to_owned), count);
+        let key = (declaration, inherited.map(str::to_owned));
         if let Some(index) = self.indices.get(&key) {
             return Ok(*index);
         }
@@ -422,8 +418,20 @@ impl Builder<'_> {
         let raw: BTreeMap<String, &RawValue> =
             serde_json::from_slice(input).map_err(|_| CompileError::Structure)?;
         let kind = self.graph.components()[declaration].kind;
-        let own_frame = aggregate::optional_string(&source, "referenceFrame")
-            .map_err(CompileError::Aggregate)?;
+        let own_frame = if matches!(
+            kind,
+            Contract::Vector | Contract::Matrix | Contract::Count | Contract::Quantity | Contract::Time
+        ) {
+            aggregate::optional_string(&source, "referenceFrame").map_err(CompileError::Aggregate)?
+        } else {
+            None
+        };
+        // A declaration's role does not change when reached through an alias.
+        // Typeless ElementCount objects are not ordinary scalar declarations.
+        let count = self.graph.edges.iter().flatten().any(|edge| {
+            edge.slot == Slot::ElementCount
+                && matches!(edge.target, EdgeTarget::Component(target) if target == declaration)
+        });
         let effective_frame = own_frame.as_deref().or(inherited);
         let semantics = if count {
             let raw: &RawValue =
@@ -494,15 +502,14 @@ impl Builder<'_> {
         for offset in 0..self.graph.edges[declaration].len() {
             let edge = &self.graph.edges[declaration][offset];
             let slot = edge.slot;
-            let (target, reference, inline) = match edge.target {
-                EdgeTarget::Component(target) => (Some(target), None, true),
+            let (target, reference) = match edge.target {
+                EdgeTarget::Component(target) => (Some(target), None),
                 EdgeTarget::Reference(reference) => (
                     match self.graph.references()[reference].target {
                         ReferenceTarget::Local(target) => Some(target),
                         ReferenceTarget::Nonlocal => None,
                     },
                     Some(reference),
-                    false,
                 ),
             };
             let name = reference
@@ -518,11 +525,7 @@ impl Builder<'_> {
                 None
             };
             let compiled = match target {
-                Some(target) => BindingTarget::Local(self.node(
-                    target,
-                    frame,
-                    inline && slot == Slot::ElementCount,
-                )?),
+                Some(target) => BindingTarget::Local(self.node(target, frame)?),
                 None => BindingTarget::Nonlocal(reference.ok_or(CompileError::Structure)?),
             };
             self.nodes[index].bindings.push(CompiledBinding {
