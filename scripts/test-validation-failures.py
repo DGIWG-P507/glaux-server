@@ -30,6 +30,7 @@ GEOMETRY_VALUE = Path("crates/glaux-standards/src/geometry/value.rs")
 REFERENCES = Path("crates/glaux-standards/src/references.rs")
 QUALITY = Path("crates/glaux-standards/src/quality.rs")
 QUALITY_BINDING = Path("crates/glaux-standards/src/quality/binding.rs")
+COMPILED = Path("crates/glaux-standards/src/compiled.rs")
 TIMEOUT_SECONDS = 180
 
 
@@ -197,7 +198,18 @@ def select_neighbor_quality_value(root):
             "occurrences.iter().rfind(|other| other.address.component == node).unwrap().value.clone()")
 
 
+def publish_partial_contract(root):
+    # A valid first root must not hide a later root's semantic failure.
+    replace(root / COMPILED,
+            "plans.push(result?); // No partially compiled wrapper escapes.",
+            "if let Ok(plan) = result { plans.push(plan); } // Fault: publish partial roots.")
+
+
 CASES = [
+    ("compiled-partial-wrapper",
+     "compiled::tests::compiled_contract_rejects_partial_wrapper_publication",
+     publish_partial_contract,
+     ["left: None", "right: Some(Scalar(CategoryWithoutEnumeration))"]),
     ("quality-wrong-record-value",
      "quality::binding::tests::quality_references_nested_records_select_exact_neighbor_values",
      select_neighbor_quality_value, ['left: Some("0.875")', 'right: Some("0.125")']),

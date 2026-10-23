@@ -384,7 +384,7 @@ fn kind(source: &Value) -> Result<(Contract, &'static str), AggregateError> {
     }
 }
 
-fn valid_name(name: &str) -> bool {
+pub(crate) fn valid_name(name: &str) -> bool {
     // basicTypes.json NameToken: ^[A-Za-z][A-Za-z0-9_\-]*$
     let mut bytes = name.bytes();
     bytes

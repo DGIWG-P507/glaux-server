@@ -290,6 +290,11 @@ or browser is installed by these checks.
 
 ## Main-branch rule
 
+The static lane preserves an unapproved Cargo inventory candidate before
+formatting/snapshot checks. This helps inspect a deliberate dependency change;
+it does not update or approve `docs/cargo-dependencies.json`. The normal inventory
+comparison must still pass against the reviewed, committed snapshot.
+
 The approved configuration is recorded in [main-ruleset.json](main-ruleset.json):
 main-only, active, no bypass actors (including no administrator exception),
 pull requests required, zero required human approvals, no deletion or history

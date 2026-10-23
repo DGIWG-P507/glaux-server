@@ -55,8 +55,8 @@ and byte bounds. Missing values do not justify borrowing another occurrence.
 
 This stage checks quality binding, not every payload obligation. Repeated model
 values are not an implementation of JSON/Text/Binary framing, runtime array-count
-validation or complete compiled-contract assembly. The latter remains
-[#38](https://github.com/DGIWG-P507/glaux-server/issues/38); codecs remain with
+validation or complete compiled-contract assembly. The latter is provided by
+the separate [compiled-contract API](compiled-contracts.md); codecs remain with
 their owning tasks. No quality endpoint, database change, aggregation policy,
 external lookup or additional conformance claim is introduced.
 

@@ -61,6 +61,9 @@ jobs:
       - name: Verify formatting and locked dependencies
         shell: bash
         run: |
+          # Evidence only: changed dependencies still fail the enforced snapshot
+          # comparison below until their candidate has been reviewed/committed.
+          python3 scripts/cargo_inventory.py --candidate > "$RUNNER_TEMP/glaux-ci-evidence/cargo-dependencies-candidate.json"
           if ! cargo fmt --all --check; then
             cargo fmt --all
             git diff -- '*.rs' > "$RUNNER_TEMP/glaux-ci-evidence/rustfmt.patch"

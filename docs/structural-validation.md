@@ -70,6 +70,13 @@ the internal entry-point wrapper uses Draft 2020-12. See the pinned
 
 ## Fixed entry points
 
+Task #38 also selects the original `observationSchemaJson.json` and
+`commandSchemaJson.json` through `Contract::ObservationJson` and
+`Contract::CommandJson`. They validate complete ordinary-JSON schema wrappers,
+not arbitrary caller-supplied JSON Schema. The [compiled contract](compiled-contracts.md)
+then checks the contained SWE components semantically and retains the wrapper's
+exact bytes separately from their meaning.
+
 `StructuralValidator::new()` constructs the embedded catalog, checks its graph
 and compiles the fixed contracts. Callers retain that validator for reuse.
 `validate(contract, bytes)` accepts a `Contract` enum and JSON bytes. There is no

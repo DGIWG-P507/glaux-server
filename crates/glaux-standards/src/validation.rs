@@ -46,6 +46,8 @@ pub enum Contract {
     PhysicalSystem,
     ObservationSwe,
     CommandSwe,
+    ObservationJson,
+    CommandJson,
     JsonEncoding,
     TextEncoding,
     BinaryEncoding,
@@ -77,6 +79,12 @@ impl Contract {
             }
             Self::CommandSwe => {
                 format!("{PIN}api/part2/openapi/schemas/json/commandSchemaSwe.json")
+            }
+            Self::ObservationJson => {
+                format!("{PIN}api/part2/openapi/schemas/json/observationSchemaJson.json")
+            }
+            Self::CommandJson => {
+                format!("{PIN}api/part2/openapi/schemas/json/commandSchemaJson.json")
             }
             Self::JsonEncoding => format!("{SWE}encodings.json#/$defs/JSONEncoding"),
             Self::TextEncoding => format!("{SWE}encodings.json#/$defs/TextEncoding"),
@@ -368,6 +376,8 @@ impl StructuralValidator {
             Contract::PhysicalSystem,
             Contract::ObservationSwe,
             Contract::CommandSwe,
+            Contract::ObservationJson,
+            Contract::CommandJson,
             Contract::JsonEncoding,
             Contract::TextEncoding,
             Contract::BinaryEncoding,

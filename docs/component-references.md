@@ -57,8 +57,8 @@ descriptor with the correct ID.
 This graph stage is separate from the existing inline typed-component compilers.
 A graph result establishes structural validity and reference relationships, not
 every scalar constraint, runtime value or encoding rule. The owning
-[compiled-contract task #38](https://github.com/DGIWG-P507/glaux-server/issues/38)
-composes these stages into the complete immutable validation/codec description.
+[compiled-contract assembly](compiled-contracts.md)
+composes these stages into an immutable validation/codec description.
 The existing Array/Aggregate APIs do not silently change their acceptance or
 pretend to compile reference-bearing payloads. [Inline quality](inline-quality.md)
 is validated by the scalar/range contracts; the separate
