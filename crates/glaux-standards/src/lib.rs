@@ -13,7 +13,7 @@ pub mod quality;
 pub mod range;
 pub mod references;
 pub mod scalar;
-pub mod sensorml;
 mod schema_guard;
+pub mod sensorml;
 pub mod units;
 pub mod validation;

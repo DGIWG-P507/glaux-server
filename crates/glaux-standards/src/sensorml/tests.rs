@@ -51,60 +51,87 @@ fn rich_expected_fields() -> Vec<(&'static str, Value)> {
         ("/id", json!("local-A")),
         ("/uniqueId", json!("urn:example:sensor:alpha")),
         ("/label", json!(" Alpha sensor ")),
-        ("/description", json!("Synthetic common metadata, not a complete family mapping")),
+        (
+            "/description",
+            json!("Synthetic common metadata, not a complete family mapping"),
+        ),
         ("/lang", json!("en")),
         ("/keywords", json!(["temperature", "calibration"])),
-        ("/identifiers", json!([
-            {"definition":"urn:example:term:serial-number","label":"Serial","codeSpace":"urn:example:authority:manufacturer-a","value":"000042"},
-            {"definition":"urn:example:term:serial-number","label":"Serial","codeSpace":"urn:example:authority:operator-b","value":"000042"}
-        ])),
-        ("/classifiers", json!([
-            {"definition":"urn:example:term:sensor-kind","label":"Kind","codeSpace":"urn:example:classification:local","value":"thermometer"}
-        ])),
-        ("/validTime", json!(["2026-10-01T00:00:00.000000001Z", "2026-10-31T00:00:00.000000002Z"])),
-        ("/contacts", json!([
-            {
-                "individualName":"Synthetic Operator",
-                "positionName":"Test custodian",
-                "role":"urn:example:role:custodian",
-                "contactInfo":{
-                    "phone":{"voice":"000-555-0100","facsimile":"000-555-0101"},
-                    "address":{
-                        "deliveryPoint":"1 Example Road","city":"Test City",
-                        "administrativeArea":"Example Region","postalCode":"00000",
-                        "country":"Test Country","electronicMailAddress":"operator@example.invalid"
-                    },
-                    "website":"https://example.invalid/operator",
-                    "hoursOfService":"Synthetic fixture only",
-                    "contactInstructions":"Do not contact"
+        (
+            "/identifiers",
+            json!([
+                {"definition":"urn:example:term:serial-number","label":"Serial","codeSpace":"urn:example:authority:manufacturer-a","value":"000042"},
+                {"definition":"urn:example:term:serial-number","label":"Serial","codeSpace":"urn:example:authority:operator-b","value":"000042"}
+            ]),
+        ),
+        (
+            "/classifiers",
+            json!([
+                {"definition":"urn:example:term:sensor-kind","label":"Kind","codeSpace":"urn:example:classification:local","value":"thermometer"}
+            ]),
+        ),
+        (
+            "/validTime",
+            json!([
+                "2026-10-01T00:00:00.000000001Z",
+                "2026-10-31T00:00:00.000000002Z"
+            ]),
+        ),
+        (
+            "/contacts",
+            json!([
+                {
+                    "individualName":"Synthetic Operator",
+                    "positionName":"Test custodian",
+                    "role":"urn:example:role:custodian",
+                    "contactInfo":{
+                        "phone":{"voice":"000-555-0100","facsimile":"000-555-0101"},
+                        "address":{
+                            "deliveryPoint":"1 Example Road","city":"Test City",
+                            "administrativeArea":"Example Region","postalCode":"00000",
+                            "country":"Test Country","electronicMailAddress":"operator@example.invalid"
+                        },
+                        "website":"https://example.invalid/operator",
+                        "hoursOfService":"Synthetic fixture only",
+                        "contactInstructions":"Do not contact"
+                    }
+                },
+                {
+                    "role":"urn:example:role:manufacturer","name":"Synthetic Manufacturer",
+                    "link":{
+                        "href":"https://example.invalid/contact/A","rel":"related",
+                        "type":"application/json","hreflang":"en","title":"Manufacturer record",
+                        "uid":"urn:example:contact:manufacturer-a","rt":"urn:example:class:organization",
+                        "if":"urn:example:interface:contact","ex:assertion":{"verified":false}
+                    }
                 }
-            },
-            {
-                "role":"urn:example:role:manufacturer","name":"Synthetic Manufacturer",
-                "link":{
-                    "href":"https://example.invalid/contact/A","rel":"related",
-                    "type":"application/json","hreflang":"en","title":"Manufacturer record",
-                    "uid":"urn:example:contact:manufacturer-a","rt":"urn:example:class:organization",
-                    "if":"urn:example:interface:contact","ex:assertion":{"verified":false}
+            ]),
+        ),
+        (
+            "/documents",
+            json!([
+                {
+                    "role":"urn:example:role:calibration-report","name":"Calibration report A",
+                    "description":"Synthetic and not fetched",
+                    "link":{
+                        "href":"https://example.invalid/document/A.pdf","rel":"describedby",
+                        "type":"application/pdf","title":"Report A","uid":"urn:example:document:calibration-a"
+                    }
                 }
-            }
-        ])),
-        ("/documents", json!([
-            {
-                "role":"urn:example:role:calibration-report","name":"Calibration report A",
-                "description":"Synthetic and not fetched",
-                "link":{
-                    "href":"https://example.invalid/document/A.pdf","rel":"describedby",
-                    "type":"application/pdf","title":"Report A","uid":"urn:example:document:calibration-a"
-                }
-            }
-        ])),
-        ("/ex:calibration", json!({
-            "version":"v1","id":"asserted-not-resource-id",
-            "contacts":["asserted-not-verified-actor"],
-            "coefficient":9007199254740993_u64,"enabled":false,"unknown":null
-        })),
-        ("/additionalInfo", json!(["permitted open descriptive member", {"revision":"r1"}])),
+            ]),
+        ),
+        (
+            "/ex:calibration",
+            json!({
+                "version":"v1","id":"asserted-not-resource-id",
+                "contacts":["asserted-not-verified-actor"],
+                "coefficient":9007199254740993_u64,"enabled":false,"unknown":null
+            }),
+        ),
+        (
+            "/additionalInfo",
+            json!(["permitted open descriptive member", {"revision":"r1"}]),
+        ),
     ]
 }
 
@@ -130,18 +157,27 @@ fn sensorml_common_minimal_description_has_no_invented_metadata() {
     assert_eq!(contract.documents(), None);
     assert_eq!(contract.valid_time(), None);
     assert!(contract.remaining_members().is_empty());
-    assert_eq!(contract.generated_json(), json!({
-        "type":"SimpleProcess","label":" Minimal description ","uniqueId":"urn:example:sensor:minimal"
-    }));
+    assert_eq!(
+        contract.generated_json(),
+        json!({
+            "type":"SimpleProcess","label":" Minimal description ","uniqueId":"urn:example:sensor:minimal"
+        })
+    );
 }
 
 #[test]
 fn sensorml_common_generated_fields_match_independent_oracle() {
     let generated = compile(RICH).generated_json();
-    assert_eq!(field_mismatches(&generated), Vec::<&str>::new(),
-        "all common descriptive fields must retain independently expected meaning");
-    assert_eq!(generated.as_object().unwrap().len(), 14,
-        "the mapper must not add identity, authority or policy fields");
+    assert_eq!(
+        field_mismatches(&generated),
+        Vec::<&str>::new(),
+        "all common descriptive fields must retain independently expected meaning"
+    );
+    assert_eq!(
+        generated.as_object().unwrap().len(),
+        14,
+        "the mapper must not add identity, authority or policy fields"
+    );
 }
 
 #[test]
@@ -154,10 +190,20 @@ fn sensorml_common_source_bytes_digest_and_owned_state_are_separate() {
     assert_eq!(contract.source_media_type(), MEDIA);
     // Independent SHA-256 calculated with PowerShell/.NET Get-FileHash over
     // the checked-in LF fixture bytes, not the implementation's digest helper.
-    let actual = contract.source_sha256().iter().map(|b| format!("{b:02x}")).collect::<String>();
-    assert_eq!(actual, "a8a45ed90fd2728e1aa968e1283cac37cb4996810babab99e016095965b9bc2b");
+    let actual = contract
+        .source_sha256()
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect::<String>();
+    assert_eq!(
+        actual,
+        "a8a45ed90fd2728e1aa968e1283cac37cb4996810babab99e016095965b9bc2b"
+    );
     let generated_bytes = bytes(&contract.generated_json());
-    assert_ne!(generated_bytes, RICH, "generated JSON is not retained source bytes");
+    assert_ne!(
+        generated_bytes, RICH,
+        "generated JSON is not retained source bytes"
+    );
     assert!(field_mismatches(&contract.generated_json()).is_empty());
 }
 
@@ -165,9 +211,19 @@ fn sensorml_common_source_bytes_digest_and_owned_state_are_separate() {
 fn sensorml_common_reordered_members_preserve_meaning_not_source_digest() {
     let original = compile(RICH);
     let source = rich_value();
-    let fields = source.as_object().unwrap().iter().rev().map(|(key, value)| {
-        format!("{}:{}", serde_json::to_string(key).unwrap(), serde_json::to_string(value).unwrap())
-    }).collect::<Vec<_>>();
+    let fields = source
+        .as_object()
+        .unwrap()
+        .iter()
+        .rev()
+        .map(|(key, value)| {
+            format!(
+                "{}:{}",
+                serde_json::to_string(key).unwrap(),
+                serde_json::to_string(value).unwrap()
+            )
+        })
+        .collect::<Vec<_>>();
     let reordered = format!("{{{}}}", fields.join(","));
     assert_ne!(reordered.as_bytes(), RICH);
     let contract = compile(reordered.as_bytes());
@@ -184,12 +240,27 @@ fn sensorml_common_identifier_authorities_and_classifier_definitions_are_distinc
     assert_eq!(identifiers.len(), 2);
     assert_eq!(identifiers[0].value, "000042");
     assert_eq!(identifiers[1].value, "000042");
-    assert_eq!(identifiers[0].code_space.as_deref(), Some("urn:example:authority:manufacturer-a"));
-    assert_eq!(identifiers[1].code_space.as_deref(), Some("urn:example:authority:operator-b"));
-    assert_eq!(identifiers[0].definition.as_deref(), Some("urn:example:term:serial-number"));
+    assert_eq!(
+        identifiers[0].code_space.as_deref(),
+        Some("urn:example:authority:manufacturer-a")
+    );
+    assert_eq!(
+        identifiers[1].code_space.as_deref(),
+        Some("urn:example:authority:operator-b")
+    );
+    assert_eq!(
+        identifiers[0].definition.as_deref(),
+        Some("urn:example:term:serial-number")
+    );
     let classifiers = contract.classifiers().unwrap();
-    assert_eq!(classifiers[0].definition.as_deref(), Some("urn:example:term:sensor-kind"));
-    assert_eq!(classifiers[0].code_space.as_deref(), Some("urn:example:classification:local"));
+    assert_eq!(
+        classifiers[0].definition.as_deref(),
+        Some("urn:example:term:sensor-kind")
+    );
+    assert_eq!(
+        classifiers[0].code_space.as_deref(),
+        Some("urn:example:classification:local")
+    );
     assert_eq!(classifiers[0].value, "thermometer");
     assert_eq!(contract.id(), Some("local-A"));
     assert_eq!(contract.unique_id(), "urn:example:sensor:alpha");
@@ -198,17 +269,26 @@ fn sensorml_common_identifier_authorities_and_classifier_definitions_are_distinc
 #[test]
 fn sensorml_common_contacts_keep_inline_linked_and_organization_forms() {
     let contract = compile(RICH);
-    assert!(matches!(&contract.contacts().unwrap()[0], Contact::Party(_)));
+    assert!(matches!(
+        &contract.contacts().unwrap()[0],
+        Contact::Party(_)
+    ));
     assert!(matches!(&contract.contacts().unwrap()[1], Contact::Link(_)));
     let mut source = minimal_value();
     source["contacts"] = json!([{
         "organisationName":"Synthetic Organization","role":"urn:example:role:operator"
     }]);
     let organization = compile(&bytes(&source));
-    assert!(matches!(&organization.contacts().unwrap()[0], Contact::Party(_)));
-    assert_eq!(organization.generated_json()["contacts"], json!([{
-        "organisationName":"Synthetic Organization","role":"urn:example:role:operator"
-    }]));
+    assert!(matches!(
+        &organization.contacts().unwrap()[0],
+        Contact::Party(_)
+    ));
+    assert_eq!(
+        organization.generated_json()["contacts"],
+        json!([{
+            "organisationName":"Synthetic Organization","role":"urn:example:role:operator"
+        }])
+    );
 }
 
 #[test]
@@ -220,25 +300,46 @@ fn sensorml_common_validity_keeps_precision_offsets_and_now_symbolic() {
     let mut source = minimal_value();
     source["validTime"] = json!(["2026-10-01T01:00:00.000000001+01:00", "now"]);
     let contract = compile(&bytes(&source));
-    assert!(matches!(&contract.valid_time().unwrap().end, ValidityBound::Now));
-    assert_eq!(contract.generated_json()["validTime"], json!([
-        "2026-10-01T01:00:00.000000001+01:00", "now"
-    ]));
+    assert!(matches!(
+        &contract.valid_time().unwrap().end,
+        ValidityBound::Now
+    ));
+    assert_eq!(
+        contract.generated_json()["validTime"],
+        json!(["2026-10-01T01:00:00.000000001+01:00", "now"])
+    );
     source["validTime"] = json!(["now", "now"]);
     let symbolic = compile(&bytes(&source));
-    assert!(matches!(&symbolic.valid_time().unwrap().start, ValidityBound::Now));
-    assert_eq!(symbolic.generated_json()["validTime"], json!(["now", "now"]));
+    assert!(matches!(
+        &symbolic.valid_time().unwrap().start,
+        ValidityBound::Now
+    ));
+    assert_eq!(
+        symbolic.generated_json()["validTime"],
+        json!(["now", "now"])
+    );
 }
 
 #[test]
 fn sensorml_common_reversed_or_malformed_validity_is_rejected() {
     let mut source = minimal_value();
-    source["validTime"] = json!(["2026-10-01T00:00:00.000000002Z", "2026-10-01T00:00:00.000000001Z"]);
-    assert_eq!(CommonDescription::compile(validator(), &bytes(&source), MEDIA).err(), Some(DescriptionError::ReversedValidity));
+    source["validTime"] = json!([
+        "2026-10-01T00:00:00.000000002Z",
+        "2026-10-01T00:00:00.000000001Z"
+    ]);
+    assert_eq!(
+        CommonDescription::compile(validator(), &bytes(&source), MEDIA).err(),
+        Some(DescriptionError::ReversedValidity)
+    );
     // Equal instants with different source offsets are not reversed.
     source["validTime"] = json!(["2026-10-01T01:00:00+01:00", "2026-10-01T00:00:00Z"]);
     compile(&bytes(&source));
-    for invalid in [json!(["2026-02-30T00:00:00Z", "now"]), json!(["now"]), json!([null, "now"]), json!(["yesterday", "now"])] {
+    for invalid in [
+        json!(["2026-02-30T00:00:00Z", "now"]),
+        json!(["now"]),
+        json!([null, "now"]),
+        json!(["yesterday", "now"]),
+    ] {
         source["validTime"] = invalid;
         assert!(CommonDescription::compile(validator(), &bytes(&source), MEDIA).is_err());
     }
@@ -254,7 +355,10 @@ fn sensorml_common_malformed_typed_fields_fail_not_become_extensions() {
         ("/identifiers/0/codeSpace", json!("not a URI")),
         ("/classifiers/0/definition", json!(true)),
         ("/contacts/0/role", json!(12)),
-        ("/contacts/0/contactInfo/address/electronicMailAddress", json!("not an email")),
+        (
+            "/contacts/0/contactInfo/address/electronicMailAddress",
+            json!("not an email"),
+        ),
         ("/contacts/1/link/href", json!({"nested":"wrong shape"})),
         ("/documents/0/name", json!(false)),
         ("/documents/0/link/href", json!("not a URI")),
@@ -262,7 +366,10 @@ fn sensorml_common_malformed_typed_fields_fail_not_become_extensions() {
     for (pointer, invalid) in mutations {
         let mut source = rich_value();
         *source.pointer_mut(pointer).unwrap() = invalid;
-        assert!(CommonDescription::compile(validator(), &bytes(&source), MEDIA).is_err(), "malformed typed field must fail: {pointer}");
+        assert!(
+            CommonDescription::compile(validator(), &bytes(&source), MEDIA).is_err(),
+            "malformed typed field must fail: {pointer}"
+        );
     }
     let mut term_extra = rich_value();
     term_extra["identifiers"][0]["unrecognized"] = json!("not allowed by closed Term schema");
@@ -277,12 +384,24 @@ fn sensorml_common_extension_content_is_retained_without_identity_promotion() {
     let contract = compile(RICH);
     assert_eq!(contract.id(), Some("local-A"));
     assert_eq!(contract.contacts().unwrap().len(), 2);
-    assert_eq!(contract.remaining_members()["ex:calibration"]["id"], json!("asserted-not-resource-id"));
-    assert_eq!(contract.remaining_members()["ex:calibration"]["coefficient"], json!(9007199254740993_u64));
+    assert_eq!(
+        contract.remaining_members()["ex:calibration"]["id"],
+        json!("asserted-not-resource-id")
+    );
+    assert_eq!(
+        contract.remaining_members()["ex:calibration"]["coefficient"],
+        json!(9007199254740993_u64)
+    );
     let mut added = Map::new();
-    added.insert("org:provenance".into(), json!({"id":"unverified assertion","role":"unverified creator"}));
+    added.insert(
+        "org:provenance".into(),
+        json!({"id":"unverified assertion","role":"unverified creator"}),
+    );
     let generated = contract.with_extensions(&added).unwrap();
-    assert_eq!(generated["org:provenance"], json!({"id":"unverified assertion","role":"unverified creator"}));
+    assert_eq!(
+        generated["org:provenance"],
+        json!({"id":"unverified assertion","role":"unverified creator"})
+    );
     assert!(field_mismatches(&generated).is_empty());
     assert!(contract.generated_json().get("org:provenance").is_none());
     assert_eq!(contract.source_bytes(), RICH);
@@ -291,15 +410,36 @@ fn sensorml_common_extension_content_is_retained_without_identity_promotion() {
 #[test]
 fn sensorml_common_extensions_cannot_replace_reserved_or_existing_members() {
     let contract = compile(RICH);
-    for reserved in ["id", "uniqueId", "type", "label", "identifiers", "contacts", "typeOf", "components", "systemKind@link", "system@link", "links"] {
+    for reserved in [
+        "id",
+        "uniqueId",
+        "type",
+        "label",
+        "identifiers",
+        "contacts",
+        "typeOf",
+        "components",
+        "systemKind@link",
+        "system@link",
+        "links",
+    ] {
         let additions = Map::from_iter([(reserved.to_owned(), json!("replacement"))]);
-        assert!(contract.with_extensions(&additions).is_err(), "reserved name: {reserved}");
+        assert!(
+            contract.with_extensions(&additions).is_err(),
+            "reserved name: {reserved}"
+        );
         assert!(field_mismatches(&contract.generated_json()).is_empty());
     }
     let collision = Map::from_iter([("ex:calibration".into(), json!({"version":"replace"}))]);
-    assert_eq!(contract.with_extensions(&collision).err(), Some(DescriptionError::ExtensionCollision));
+    assert_eq!(
+        contract.with_extensions(&collision).err(),
+        Some(DescriptionError::ExtensionCollision)
+    );
     let unqualified = Map::from_iter([("unqualifiedNew".into(), json!(true))]);
-    assert_eq!(contract.with_extensions(&unqualified).err(), Some(DescriptionError::ExtensionNamespace));
+    assert_eq!(
+        contract.with_extensions(&unqualified).err(),
+        Some(DescriptionError::ExtensionNamespace)
+    );
 }
 
 #[test]
@@ -310,31 +450,61 @@ fn sensorml_common_extension_preflight_and_combined_output_are_bounded() {
         deep = Value::Array(vec![deep]);
     }
     for (value, failure) in [
-        (json!("a".repeat(crate::validation::MAX_STRING_BYTES + 1)), Failure::String),
-        (Value::Array(vec![Value::Null; crate::validation::MAX_MEMBERS + 1]), Failure::Members),
+        (
+            json!("a".repeat(crate::validation::MAX_STRING_BYTES + 1)),
+            Failure::String,
+        ),
+        (
+            Value::Array(vec![Value::Null; crate::validation::MAX_MEMBERS + 1]),
+            Failure::Members,
+        ),
         (deep, Failure::Depth),
-        (Value::Array(vec![Value::Array(vec![Value::Null; 500]); 9]), Failure::Nodes),
+        (
+            Value::Array(vec![Value::Array(vec![Value::Null; 500]); 9]),
+            Failure::Nodes,
+        ),
     ] {
         let additions = Map::from_iter([("ex:bounded".into(), value)]);
-        assert_eq!(contract.with_extensions(&additions).err(), Some(DescriptionError::Syntax(failure)));
+        assert_eq!(
+            contract.with_extensions(&additions).err(),
+            Some(DescriptionError::Syntax(failure))
+        );
     }
     let mut source = minimal_value();
     source["ex:existing"] = Value::Array(vec![Value::Array(vec![Value::Null; 500]); 6]);
     let larger = compile(&bytes(&source));
-    let additions = Map::from_iter([("ex:added".into(), Value::Array(vec![Value::Array(vec![Value::Null; 500]); 3]))]);
-    assert!(contract.with_extensions(&additions).is_ok(), "the added value alone fits");
-    assert_eq!(larger.with_extensions(&additions).err(), Some(DescriptionError::Syntax(Failure::Nodes)),
-        "the complete generated document, not each part separately, must fit");
+    let additions = Map::from_iter([(
+        "ex:added".into(),
+        Value::Array(vec![Value::Array(vec![Value::Null; 500]); 3]),
+    )]);
+    assert!(
+        contract.with_extensions(&additions).is_ok(),
+        "the added value alone fits"
+    );
+    assert_eq!(
+        larger.with_extensions(&additions).err(),
+        Some(DescriptionError::Syntax(Failure::Nodes)),
+        "the complete generated document, not each part separately, must fit"
+    );
     assert_eq!(larger.source_bytes(), bytes(&source));
 }
 
 #[test]
 fn sensorml_common_duplicate_identity_and_input_limits_fail_safely() {
     let duplicate = br#"{"type":"SimpleProcess","label":"test","uniqueId":"urn:example:A","uniqueId":"urn:example:B"}"#;
-    assert_eq!(CommonDescription::compile(validator(), duplicate, MEDIA).err(), Some(DescriptionError::Syntax(Failure::DuplicateKey)));
+    assert_eq!(
+        CommonDescription::compile(validator(), duplicate, MEDIA).err(),
+        Some(DescriptionError::Syntax(Failure::DuplicateKey))
+    );
     let oversized = vec![b' '; crate::validation::MAX_BYTES + 1];
-    assert_eq!(CommonDescription::compile(validator(), &oversized, MEDIA).err(), Some(DescriptionError::Syntax(Failure::Size)));
-    assert_eq!(CommonDescription::compile(validator(), MINIMAL, "application/json\n").err(), Some(DescriptionError::MediaType));
+    assert_eq!(
+        CommonDescription::compile(validator(), &oversized, MEDIA).err(),
+        Some(DescriptionError::Syntax(Failure::Size))
+    );
+    assert_eq!(
+        CommonDescription::compile(validator(), MINIMAL, "application/json\n").err(),
+        Some(DescriptionError::MediaType)
+    );
 }
 
 #[test]
@@ -378,20 +548,31 @@ impl Canary {
                 match listener.accept() {
                     Ok((mut connection, _)) => {
                         worker_count.fetch_add(1, Ordering::SeqCst);
-                        connection.set_write_timeout(Some(Duration::from_secs(2))).unwrap();
+                        connection
+                            .set_write_timeout(Some(Duration::from_secs(2)))
+                            .unwrap();
                         connection.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 2\r\nConnection: close\r\n\r\n{}").unwrap();
                     }
-                    Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => thread::yield_now(),
+                    Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                        thread::yield_now()
+                    }
                     Err(error) => panic!("canary accept failed: {error}"),
                 }
             }
         });
-        Self { address, count, stop, worker: Some(worker) }
+        Self {
+            address,
+            count,
+            stop,
+            worker: Some(worker),
+        }
     }
 
     fn verify_sensitive(&self) {
         let mut connection = TcpStream::connect(&self.address).unwrap();
-        connection.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+        connection
+            .set_read_timeout(Some(Duration::from_secs(2)))
+            .unwrap();
         let mut response = String::new();
         connection.read_to_string(&mut response).unwrap();
         assert!(response.starts_with("HTTP/1.1 200 OK"));
@@ -400,7 +581,11 @@ impl Canary {
 
     fn finish(&mut self) {
         self.stop.store(true, Ordering::SeqCst);
-        self.worker.take().unwrap().join().expect("canary worker succeeded");
+        self.worker
+            .take()
+            .unwrap()
+            .join()
+            .expect("canary worker succeeded");
     }
 }
 
@@ -434,8 +619,11 @@ fn sensorml_common_links_and_reference_shaped_extensions_never_fetch() {
     source["identifiers"][0]["value"] = json!(17);
     assert!(CommonDescription::compile(validator(), &bytes(&source), MEDIA).is_err());
     canary.finish();
-    assert_eq!(canary.count.load(Ordering::SeqCst), 1,
-        "only the explicit sensitivity-control connection is permitted");
+    assert_eq!(
+        canary.count.load(Ordering::SeqCst),
+        1,
+        "only the explicit sensitivity-control connection is permitted"
+    );
 }
 
 #[test]
@@ -446,7 +634,10 @@ fn sensorml_common_oracle_detects_contact_extension_and_identifier_corruption() 
     no_contact["contacts"].as_array_mut().unwrap().remove(0);
     assert_eq!(field_mismatches(&no_contact), vec!["/contacts"]);
     let mut no_extension = correct.clone();
-    no_extension.as_object_mut().unwrap().remove("ex:calibration");
+    no_extension
+        .as_object_mut()
+        .unwrap()
+        .remove("ex:calibration");
     assert_eq!(field_mismatches(&no_extension), vec!["/ex:calibration"]);
     let mut wrong_identifier = correct;
     wrong_identifier["identifiers"][0]["value"] = json!("wrong-but-valid-identifier");

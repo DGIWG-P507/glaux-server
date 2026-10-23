@@ -63,12 +63,26 @@ impl CommonDescription {
             .validate(Contract::DescribedObject, input)
             .map_err(DescriptionError::Syntax)?;
         let object = object(&value)?;
-        let valid_time = object.get("validTime").map(ValidityPeriod::parse).transpose()?;
-        let keywords = object.get("keywords").map(|value| {
-            value.as_array().ok_or(DescriptionError::Structure)?.iter()
-                .map(|value| value.as_str().map(str::to_owned).ok_or(DescriptionError::Structure))
-                .collect::<Result<Vec<_>, _>>()
-        }).transpose()?;
+        let valid_time = object
+            .get("validTime")
+            .map(ValidityPeriod::parse)
+            .transpose()?;
+        let keywords = object
+            .get("keywords")
+            .map(|value| {
+                value
+                    .as_array()
+                    .ok_or(DescriptionError::Structure)?
+                    .iter()
+                    .map(|value| {
+                        value
+                            .as_str()
+                            .map(str::to_owned)
+                            .ok_or(DescriptionError::Structure)
+                    })
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .transpose()?;
         let mut remaining = object.clone();
         for key in COMMON_FIELDS {
             remaining.remove(*key);
@@ -93,22 +107,54 @@ impl CommonDescription {
         })
     }
 
-    pub fn source_bytes(&self) -> &[u8] { &self.source }
-    pub fn source_media_type(&self) -> &str { &self.media_type }
-    pub fn source_sha256(&self) -> &[u8; 32] { &self.sha256 }
-    pub fn type_name(&self) -> &str { &self.type_name }
-    pub fn id(&self) -> Option<&str> { self.id.as_deref() }
-    pub fn unique_id(&self) -> &str { &self.unique_id }
-    pub fn label(&self) -> &str { &self.label }
-    pub fn description(&self) -> Option<&str> { self.description.as_deref() }
-    pub fn lang(&self) -> Option<&str> { self.lang.as_deref() }
-    pub fn keywords(&self) -> Option<&[String]> { self.keywords.as_deref() }
-    pub fn identifiers(&self) -> Option<&[Term]> { self.identifiers.as_deref() }
-    pub fn classifiers(&self) -> Option<&[Term]> { self.classifiers.as_deref() }
-    pub fn contacts(&self) -> Option<&[Contact]> { self.contacts.as_deref() }
-    pub fn documents(&self) -> Option<&[Document]> { self.documents.as_deref() }
-    pub fn valid_time(&self) -> Option<&ValidityPeriod> { self.valid_time.as_ref() }
-    pub fn remaining_members(&self) -> &Map<String, Value> { &self.remaining }
+    pub fn source_bytes(&self) -> &[u8] {
+        &self.source
+    }
+    pub fn source_media_type(&self) -> &str {
+        &self.media_type
+    }
+    pub fn source_sha256(&self) -> &[u8; 32] {
+        &self.sha256
+    }
+    pub fn type_name(&self) -> &str {
+        &self.type_name
+    }
+    pub fn id(&self) -> Option<&str> {
+        self.id.as_deref()
+    }
+    pub fn unique_id(&self) -> &str {
+        &self.unique_id
+    }
+    pub fn label(&self) -> &str {
+        &self.label
+    }
+    pub fn description(&self) -> Option<&str> {
+        self.description.as_deref()
+    }
+    pub fn lang(&self) -> Option<&str> {
+        self.lang.as_deref()
+    }
+    pub fn keywords(&self) -> Option<&[String]> {
+        self.keywords.as_deref()
+    }
+    pub fn identifiers(&self) -> Option<&[Term]> {
+        self.identifiers.as_deref()
+    }
+    pub fn classifiers(&self) -> Option<&[Term]> {
+        self.classifiers.as_deref()
+    }
+    pub fn contacts(&self) -> Option<&[Contact]> {
+        self.contacts.as_deref()
+    }
+    pub fn documents(&self) -> Option<&[Document]> {
+        self.documents.as_deref()
+    }
+    pub fn valid_time(&self) -> Option<&ValidityPeriod> {
+        self.valid_time.as_ref()
+    }
+    pub fn remaining_members(&self) -> &Map<String, Value> {
+        &self.remaining
+    }
 
     /// Reconstruct typed mapped fields, preserving list order, optional-member
     /// presence and uninterpreted remainder. This is generated JSON, not the
@@ -122,12 +168,35 @@ impl CommonDescription {
         put_string(&mut out, "description", self.description.as_deref());
         put_string(&mut out, "lang", self.lang.as_deref());
         if let Some(values) = &self.keywords {
-            out.insert("keywords".into(), Value::Array(values.iter().cloned().map(Value::String).collect()));
+            out.insert(
+                "keywords".into(),
+                Value::Array(values.iter().cloned().map(Value::String).collect()),
+            );
         }
-        put_list(&mut out, "identifiers", self.identifiers.as_deref(), Term::json);
-        put_list(&mut out, "classifiers", self.classifiers.as_deref(), Term::json);
-        put_list(&mut out, "contacts", self.contacts.as_deref(), Contact::json);
-        put_list(&mut out, "documents", self.documents.as_deref(), Document::json);
+        put_list(
+            &mut out,
+            "identifiers",
+            self.identifiers.as_deref(),
+            Term::json,
+        );
+        put_list(
+            &mut out,
+            "classifiers",
+            self.classifiers.as_deref(),
+            Term::json,
+        );
+        put_list(
+            &mut out,
+            "contacts",
+            self.contacts.as_deref(),
+            Contact::json,
+        );
+        put_list(
+            &mut out,
+            "documents",
+            self.documents.as_deref(),
+            Document::json,
+        );
         if let Some(period) = &self.valid_time {
             out.insert("validTime".into(), period.json());
         }
@@ -144,7 +213,9 @@ impl CommonDescription {
         extensions: &Map<String, Value>,
     ) -> Result<Value, DescriptionError> {
         bound_extensions(extensions)?;
-        let Value::Object(mut out) = self.generated_json() else { unreachable!() };
+        let Value::Object(mut out) = self.generated_json() else {
+            unreachable!()
+        };
         for (name, value) in extensions {
             if COMMON_FIELDS.contains(&name.as_str()) || RESERVED_FIELDS.contains(&name.as_str()) {
                 return Err(DescriptionError::ReservedExtension);
@@ -155,10 +226,15 @@ impl CommonDescription {
             let Some((prefix, local)) = name.split_once(':') else {
                 return Err(DescriptionError::ExtensionNamespace);
             };
-            if prefix.is_empty() || local.is_empty()
+            if prefix.is_empty()
+                || local.is_empty()
                 || !prefix.as_bytes()[0].is_ascii_alphabetic()
-                || !prefix.bytes().all(|byte| byte.is_ascii_alphanumeric() || b"+.-".contains(&byte))
-                || ["sml", "sensorml", "swe", "gml", "geojson", "ogc"].iter().any(|reserved| prefix.eq_ignore_ascii_case(reserved))
+                || !prefix
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || b"+.-".contains(&byte))
+                || ["sml", "sensorml", "swe", "gml", "geojson", "ogc"]
+                    .iter()
+                    .any(|reserved| prefix.eq_ignore_ascii_case(reserved))
             {
                 return Err(DescriptionError::ExtensionNamespace);
             }
@@ -172,22 +248,70 @@ impl CommonDescription {
 }
 
 const COMMON_FIELDS: &[&str] = &[
-    "type", "id", "uniqueId", "label", "description", "lang", "keywords",
-    "identifiers", "classifiers", "contacts", "documents", "validTime",
+    "type",
+    "id",
+    "uniqueId",
+    "label",
+    "description",
+    "lang",
+    "keywords",
+    "identifiers",
+    "classifiers",
+    "contacts",
+    "documents",
+    "validTime",
 ];
 
 // Do not allow an extension-insertion API to create unvalidated ordinary
 // SensorML/CSAPI identity, content or relationship members. Source members with
 // these names remain intact in the explicitly uninterpreted remainder instead.
 const RESERVED_FIELDS: &[&str] = &[
-    "securityConstraints", "legalConstraints", "characteristics", "capabilities", "history",
-    "definition", "typeOf", "configuration", "featuresOfInterest", "inputs", "outputs",
-    "parameters", "modes", "method", "components", "connections", "attachedTo", "position",
-    "localReferenceFrames", "localTimeFrames", "location", "platform", "deployedSystems",
-    "baseProperty", "objectType", "statistic", "qualifiers", "links", "geometry", "properties",
-    "featureType", "systemType", "systemKind", "systemKind@link", "parentSystem", "parentSystem@link",
-    "system", "system@link", "procedure", "procedures", "deployment", "deployments",
-    "sampledFeature", "sampledFeature@link", "samplingFeature", "samplingFeatures",
+    "securityConstraints",
+    "legalConstraints",
+    "characteristics",
+    "capabilities",
+    "history",
+    "definition",
+    "typeOf",
+    "configuration",
+    "featuresOfInterest",
+    "inputs",
+    "outputs",
+    "parameters",
+    "modes",
+    "method",
+    "components",
+    "connections",
+    "attachedTo",
+    "position",
+    "localReferenceFrames",
+    "localTimeFrames",
+    "location",
+    "platform",
+    "deployedSystems",
+    "baseProperty",
+    "objectType",
+    "statistic",
+    "qualifiers",
+    "links",
+    "geometry",
+    "properties",
+    "featureType",
+    "systemType",
+    "systemKind",
+    "systemKind@link",
+    "parentSystem",
+    "parentSystem@link",
+    "system",
+    "system@link",
+    "procedure",
+    "procedures",
+    "deployment",
+    "deployments",
+    "sampledFeature",
+    "sampledFeature@link",
+    "samplingFeature",
+    "samplingFeatures",
 ];
 
 #[derive(Clone, Debug, PartialEq)]
@@ -202,8 +326,10 @@ impl Term {
     fn parse(value: &Value) -> Result<Self, DescriptionError> {
         let object = object(value)?;
         Ok(Self {
-            definition: optional(object, "definition")?, label: required(object, "label")?,
-            code_space: optional(object, "codeSpace")?, value: required(object, "value")?,
+            definition: optional(object, "definition")?,
+            label: required(object, "label")?,
+            code_space: optional(object, "codeSpace")?,
+            value: required(object, "value")?,
         })
     }
     fn json(&self) -> Value {
@@ -230,7 +356,10 @@ impl Contact {
         }
     }
     fn json(&self) -> Value {
-        match self { Self::Party(value) => value.json(), Self::Link(value) => value.json() }
+        match self {
+            Self::Party(value) => value.json(),
+            Self::Link(value) => value.json(),
+        }
     }
 }
 
@@ -248,17 +377,27 @@ impl ResponsibleParty {
         Ok(Self {
             individual_name: optional(object, "individualName")?,
             organisation_name: optional(object, "organisationName")?,
-            position_name: optional(object, "positionName")?, role: required(object, "role")?,
-            contact_info: object.get("contactInfo").map(ContactInfo::parse).transpose()?,
+            position_name: optional(object, "positionName")?,
+            role: required(object, "role")?,
+            contact_info: object
+                .get("contactInfo")
+                .map(ContactInfo::parse)
+                .transpose()?,
         })
     }
     fn json(&self) -> Value {
         let mut out = Map::new();
         put_string(&mut out, "individualName", self.individual_name.as_deref());
-        put_string(&mut out, "organisationName", self.organisation_name.as_deref());
+        put_string(
+            &mut out,
+            "organisationName",
+            self.organisation_name.as_deref(),
+        );
         put_string(&mut out, "positionName", self.position_name.as_deref());
         out.insert("role".into(), Value::String(self.role.clone()));
-        if let Some(info) = &self.contact_info { out.insert("contactInfo".into(), info.json()); }
+        if let Some(info) = &self.contact_info {
+            out.insert("contactInfo".into(), info.json());
+        }
         Value::Object(out)
     }
 }
@@ -277,17 +416,26 @@ impl ContactInfo {
         Ok(Self {
             phone: object.get("phone").map(Phone::parse).transpose()?,
             address: object.get("address").map(Address::parse).transpose()?,
-            website: optional(object, "website")?, hours_of_service: optional(object, "hoursOfService")?,
+            website: optional(object, "website")?,
+            hours_of_service: optional(object, "hoursOfService")?,
             contact_instructions: optional(object, "contactInstructions")?,
         })
     }
     fn json(&self) -> Value {
         let mut out = Map::new();
-        if let Some(value) = &self.phone { out.insert("phone".into(), value.json()); }
-        if let Some(value) = &self.address { out.insert("address".into(), value.json()); }
+        if let Some(value) = &self.phone {
+            out.insert("phone".into(), value.json());
+        }
+        if let Some(value) = &self.address {
+            out.insert("address".into(), value.json());
+        }
         put_string(&mut out, "website", self.website.as_deref());
         put_string(&mut out, "hoursOfService", self.hours_of_service.as_deref());
-        put_string(&mut out, "contactInstructions", self.contact_instructions.as_deref());
+        put_string(
+            &mut out,
+            "contactInstructions",
+            self.contact_instructions.as_deref(),
+        );
         Value::Object(out)
     }
 }
@@ -326,8 +474,11 @@ pub struct ContactLink {
 impl ContactLink {
     fn parse(value: &Value) -> Result<Self, DescriptionError> {
         let object = object(value)?;
-        Ok(Self { role: optional(object, "role")?, name: required(object, "name")?,
-            link: Link::parse(object.get("link").ok_or(DescriptionError::Structure)?)? })
+        Ok(Self {
+            role: optional(object, "role")?,
+            name: required(object, "name")?,
+            link: Link::parse(object.get("link").ok_or(DescriptionError::Structure)?)?,
+        })
     }
     fn json(&self) -> Value {
         let mut out = Map::new();
@@ -348,9 +499,12 @@ pub struct Document {
 impl Document {
     fn parse(value: &Value) -> Result<Self, DescriptionError> {
         let object = object(value)?;
-        Ok(Self { role: optional(object, "role")?, name: required(object, "name")?,
+        Ok(Self {
+            role: optional(object, "role")?,
+            name: required(object, "name")?,
             description: optional(object, "description")?,
-            link: Link::parse(object.get("link").ok_or(DescriptionError::Structure)?)? })
+            link: Link::parse(object.get("link").ok_or(DescriptionError::Structure)?)?,
+        })
     }
     fn json(&self) -> Value {
         let mut out = Map::new();
@@ -380,12 +534,21 @@ impl Link {
     fn parse(value: &Value) -> Result<Self, DescriptionError> {
         let object = object(value)?;
         let mut remaining = object.clone();
-        for key in ["href", "rel", "type", "hreflang", "title", "uid", "rt", "if"] { remaining.remove(key); }
+        for key in [
+            "href", "rel", "type", "hreflang", "title", "uid", "rt", "if",
+        ] {
+            remaining.remove(key);
+        }
         Ok(Self {
-            href: required(object, "href")?, rel: optional(object, "rel")?,
-            media_type: optional(object, "type")?, hreflang: optional(object, "hreflang")?,
-            title: optional(object, "title")?, uid: optional(object, "uid")?,
-            resource_type: optional(object, "rt")?, interface: optional(object, "if")?, remaining,
+            href: required(object, "href")?,
+            rel: optional(object, "rel")?,
+            media_type: optional(object, "type")?,
+            hreflang: optional(object, "hreflang")?,
+            title: optional(object, "title")?,
+            uid: optional(object, "uid")?,
+            resource_type: optional(object, "rt")?,
+            interface: optional(object, "if")?,
+            remaining,
         })
     }
     fn json(&self) -> Value {
@@ -403,50 +566,105 @@ impl Link {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum ValidityBound { Instant(ExactInstant), Now }
+pub enum ValidityBound {
+    Instant(ExactInstant),
+    Now,
+}
 impl ValidityBound {
     fn parse(value: &Value) -> Result<Self, DescriptionError> {
         let text = value.as_str().ok_or(DescriptionError::Structure)?;
-        if text == "now" { Ok(Self::Now) }
-        else { ExactInstant::parse_rfc3339(text).map(Self::Instant).map_err(DescriptionError::Time) }
+        if text == "now" {
+            Ok(Self::Now)
+        } else {
+            ExactInstant::parse_rfc3339(text)
+                .map(Self::Instant)
+                .map_err(DescriptionError::Time)
+        }
     }
     fn json(&self) -> Value {
-        Value::String(match self { Self::Instant(value) => value.source_lexeme().to_owned(), Self::Now => "now".into() })
+        Value::String(match self {
+            Self::Instant(value) => value.source_lexeme().to_owned(),
+            Self::Now => "now".into(),
+        })
     }
 }
 #[derive(Clone, Debug, PartialEq)]
-pub struct ValidityPeriod { pub start: ValidityBound, pub end: ValidityBound }
+pub struct ValidityPeriod {
+    pub start: ValidityBound,
+    pub end: ValidityBound,
+}
 impl ValidityPeriod {
     fn parse(value: &Value) -> Result<Self, DescriptionError> {
         let values = value.as_array().ok_or(DescriptionError::Structure)?;
-        if values.len() != 2 { return Err(DescriptionError::Structure); }
+        if values.len() != 2 {
+            return Err(DescriptionError::Structure);
+        }
         let start = ValidityBound::parse(&values[0])?;
         let end = ValidityBound::parse(&values[1])?;
         if let (ValidityBound::Instant(start), ValidityBound::Instant(end)) = (&start, &end)
             && start > end
-        { return Err(DescriptionError::ReversedValidity); }
+        {
+            return Err(DescriptionError::ReversedValidity);
+        }
         Ok(Self { start, end })
     }
-    fn json(&self) -> Value { Value::Array(vec![self.start.json(), self.end.json()]) }
+    fn json(&self) -> Value {
+        Value::Array(vec![self.start.json(), self.end.json()])
+    }
 }
 
 fn object(value: &Value) -> Result<&Map<String, Value>, DescriptionError> {
     value.as_object().ok_or(DescriptionError::Structure)
 }
 fn required(object: &Map<String, Value>, name: &str) -> Result<String, DescriptionError> {
-    object.get(name).and_then(Value::as_str).map(str::to_owned).ok_or(DescriptionError::Structure)
+    object
+        .get(name)
+        .and_then(Value::as_str)
+        .map(str::to_owned)
+        .ok_or(DescriptionError::Structure)
 }
 fn optional(object: &Map<String, Value>, name: &str) -> Result<Option<String>, DescriptionError> {
-    object.get(name).map(|value| value.as_str().map(str::to_owned).ok_or(DescriptionError::Structure)).transpose()
+    object
+        .get(name)
+        .map(|value| {
+            value
+                .as_str()
+                .map(str::to_owned)
+                .ok_or(DescriptionError::Structure)
+        })
+        .transpose()
 }
-fn list<T>(object: &Map<String, Value>, name: &str, parse: fn(&Value) -> Result<T, DescriptionError>) -> Result<Option<Vec<T>>, DescriptionError> {
-    object.get(name).map(|value| value.as_array().ok_or(DescriptionError::Structure)?.iter().map(parse).collect()).transpose()
+fn list<T>(
+    object: &Map<String, Value>,
+    name: &str,
+    parse: fn(&Value) -> Result<T, DescriptionError>,
+) -> Result<Option<Vec<T>>, DescriptionError> {
+    object
+        .get(name)
+        .map(|value| {
+            value
+                .as_array()
+                .ok_or(DescriptionError::Structure)?
+                .iter()
+                .map(parse)
+                .collect()
+        })
+        .transpose()
 }
 fn put_string(out: &mut Map<String, Value>, name: &str, value: Option<&str>) {
-    if let Some(value) = value { out.insert(name.into(), Value::String(value.to_owned())); }
+    if let Some(value) = value {
+        out.insert(name.into(), Value::String(value.to_owned()));
+    }
 }
-fn put_list<T>(out: &mut Map<String, Value>, name: &str, values: Option<&[T]>, emit: fn(&T) -> Value) {
-    if let Some(values) = values { out.insert(name.into(), Value::Array(values.iter().map(emit).collect())); }
+fn put_list<T>(
+    out: &mut Map<String, Value>,
+    name: &str,
+    values: Option<&[T]>,
+    emit: fn(&T) -> Value,
+) {
+    if let Some(values) = values {
+        out.insert(name.into(), Value::Array(values.iter().map(emit).collect()));
+    }
 }
 
 /// A caller may construct a Value without using our parser. Bound it iteratively
@@ -455,45 +673,69 @@ fn put_list<T>(out: &mut Map<String, Value>, name: &str, values: Option<&[T]>, e
 fn bound_extensions(extensions: &Map<String, Value>) -> Result<(), DescriptionError> {
     use validation::{Failure, MAX_BYTES, MAX_DEPTH, MAX_MEMBERS, MAX_NODES, MAX_STRING_BYTES};
     let fail = DescriptionError::Syntax;
-    if extensions.len() > MAX_MEMBERS { return Err(fail(Failure::Members)); }
+    if extensions.len() > MAX_MEMBERS {
+        return Err(fail(Failure::Members));
+    }
     let mut bytes = 0_usize;
     let mut charge = |len: usize| -> Result<(), DescriptionError> {
         bytes = bytes.saturating_add(len);
-        if bytes > MAX_BYTES { Err(fail(Failure::Size)) } else { Ok(()) }
+        if bytes > MAX_BYTES {
+            Err(fail(Failure::Size))
+        } else {
+            Ok(())
+        }
     };
     for name in extensions.keys() {
-        if name.len() > MAX_STRING_BYTES { return Err(fail(Failure::String)); }
+        if name.len() > MAX_STRING_BYTES {
+            return Err(fail(Failure::String));
+        }
         charge(name.len())?;
     }
     let mut pending: Vec<_> = extensions.values().map(|value| (value, 2)).collect();
     let mut nodes = 1;
     while let Some((value, depth)) = pending.pop() {
         nodes += 1;
-        if nodes > MAX_NODES { return Err(fail(Failure::Nodes)); }
+        if nodes > MAX_NODES {
+            return Err(fail(Failure::Nodes));
+        }
         charge(1)?;
         match value {
             Value::Object(object) => {
-                if depth > MAX_DEPTH { return Err(fail(Failure::Depth)); }
-                if object.len() > MAX_MEMBERS { return Err(fail(Failure::Members)); }
+                if depth > MAX_DEPTH {
+                    return Err(fail(Failure::Depth));
+                }
+                if object.len() > MAX_MEMBERS {
+                    return Err(fail(Failure::Members));
+                }
                 for (name, value) in object {
-                    if name.len() > MAX_STRING_BYTES { return Err(fail(Failure::String)); }
+                    if name.len() > MAX_STRING_BYTES {
+                        return Err(fail(Failure::String));
+                    }
                     charge(name.len())?;
                     pending.push((value, depth + 1));
                 }
             }
             Value::Array(values) => {
-                if depth > MAX_DEPTH { return Err(fail(Failure::Depth)); }
-                if values.len() > MAX_MEMBERS { return Err(fail(Failure::Members)); }
+                if depth > MAX_DEPTH {
+                    return Err(fail(Failure::Depth));
+                }
+                if values.len() > MAX_MEMBERS {
+                    return Err(fail(Failure::Members));
+                }
                 pending.extend(values.iter().map(|value| (value, depth + 1)));
             }
             Value::String(value) => {
-                if value.len() > MAX_STRING_BYTES { return Err(fail(Failure::String)); }
+                if value.len() > MAX_STRING_BYTES {
+                    return Err(fail(Failure::String));
+                }
                 charge(value.len())?;
             }
             Value::Number(value) => charge(value.as_str().len())?,
             Value::Bool(_) | Value::Null => {}
         }
-        if nodes + pending.len() > MAX_NODES { return Err(fail(Failure::Nodes)); }
+        if nodes + pending.len() > MAX_NODES {
+            return Err(fail(Failure::Nodes));
+        }
     }
     Ok(())
 }
