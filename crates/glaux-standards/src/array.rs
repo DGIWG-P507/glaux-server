@@ -183,10 +183,19 @@ fn corrected_validators()
     CORRECTED.get_or_init(|| {
         let mut catalog =
             validation::catalog().map_err(|_| AggregateError::AdaptationSourceChanged)?;
-        let schema = catalog
-            .get_mut(&Contract::DataArray.uri())
-            .ok_or(AggregateError::AdaptationSourceChanged)?;
-        correct_count_schema(schema)?;
+        // Standalone components use the registry alias; CSAPI wrappers retain
+        // relative references under the pinned GitHub retrieval base. Both
+        // catalog entries describe the same original bytes and need the same
+        // guarded, explicitly selected correction. The corpus is untouched.
+        for uri in [
+            Contract::DataArray.uri(),
+            format!("{}swecommon/schemas/json/DataArray.json", validation::PIN),
+        ] {
+            let schema = catalog
+                .get_mut(&uri)
+                .ok_or(AggregateError::AdaptationSourceChanged)?;
+            correct_count_schema(schema)?;
+        }
         crate::schema_guard::check_catalog(&catalog)
             .map_err(|_| AggregateError::AdaptationSourceChanged)?;
         [

@@ -25,8 +25,10 @@ Metadata-only nonlocal references remain explicit and are never fetched;
 their presence is not a claim that a payload can be executed.
 
 Whole-input syntax and graph limits still apply. Compilation also bounds the
-total semantic entries (4,096) and cumulative source bytes processed across roots
-and contexts (8 MiB). These are Glaux budgets, not standard-imposed sizes.
+total semantic entries (4,096) and cumulative source lengths charged for plan
+roots and semantic contexts (8 MiB). Helpers may inspect those bytes more than
+once; this is not an exact CPU-work measurement. These are Glaux budgets,
+not standard-imposed sizes.
 Errors return no partially usable contract, even when earlier roots
 compiled successfully. Public access is read-only; callers cannot mutate the
 retained input through their original buffer or a shared plan registry.

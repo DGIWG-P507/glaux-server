@@ -1,11 +1,11 @@
 {
-  "cargo_lock_sha256": "e2262ed72ac71daa5f7b7e1146222352c6df49a0178971da4b020cea8d59cda7",
+  "cargo_lock_sha256": "458730a934b63da817edff9ff1813a8937ed5b4ef0b0bba13bea38e7b93e82e6",
   "format_version": 1,
   "licence_metadata_unavailable": [],
   "manifests": [
     {
       "path": "Cargo.toml",
-      "sha256": "12636389fc78393743ac5c0198fc72dbe914c5d33b1295dc424d0c4259883934"
+      "sha256": "09c4e4818d53a0348e20163f24436f7eb118d48cbe016f8d134f9fc064bfae82"
     },
     {
       "path": "crates/glaux-domain/Cargo.toml",
@@ -17,7 +17,7 @@
     },
     {
       "path": "crates/glaux-standards/Cargo.toml",
-      "sha256": "4a4c9b3789668836252bcef2602613acf7231f7c76be9387ad915eb62ea52492"
+      "sha256": "0385113206f670b70673031c1dbf0241d970aa014c107ae54b5fb1e8aeb70a06"
     }
   ],
   "metadata_configuration": "--format-version=1 --locked --offline; all target platforms",
@@ -3551,6 +3551,16 @@
           ],
           "name": "jsonschema",
           "package": "jsonschema 0.56.0 (registry+https://github.com/rust-lang/crates.io-index)"
+        },
+        {
+          "kinds": [
+            {
+              "kind": null,
+              "target": null
+            }
+          ],
+          "name": "sha2",
+          "package": "sha2 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)"
         }
       ],
       "enabled_features": [],

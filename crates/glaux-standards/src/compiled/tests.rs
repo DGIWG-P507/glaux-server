@@ -4,10 +4,15 @@
 //! These model checks do not establish executable codecs or persistence.
 use std::sync::OnceLock;
 
-use glaux_domain::{range::RangeKind, scalar::{ScalarComponent, ScalarValue}};
+use glaux_domain::{
+    range::RangeKind,
+    scalar::{ScalarComponent, ScalarValue},
+};
 use serde_json::{Value, json};
 
-use super::{BindingSlot, BindingTarget, CompileError, CompiledContract, CompiledSemantics, Descriptor};
+use super::{
+    BindingSlot, BindingTarget, CompileError, CompiledContract, CompiledSemantics, Descriptor,
+};
 use crate::{
     aggregate::AggregateError,
     array::{ArrayOptions, CountReferenceSchema, SourceValidation},
@@ -19,7 +24,8 @@ use crate::{
 };
 
 const A: &[u8] = br#"{"type":"Count","id":"A","definition":"urn:example:count","label":" Count A ","value":9007199254740993}"#;
-const B: &[u8] = br#"{"type":"Count","id":"B","definition":"urn:example:count","label":"Count B","value":7}"#;
+const B: &[u8] =
+    br#"{"type":"Count","id":"B","definition":"urn:example:count","label":"Count B","value":7}"#;
 const RECORD: &[u8] = include_bytes!("../../fixtures/aggregate/record-mixed.json");
 const LOCAL: &[u8] = include_bytes!("../../fixtures/references/local-graph.json");
 const GREGORIAN: &str = "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian";
@@ -30,8 +36,14 @@ fn validator() -> &'static StructuralValidator {
 }
 
 fn compile(input: &[u8], descriptor: Descriptor) -> CompiledContract {
-    CompiledContract::compile(validator(), input, "application/json", descriptor, ArrayOptions::default())
-        .expect("independently authored valid description")
+    CompiledContract::compile(
+        validator(),
+        input,
+        "application/json",
+        descriptor,
+        ArrayOptions::default(),
+    )
+    .expect("independently authored valid description")
 }
 
 fn bytes(value: &Value) -> Vec<u8> {
@@ -39,7 +51,8 @@ fn bytes(value: &Value) -> Vec<u8> {
 }
 
 fn scalar(kind: &str, name: &str) -> Value {
-    let mut value = json!({"type":kind,"name":name,"definition":"urn:example:property","label":"Property"});
+    let mut value =
+        json!({"type":kind,"name":name,"definition":"urn:example:property","label":"Property"});
     if matches!(kind, "Quantity" | "QuantityRange") {
         value["uom"] = json!({"code":"m"});
     }
@@ -73,22 +86,27 @@ fn count_value(plan: &CompiledContract) -> String {
 fn compiled_contract_covers_every_implemented_component_family() {
     let mut fixtures = Vec::new();
     for (kind, expected) in [
-        ("Boolean", Contract::Boolean), ("Text", Contract::Text),
-        ("Category", Contract::Category), ("Count", Contract::Count),
-        ("Quantity", Contract::Quantity), ("Time", Contract::Time),
-        ("CategoryRange", Contract::CategoryRange), ("CountRange", Contract::CountRange),
-        ("QuantityRange", Contract::QuantityRange), ("TimeRange", Contract::TimeRange),
+        ("Boolean", Contract::Boolean),
+        ("Text", Contract::Text),
+        ("Category", Contract::Category),
+        ("Count", Contract::Count),
+        ("Quantity", Contract::Quantity),
+        ("Time", Contract::Time),
+        ("CategoryRange", Contract::CategoryRange),
+        ("CountRange", Contract::CountRange),
+        ("QuantityRange", Contract::QuantityRange),
+        ("TimeRange", Contract::TimeRange),
     ] {
         fixtures.push((scalar(kind, "sample"), expected));
     }
     fixtures.extend([
         (json!({"type":"DataRecord","fields":[scalar("Count","count")]}), Contract::DataRecord),
-        (json!({"type":"Vector","definition":"urn:example:position","referenceFrame":"urn:example:frame",
+        (json!({"type":"Vector","definition":"urn:example:position","label":"Position","referenceFrame":"urn:example:frame",
             "coordinates":[{"type":"Quantity","name":"east","axisID":"X","definition":"urn:example:east","label":"East","uom":{"code":"m"}}]}), Contract::Vector),
         (json!({"type":"DataChoice","items":[scalar("Text","text"),scalar("Boolean","flag")]}), Contract::DataChoice),
         (json!({"type":"DataArray","elementCount":{"value":3},"elementType":scalar("Count","count")}), Contract::DataArray),
         (json!({"type":"Matrix","elementCount":{"value":2},"elementType":scalar("Quantity","distance")}), Contract::Matrix),
-        (json!({"type":"Geometry","srs":"http://www.opengis.net/def/crs/OGC/1.3/CRS84"}), Contract::Geometry),
+        (json!({"type":"Geometry","definition":"urn:example:geometry","label":"Geometry","srs":"http://www.opengis.net/def/crs/OGC/1.3/CRS84"}), Contract::Geometry),
     ]);
     assert_eq!(fixtures.len(), 16);
     for (fixture, expected) in fixtures {
@@ -101,18 +119,50 @@ fn compiled_contract_covers_every_implemented_component_family() {
         assert_eq!(plan.plans()[0].graph().components()[0].kind, expected);
         assert_eq!(plan.plans()[0].nodes()[0].declaration(), 0);
         match (expected, plan.plans()[0].nodes()[0].semantics()) {
-            (Contract::Boolean, CompiledSemantics::Scalar(value)) => assert!(matches!(value.component(), ScalarComponent::Boolean { .. })),
-            (Contract::Text, CompiledSemantics::Scalar(value)) => assert!(matches!(value.component(), ScalarComponent::Text { .. })),
-            (Contract::Category, CompiledSemantics::Scalar(value)) => assert!(matches!(value.component(), ScalarComponent::Category { .. })),
-            (Contract::Count, CompiledSemantics::Scalar(value)) => assert!(matches!(value.component(), ScalarComponent::Count { .. })),
-            (Contract::Quantity, CompiledSemantics::Scalar(value)) => assert!(matches!(value.component(), ScalarComponent::Quantity { .. })),
-            (Contract::Time, CompiledSemantics::Scalar(value)) => assert!(matches!(value.component(), ScalarComponent::Time(_))),
-            (Contract::CategoryRange, CompiledSemantics::Range(value)) => assert_eq!(value.component().kind, RangeKind::Category),
-            (Contract::CountRange, CompiledSemantics::Range(value)) => assert_eq!(value.component().kind, RangeKind::Count),
-            (Contract::QuantityRange, CompiledSemantics::Range(value)) => assert_eq!(value.component().kind, RangeKind::Quantity),
-            (Contract::TimeRange, CompiledSemantics::Range(value)) => assert_eq!(value.component().kind, RangeKind::Time),
-            (Contract::DataRecord | Contract::Vector | Contract::DataChoice | Contract::DataArray | Contract::Matrix, CompiledSemantics::Aggregate(value)) => assert_eq!(value.kind, expected),
-            (Contract::Geometry, CompiledSemantics::Geometry(value)) => assert_eq!(value.component().srs, "http://www.opengis.net/def/crs/OGC/1.3/CRS84"),
+            (Contract::Boolean, CompiledSemantics::Scalar(value)) => {
+                assert!(matches!(value.component(), ScalarComponent::Boolean { .. }))
+            }
+            (Contract::Text, CompiledSemantics::Scalar(value)) => {
+                assert!(matches!(value.component(), ScalarComponent::Text { .. }))
+            }
+            (Contract::Category, CompiledSemantics::Scalar(value)) => assert!(matches!(
+                value.component(),
+                ScalarComponent::Category { .. }
+            )),
+            (Contract::Count, CompiledSemantics::Scalar(value)) => {
+                assert!(matches!(value.component(), ScalarComponent::Count { .. }))
+            }
+            (Contract::Quantity, CompiledSemantics::Scalar(value)) => assert!(matches!(
+                value.component(),
+                ScalarComponent::Quantity { .. }
+            )),
+            (Contract::Time, CompiledSemantics::Scalar(value)) => {
+                assert!(matches!(value.component(), ScalarComponent::Time(_)))
+            }
+            (Contract::CategoryRange, CompiledSemantics::Range(value)) => {
+                assert_eq!(value.component().kind, RangeKind::Category)
+            }
+            (Contract::CountRange, CompiledSemantics::Range(value)) => {
+                assert_eq!(value.component().kind, RangeKind::Count)
+            }
+            (Contract::QuantityRange, CompiledSemantics::Range(value)) => {
+                assert_eq!(value.component().kind, RangeKind::Quantity)
+            }
+            (Contract::TimeRange, CompiledSemantics::Range(value)) => {
+                assert_eq!(value.component().kind, RangeKind::Time)
+            }
+            (
+                Contract::DataRecord
+                | Contract::Vector
+                | Contract::DataChoice
+                | Contract::DataArray
+                | Contract::Matrix,
+                CompiledSemantics::Aggregate(value),
+            ) => assert_eq!(value.kind, expected),
+            (Contract::Geometry, CompiledSemantics::Geometry(value)) => assert_eq!(
+                value.component().srs,
+                "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+            ),
             _ => panic!("wrong typed meaning for {expected:?}"),
         }
         assert!(plan.encoding().is_none());
@@ -123,8 +173,14 @@ fn compiled_contract_covers_every_implemented_component_family() {
 fn compiled_contract_owns_exact_source_media_digest_and_prior_meaning() {
     let mut caller_source = A.to_vec();
     let mut caller_media = String::from("application/json");
-    let first = CompiledContract::compile(validator(), &caller_source, &caller_media,
-        Descriptor::Component, ArrayOptions::default()).unwrap();
+    let first = CompiledContract::compile(
+        validator(),
+        &caller_source,
+        &caller_media,
+        Descriptor::Component,
+        ArrayOptions::default(),
+    )
+    .unwrap();
     caller_source.fill(b' ');
     caller_media.clear();
     drop(caller_source);
@@ -133,15 +189,24 @@ fn compiled_contract_owns_exact_source_media_digest_and_prior_meaning() {
     let repeated = compile(A, Descriptor::Component);
     // Independently computed from the literal A using .NET SHA256.HashData,
     // not the production digest implementation or a compiler-generated value.
-    let expected_digest = [0xab,0xde,0x5f,0xe3,0x72,0x8a,0x57,0x21,0xcd,0xa0,0xe1,0x68,0x8d,0x15,0xb4,0x27,
-        0x65,0x09,0xb5,0x1b,0x7b,0xdc,0x39,0xd1,0xc3,0x17,0xad,0x0c,0x3d,0x09,0x6c,0x53];
+    let expected_digest = [
+        0xab, 0xde, 0x5f, 0xe3, 0x72, 0x8a, 0x57, 0x21, 0xcd, 0xa0, 0xe1, 0x68, 0x8d, 0x15, 0xb4,
+        0x27, 0x65, 0x09, 0xb5, 0x1b, 0x7b, 0xdc, 0x39, 0xd1, 0xc3, 0x17, 0xad, 0x0c, 0x3d, 0x09,
+        0x6c, 0x53,
+    ];
     assert_eq!(first.source(), A);
     assert_eq!(first.media_type(), "application/json");
     assert_eq!(first.sha256(), &expected_digest);
     assert_eq!(count_value(&first), "9007199254740993");
     assert_eq!(count_value(&second), "7");
-    assert_eq!(first.plans()[0].graph().components()[0].id.as_deref(), Some("A"));
-    assert_eq!(second.plans()[0].graph().components()[0].id.as_deref(), Some("B"));
+    assert_eq!(
+        first.plans()[0].graph().components()[0].id.as_deref(),
+        Some("A")
+    );
+    assert_eq!(
+        second.plans()[0].graph().components()[0].id.as_deref(),
+        Some("B")
+    );
     assert_eq!(repeated.sha256(), first.sha256());
     assert_eq!(count_value(&repeated), "9007199254740993");
     assert_ne!(second.sha256(), first.sha256());
@@ -149,12 +214,26 @@ fn compiled_contract_owns_exact_source_media_digest_and_prior_meaning() {
     whitespace.push(b'\n');
     let equivalent = compile(&whitespace, Descriptor::Component);
     assert_eq!(count_value(&equivalent), "9007199254740993");
-    assert_ne!(equivalent.sha256(), first.sha256(), "digest represents exact bytes, not normalized JSON");
+    assert_ne!(
+        equivalent.sha256(),
+        first.sha256(),
+        "digest represents exact bytes, not normalized JSON"
+    );
     let source_media = "application/json; profile=\"urn:example:contract\"";
-    let qualified = CompiledContract::compile(validator(), A, source_media,
-        Descriptor::Component, ArrayOptions::default()).unwrap();
+    let qualified = CompiledContract::compile(
+        validator(),
+        A,
+        source_media,
+        Descriptor::Component,
+        ArrayOptions::default(),
+    )
+    .unwrap();
     assert_eq!(qualified.media_type(), source_media);
-    assert_eq!(qualified.sha256(), first.sha256(), "source digest is over bytes, not media metadata");
+    assert_eq!(
+        qualified.sha256(),
+        first.sha256(),
+        "source digest is over bytes, not media metadata"
+    );
 }
 
 #[test]
@@ -162,22 +241,42 @@ fn compiled_contract_keeps_order_metadata_and_exact_numeric_meaning() {
     let contract = compile(RECORD, Descriptor::Component);
     let plan = &contract.plans()[0];
     let root = &plan.nodes()[0];
-    let CompiledSemantics::Aggregate(description) = root.semantics() else { panic!("record") };
+    let CompiledSemantics::Aggregate(description) = root.semantics() else {
+        panic!("record")
+    };
     assert_eq!(description.metadata.id.as_deref(), Some("MIXED"));
-    assert_eq!(description.metadata.label.as_deref(), Some(" Mixed values "));
+    assert_eq!(
+        description.metadata.label.as_deref(),
+        Some(" Mixed values ")
+    );
     assert_eq!(description.metadata.optional, Some(true));
     assert_eq!(description.metadata.updatable, Some(false));
-    assert_eq!(root.bindings().iter().map(|binding| binding.name()).collect::<Vec<_>>(),
-        [Some("zCount"), Some("aBand"), Some("mNested")]);
+    assert_eq!(
+        root.bindings()
+            .iter()
+            .map(|binding| binding.name())
+            .collect::<Vec<_>>(),
+        [Some("zCount"), Some("aBand"), Some("mNested")]
+    );
     let count = &plan.nodes()[local(root.bindings()[0].target())];
-    let CompiledSemantics::Scalar(count) = count.semantics() else { panic!("Count") };
-    let Some(ScalarValue::Count(value)) = count.component().value() else { panic!("exact value") };
+    let CompiledSemantics::Scalar(count) = count.semantics() else {
+        panic!("Count")
+    };
+    let Some(ScalarValue::Count(value)) = count.component().value() else {
+        panic!("exact value")
+    };
     assert_eq!(value.try_to_u64(), Ok(9_007_199_254_740_993));
     let band = &plan.nodes()[local(root.bindings()[1].target())];
-    let CompiledSemantics::Range(band) = band.semantics() else { panic!("QuantityRange") };
+    let CompiledSemantics::Range(band) = band.semantics() else {
+        panic!("QuantityRange")
+    };
     let checked = band.inline_value().unwrap();
     for (endpoint, expected) in checked.endpoints.iter().zip(["125.00", "150.00"]) {
-        let ScalarValue::Quantity(glaux_domain::numeric::NumericValue::Finite(value)) = &endpoint.value else { panic!("finite quantity") };
+        let ScalarValue::Quantity(glaux_domain::numeric::NumericValue::Finite(value)) =
+            &endpoint.value
+        else {
+            panic!("finite quantity")
+        };
         assert_eq!(value.decimal_lexeme(), Some(expected));
     }
     assert_eq!(contract.source(), RECORD);
@@ -188,20 +287,48 @@ fn compiled_contract_reuses_exact_local_targets_without_expanding_sources() {
     let contract = compile(LOCAL, Descriptor::Component);
     let plan = &contract.plans()[0];
     assert_eq!(plan.graph().components().len(), 4);
-    assert_eq!(plan.nodes().len(), 4, "same declaration and context is one immutable node");
-    assert_eq!(plan.graph().traversal(), [0,1,3,2,3,1,2,3,1]);
+    assert_eq!(
+        plan.nodes().len(),
+        4,
+        "same declaration and context is one immutable node"
+    );
+    assert_eq!(plan.graph().traversal(), [0, 1, 3, 2, 3, 1, 2, 3, 1]);
     let bindings = plan.nodes()[0].bindings();
-    assert_eq!(bindings.iter().map(|binding| binding.name()).collect::<Vec<_>>(),
-        [Some("target"),Some("forward"),Some("nested"),Some("shared")]);
-    assert!(bindings.iter().all(|binding| binding.slot() == BindingSlot::Component));
+    assert_eq!(
+        bindings
+            .iter()
+            .map(|binding| binding.name())
+            .collect::<Vec<_>>(),
+        [
+            Some("target"),
+            Some("forward"),
+            Some("nested"),
+            Some("shared")
+        ]
+    );
+    assert!(
+        bindings
+            .iter()
+            .all(|binding| binding.slot() == BindingSlot::Component)
+    );
     assert_eq!(local(bindings[2].target()), local(bindings[3].target()));
     let exact = &plan.nodes()[local(bindings[1].target())];
     assert_eq!(exact.declaration(), 3);
-    let CompiledSemantics::Scalar(target) = exact.semantics() else { panic!("target Count") };
-    let Some(ScalarValue::Count(value)) = target.component().value() else { panic!("target value") };
+    let CompiledSemantics::Scalar(target) = exact.semantics() else {
+        panic!("target Count")
+    };
+    let Some(ScalarValue::Count(value)) = target.component().value() else {
+        panic!("target value")
+    };
     assert_eq!(value.try_to_u64(), Ok(9_007_199_254_740_993));
-    assert_eq!(plan.graph().references()[0].target, ReferenceTarget::Local(3));
-    assert_eq!(plan.graph().references()[0].title.as_deref(), Some(" Exact target "));
+    assert_eq!(
+        plan.graph().references()[0].target,
+        ReferenceTarget::Local(3)
+    );
+    assert_eq!(
+        plan.graph().references()[0].title.as_deref(),
+        Some(" Exact target ")
+    );
     assert_eq!(plan.graph().source(), LOCAL);
     assert_eq!(contract.source(), LOCAL);
 }
@@ -209,30 +336,60 @@ fn compiled_contract_reuses_exact_local_targets_without_expanding_sources() {
 #[test]
 fn compiled_contract_preserves_vector_and_matrix_inherited_frames() {
     for (source, expected) in [
-        (include_bytes!("../../fixtures/aggregate/vector-mixed.json").as_slice(), "urn:example:spatiotemporal-frame"),
-        (include_bytes!("../../fixtures/array/matrix-time.json").as_slice(), "urn:example:unknown-time-frame"),
+        (
+            include_bytes!("../../fixtures/aggregate/vector-mixed.json").as_slice(),
+            "urn:example:spatiotemporal-frame",
+        ),
+        (
+            include_bytes!("../../fixtures/array/matrix-time.json").as_slice(),
+            "urn:example:unknown-time-frame",
+        ),
     ] {
         let contract = compile(source, Descriptor::Component);
         let plan = &contract.plans()[0];
-        let times = plan.nodes().iter().filter(|node| plan.graph().components()[node.declaration()].kind == Contract::Time).collect::<Vec<_>>();
+        let times = plan
+            .nodes()
+            .iter()
+            .filter(|node| plan.graph().components()[node.declaration()].kind == Contract::Time)
+            .collect::<Vec<_>>();
         assert_eq!(times.len(), 1);
         assert_eq!(times[0].inherited_frame(), Some(expected));
-        let CompiledSemantics::Scalar(time) = times[0].semantics() else { panic!("Time") };
-        let ScalarComponent::Time(time) = time.component() else { panic!("Time meaning") };
-        assert_eq!(time.reference.frame, glaux_domain::scalar::TimeFrame::Declared(expected.into()));
+        let CompiledSemantics::Scalar(time) = times[0].semantics() else {
+            panic!("Time")
+        };
+        let ScalarComponent::Time(time) = time.component() else {
+            panic!("Time meaning")
+        };
+        assert_eq!(
+            time.reference.frame,
+            glaux_domain::scalar::TimeFrame::Declared(expected.into())
+        );
     }
     let own_frame = "http://www.opengis.net/def/trs/BIPM/0/UTC";
-    let source = bytes(&json!({"type":"Matrix","referenceFrame":"urn:example:outer-clock",
+    let source = bytes(
+        &json!({"type":"Matrix","referenceFrame":"urn:example:outer-clock",
         "elementCount":{"value":2},"elementType":{"type":"Time","name":"time",
         "definition":"urn:example:time","label":"Time","referenceFrame":own_frame,
-        "uom":{"href":GREGORIAN}}}));
+        "uom":{"href":GREGORIAN}}}),
+    );
     let contract = compile(&source, Descriptor::Component);
     let plan = &contract.plans()[0];
-    let node = plan.nodes().iter().find(|node| plan.graph().components()[node.declaration()].kind == Contract::Time).unwrap();
-    let CompiledSemantics::Scalar(time) = node.semantics() else { panic!("Time") };
-    let ScalarComponent::Time(time) = time.component() else { panic!("Time meaning") };
-    assert_eq!(time.reference.frame, glaux_domain::scalar::TimeFrame::Declared(own_frame.into()),
-        "an explicit component frame takes precedence over its matrix context");
+    let node = plan
+        .nodes()
+        .iter()
+        .find(|node| plan.graph().components()[node.declaration()].kind == Contract::Time)
+        .unwrap();
+    let CompiledSemantics::Scalar(time) = node.semantics() else {
+        panic!("Time")
+    };
+    let ScalarComponent::Time(time) = time.component() else {
+        panic!("Time meaning")
+    };
+    assert_eq!(
+        time.reference.frame,
+        glaux_domain::scalar::TimeFrame::Declared(own_frame.into()),
+        "an explicit component frame takes precedence over its matrix context"
+    );
 }
 
 #[test]
@@ -240,14 +397,31 @@ fn compiled_contract_distinguishes_shared_target_frame_contexts() {
     let source = br##"{"type":"DataRecord","fields":[{"type":"Time","id":"TIME","name":"time","definition":"urn:example:time","label":"Time","uom":{"href":"http://www.opengis.net/def/uom/ISO-8601/0/Gregorian"}},{"type":"Matrix","name":"left","referenceFrame":"urn:example:left-clock","elementCount":{"value":2},"elementType":{"name":"leftTime","href":"#TIME"}},{"type":"Matrix","name":"right","referenceFrame":"urn:example:right-clock","elementCount":{"value":3},"elementType":{"name":"rightTime","href":"#TIME"}}]}"##;
     let contract = compile(source, Descriptor::Component);
     let plan = &contract.plans()[0];
-    let mut contexts = plan.nodes().iter().filter(|node| node.declaration() == 1)
-        .map(|node| node.inherited_frame()).collect::<Vec<_>>();
+    let mut contexts = plan
+        .nodes()
+        .iter()
+        .filter(|node| node.declaration() == 1)
+        .map(|node| node.inherited_frame())
+        .collect::<Vec<_>>();
     contexts.sort();
-    assert_eq!(contexts, [None,Some("urn:example:left-clock"),Some("urn:example:right-clock")]);
+    assert_eq!(
+        contexts,
+        [
+            None,
+            Some("urn:example:left-clock"),
+            Some("urn:example:right-clock")
+        ]
+    );
     for node in plan.nodes().iter().filter(|node| node.declaration() == 1) {
-        let CompiledSemantics::Scalar(time) = node.semantics() else { panic!("Time") };
-        let ScalarComponent::Time(time) = time.component() else { panic!("Time meaning") };
-        let expected = node.inherited_frame().map(|frame| glaux_domain::scalar::TimeFrame::Declared(frame.into()))
+        let CompiledSemantics::Scalar(time) = node.semantics() else {
+            panic!("Time")
+        };
+        let ScalarComponent::Time(time) = time.component() else {
+            panic!("Time meaning")
+        };
+        let expected = node
+            .inherited_frame()
+            .map(|frame| glaux_domain::scalar::TimeFrame::Declared(frame.into()))
             .unwrap_or(glaux_domain::scalar::TimeFrame::DefaultUtc);
         assert_eq!(time.reference.frame, expected);
     }
@@ -257,9 +431,10 @@ fn compiled_contract_distinguishes_shared_target_frame_contexts() {
 
 #[test]
 fn compiled_contract_enforces_shallow_aggregate_semantics() {
-    let duplicate = json!({"type":"DataRecord","fields":[scalar("Count","same"),scalar("Text","same")]});
+    let duplicate =
+        json!({"type":"DataRecord","fields":[scalar("Count","same"),scalar("Text","same")]});
     let short_choice = json!({"type":"DataChoice","items":[scalar("Text","only")]});
-    let vector = json!({"type":"Vector","referenceFrame":"urn:example:frame","coordinates":[
+    let vector = json!({"type":"Vector","definition":"urn:example:position","label":"Position","referenceFrame":"urn:example:frame","coordinates":[
         {"type":"Quantity","name":"east","axisID":"X","definition":"urn:example:east","label":"East","uom":{"code":"m"}}]});
     let mut empty = vector.clone();
     empty["coordinates"] = json!([]);
@@ -267,19 +442,45 @@ fn compiled_contract_enforces_shallow_aggregate_semantics() {
     own_frame["coordinates"][0]["referenceFrame"] = json!("urn:example:own-frame");
     let mut optional = vector;
     optional["coordinates"][0]["optional"] = json!(true);
-    for (source, expected) in [(duplicate,AggregateError::DuplicateName),
-        (short_choice,AggregateError::ChoiceCardinality),(empty,AggregateError::EmptyVector),
-        (own_frame,AggregateError::CoordinateReferenceFrame),(optional,AggregateError::OptionalCoordinate)] {
+    for (source, expected) in [
+        (duplicate, AggregateError::DuplicateName),
+        (short_choice, AggregateError::ChoiceCardinality),
+        (empty, AggregateError::EmptyVector),
+        (own_frame, AggregateError::CoordinateReferenceFrame),
+        (optional, AggregateError::OptionalCoordinate),
+    ] {
         let source = bytes(&source);
-        assert!(ComponentGraph::resolve(validator(), &source, ArrayOptions::default()).is_ok(),
-            "this fixture reaches semantic checks rather than failing its original schema");
-        assert_eq!(CompiledContract::compile(validator(), &source, "application/json", Descriptor::Component,
-            ArrayOptions::default()).err(), Some(CompileError::Aggregate(expected)));
+        assert!(
+            ComponentGraph::resolve(validator(), &source, ArrayOptions::default()).is_ok(),
+            "this fixture reaches semantic checks rather than failing its original schema"
+        );
+        assert_eq!(
+            CompiledContract::compile(
+                validator(),
+                &source,
+                "application/json",
+                Descriptor::Component,
+                ArrayOptions::default()
+            )
+            .err(),
+            Some(CompileError::Aggregate(expected))
+        );
     }
     let invalid_unit = br##"{"type":"DataRecord","fields":[{"name":"forward","href":"#BAD"},{"name":"quantity","type":"Quantity","id":"BAD","definition":"urn:example:q","label":"Q","uom":{"code":"m//s"}}]}"##;
     assert!(ComponentGraph::resolve(validator(), invalid_unit, ArrayOptions::default()).is_ok());
-    assert_eq!(CompiledContract::compile(validator(), invalid_unit, "application/json", Descriptor::Component,
-        ArrayOptions::default()).err(), Some(CompileError::Scalar(ScalarError::Unit(crate::units::UnitError::Invalid))));
+    assert_eq!(
+        CompiledContract::compile(
+            validator(),
+            invalid_unit,
+            "application/json",
+            Descriptor::Component,
+            ArrayOptions::default()
+        )
+        .err(),
+        Some(CompileError::Scalar(ScalarError::Unit(
+            crate::units::UnitError::Invalid
+        )))
+    );
 }
 
 #[test]
@@ -288,44 +489,92 @@ fn compiled_contract_composes_per_record_quality_bindings() {
     let contract = compile(source, Descriptor::Component);
     let plan = &contract.plans()[0];
     let fields = [
-        NamedValue { name:"uncertainty", value:ComponentValue::ScalarJson(b"0.125") },
-        NamedValue { name:"reading", value:ComponentValue::ScalarJson(b"23") },
+        NamedValue {
+            name: "uncertainty",
+            value: ComponentValue::ScalarJson(b"0.125"),
+        },
+        NamedValue {
+            name: "reading",
+            value: ComponentValue::ScalarJson(b"23"),
+        },
     ];
-    let bound = plan.quality().bind(&ComponentValue::Record(&fields)).unwrap();
+    let bound = plan
+        .quality()
+        .bind(&ComponentValue::Record(&fields))
+        .unwrap();
     assert_eq!(bound.len(), 1);
     assert_eq!(bound[0].subject.component, 1);
     assert_eq!(bound[0].subject.path, [0]);
     assert_eq!(bound[0].target.as_ref().unwrap().component, 2);
     assert_eq!(bound[0].target.as_ref().unwrap().path, [1]);
-    let QualityReferenceValue::Scalar(value) = &bound[0].value else { panic!("available exact uncertainty") };
-    let ScalarValue::Quantity(glaux_domain::numeric::NumericValue::Finite(value)) = &value.value else { panic!("finite uncertainty") };
+    let QualityReferenceValue::Scalar(value) = &bound[0].value else {
+        panic!("available exact uncertainty")
+    };
+    let ScalarValue::Quantity(glaux_domain::numeric::NumericValue::Finite(value)) = &value.value
+    else {
+        panic!("finite uncertainty")
+    };
     assert_eq!(value.decimal_lexeme(), Some("0.125"));
-    assert_eq!(plan.graph().references()[0].target, ReferenceTarget::Local(2));
+    assert_eq!(
+        plan.graph().references()[0].target,
+        ReferenceTarget::Local(2)
+    );
 }
 
 #[test]
 fn compiled_contract_checks_every_ordinary_wrapper_member() {
     let record = json!({"type":"DataRecord","fields":[scalar("Boolean","flag")]});
-    let observation = bytes(&json!({"obsFormat":"application/json","parametersSchema":record,
-        "resultSchema":scalar("Quantity","distance")}));
+    let observation = bytes(
+        &json!({"obsFormat":"application/json","parametersSchema":record,
+        "resultSchema":scalar("Quantity","distance")}),
+    );
     let observation = compile(&observation, Descriptor::ObservationJson);
     assert_eq!(observation.plans().len(), 2);
-    for (member, kind) in [("parametersSchema",Contract::DataRecord),("resultSchema",Contract::Quantity)] {
-        let plan = observation.plans().iter().find(|plan| plan.member() == Some(member)).unwrap();
+    for (member, kind) in [
+        ("parametersSchema", Contract::DataRecord),
+        ("resultSchema", Contract::Quantity),
+    ] {
+        let plan = observation
+            .plans()
+            .iter()
+            .find(|plan| plan.member() == Some(member))
+            .unwrap();
         assert_eq!(plan.graph().components()[0].kind, kind);
     }
     assert!(observation.encoding().is_none());
-    let command_source = bytes(&json!({"commandFormat":"application/json","parametersSchema":scalar("Text","request"),
-        "resultSchema":scalar("Count","result"),"feasibilityResultSchema":scalar("Boolean","feasible")}));
+    let command_source = bytes(
+        &json!({"commandFormat":"application/json","parametersSchema":scalar("Text","request"),
+        "resultSchema":scalar("Count","result"),"feasibilityResultSchema":scalar("Boolean","feasible")}),
+    );
     let command = compile(&command_source, Descriptor::CommandJson);
-    assert_eq!(command.plans().iter().map(|plan| plan.member()).collect::<Vec<_>>(),
-        [Some("parametersSchema"),Some("resultSchema"),Some("feasibilityResultSchema")]);
-    assert_eq!(command.plans().iter().map(|plan| plan.graph().components()[0].kind).collect::<Vec<_>>(),
-        [Contract::Text,Contract::Count,Contract::Boolean]);
+    assert_eq!(
+        command
+            .plans()
+            .iter()
+            .map(|plan| plan.member())
+            .collect::<Vec<_>>(),
+        [
+            Some("parametersSchema"),
+            Some("resultSchema"),
+            Some("feasibilityResultSchema")
+        ]
+    );
+    assert_eq!(
+        command
+            .plans()
+            .iter()
+            .map(|plan| plan.graph().components()[0].kind)
+            .collect::<Vec<_>>(),
+        [Contract::Text, Contract::Count, Contract::Boolean]
+    );
     assert_eq!(command.source(), command_source);
-    let out_of_band = br#"{"obsFormat":"application/json","resultLink":{"mediaType":"image/tiff"}}"#;
+    let out_of_band =
+        br#"{"obsFormat":"application/json","resultLink":{"mediaType":"image/tiff"}}"#;
     let linked = compile(out_of_band, Descriptor::ObservationJson);
-    assert!(linked.plans().is_empty(), "result link is metadata, not fetched or invented component content");
+    assert!(
+        linked.plans().is_empty(),
+        "result link is metadata, not fetched or invented component content"
+    );
     assert_eq!(linked.source(), out_of_band);
 }
 
@@ -336,22 +585,53 @@ fn compiled_contract_rejects_partial_wrapper_publication() {
     // The graph-only stage passes: rejecting this is typed semantic validation,
     // not a structural failure before any earlier wrapper plan was compiled.
     assert!(ComponentGraph::resolve(validator(), invalid, ArrayOptions::default()).is_ok());
-    assert_eq!(CompiledContract::compile(validator(), source, "application/json", Descriptor::CommandJson,
-        ArrayOptions::default()).err(), Some(CompileError::Scalar(ScalarError::CategoryWithoutEnumeration)),
-        "a successful first member must not publish an incomplete wrapper plan");
+    assert_eq!(
+        CompiledContract::compile(
+            validator(),
+            source,
+            "application/json",
+            Descriptor::CommandJson,
+            ArrayOptions::default()
+        )
+        .err(),
+        Some(CompileError::Scalar(
+            ScalarError::CategoryWithoutEnumeration
+        )),
+        "a successful first member must not publish an incomplete wrapper plan"
+    );
 }
 
 #[test]
 fn compiled_contract_checks_swe_wrapper_formats_without_claiming_codecs() {
     let cases = [
-        ("application/swe+json", json!({"type":"JSONEncoding","recordsAsArrays":false}), Encoding::Json),
-        ("application/swe+text", json!({"type":"TextEncoding","tokenSeparator":"|","blockSeparator":";"}), Encoding::Text),
-        ("application/swe+csv", json!({"type":"TextEncoding","tokenSeparator":",","blockSeparator":"\n"}), Encoding::Text),
-        ("application/swe+binary", json!({"type":"BinaryEncoding","byteOrder":"bigEndian","byteEncoding":"raw","members":[{"type":"Component","ref":"record/temperature","dataType":"http://www.opengis.net/def/dataType/OGC/0/float64"}]}), Encoding::Binary),
+        (
+            "application/swe+json",
+            json!({"type":"JSONEncoding","recordsAsArrays":false}),
+            Encoding::Json,
+        ),
+        (
+            "application/swe+text",
+            json!({"type":"TextEncoding","tokenSeparator":"|","blockSeparator":";"}),
+            Encoding::Text,
+        ),
+        (
+            "application/swe+csv",
+            json!({"type":"TextEncoding","tokenSeparator":",","blockSeparator":"\n"}),
+            Encoding::Text,
+        ),
+        (
+            "application/swe+binary",
+            json!({"type":"BinaryEncoding","byteOrder":"bigEndian","byteEncoding":"raw","members":[{"type":"Component","ref":"record/temperature","dataType":"http://www.opengis.net/def/dataType/OGC/0/float64"}]}),
+            Encoding::Binary,
+        ),
     ];
     for descriptor in [Descriptor::ObservationSwe, Descriptor::CommandSwe] {
         for (format, encoding, expected) in &cases {
-            let format_member = if descriptor == Descriptor::ObservationSwe { "obsFormat" } else { "commandFormat" };
+            let format_member = if descriptor == Descriptor::ObservationSwe {
+                "obsFormat"
+            } else {
+                "commandFormat"
+            };
             let mut wrapper = json!({"recordSchema":{"type":"DataRecord","name":"record","fields":[scalar("Quantity","temperature")]}, "encoding":encoding});
             wrapper[format_member] = json!(format);
             let source = bytes(&wrapper);
@@ -363,16 +643,44 @@ fn compiled_contract_checks_swe_wrapper_formats_without_claiming_codecs() {
             assert_eq!(contract.encoding().unwrap().source(), bytes(encoding));
             wrapper["encoding"] = json!({"type":"JSONEncoding"});
             if *expected != Encoding::Json {
-                assert!(CompiledContract::compile(validator(), &bytes(&wrapper), "application/json", descriptor, ArrayOptions::default()).is_err(), "the complete wrapper restricts the named encoding definition");
+                assert!(
+                    CompiledContract::compile(
+                        validator(),
+                        &bytes(&wrapper),
+                        "application/json",
+                        descriptor,
+                        ArrayOptions::default()
+                    )
+                    .is_err(),
+                    "the complete wrapper restricts the named encoding definition"
+                );
             }
         }
     }
     let mut csv = json!({"obsFormat":"application/swe+csv","recordSchema":scalar("Count","count"),
         "encoding":{"type":"TextEncoding","tokenSeparator":"|","blockSeparator":"\n"}});
-    assert!(CompiledContract::compile(validator(), &bytes(&csv), "application/json", Descriptor::ObservationSwe, ArrayOptions::default()).is_err());
+    assert!(
+        CompiledContract::compile(
+            validator(),
+            &bytes(&csv),
+            "application/json",
+            Descriptor::ObservationSwe,
+            ArrayOptions::default()
+        )
+        .is_err()
+    );
     csv["encoding"]["tokenSeparator"] = json!(",");
     csv["encoding"]["blockSeparator"] = json!(";");
-    assert!(CompiledContract::compile(validator(), &bytes(&csv), "application/json", Descriptor::ObservationSwe, ArrayOptions::default()).is_err());
+    assert!(
+        CompiledContract::compile(
+            validator(),
+            &bytes(&csv),
+            "application/json",
+            Descriptor::ObservationSwe,
+            ArrayOptions::default()
+        )
+        .is_err()
+    );
 }
 
 #[test]
@@ -386,11 +694,37 @@ fn compiled_contract_rejects_invalid_reference_quality_and_wrapper_atomically() 
         br#"{"type":"DataRecord","fields":[{"name":"first","type":"Text","definition":"urn:example:a","label":"A"},{"name":"last","type":"Category","definition":"urn:example:b","label":"B"}]}"#,
     ];
     for source in invalid_sources {
-        assert!(CompiledContract::compile(validator(), source, "application/json", Descriptor::Component, ArrayOptions::default()).is_err(), "no usable plan for an invalid association or semantic node");
+        assert!(
+            CompiledContract::compile(
+                validator(),
+                source,
+                "application/json",
+                Descriptor::Component,
+                ArrayOptions::default()
+            )
+            .is_err(),
+            "no usable plan for an invalid association or semantic node"
+        );
     }
-    let mut wrapper: Value = serde_json::from_slice(include_bytes!("../../corpus/fixtures/quantity-wrapper-labelled.json")).unwrap();
-    wrapper["recordSchema"]["fields"][0].as_object_mut().unwrap().remove("label");
-    assert!(CompiledContract::compile(validator(), &bytes(&wrapper), "application/json", Descriptor::ObservationSwe, ArrayOptions::default()).is_err(), "enclosing descriptors must not bypass Quantity label validation");
+    let mut wrapper: Value = serde_json::from_slice(include_bytes!(
+        "../../corpus/fixtures/quantity-wrapper-labelled.json"
+    ))
+    .unwrap();
+    wrapper["recordSchema"]["fields"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("label");
+    assert!(
+        CompiledContract::compile(
+            validator(),
+            &bytes(&wrapper),
+            "application/json",
+            Descriptor::ObservationSwe,
+            ArrayOptions::default()
+        )
+        .is_err(),
+        "enclosing descriptors must not bypass Quantity label validation"
+    );
 }
 
 #[test]
@@ -400,26 +734,84 @@ fn compiled_contract_keeps_nonlocal_and_count_schema_qualification_explicit() {
     let plan = &contract.plans()[0];
     assert_eq!(plan.nodes().len(), 1);
     assert!(plan.has_unresolved_components());
-    assert_eq!(plan.nodes()[0].bindings()[0].target(), BindingTarget::Nonlocal(0));
-    assert_eq!(plan.graph().references()[0].target, ReferenceTarget::Nonlocal);
-    assert_eq!(plan.graph().references()[0].title.as_deref(), Some("Unknown external component"));
+    assert_eq!(
+        plan.nodes()[0].bindings()[0].target(),
+        BindingTarget::Nonlocal(0)
+    );
+    assert_eq!(
+        plan.graph().references()[0].target,
+        ReferenceTarget::Nonlocal
+    );
+    assert_eq!(
+        plan.graph().references()[0].title.as_deref(),
+        Some("Unknown external component")
+    );
     let count_source = include_bytes!("../../fixtures/array/count-reference.json");
-    assert!(CompiledContract::compile(validator(), count_source, "application/json", Descriptor::Component, ArrayOptions::default()).is_err());
-    let corrected = CompiledContract::compile(validator(), count_source, "application/json", Descriptor::Component,
-        ArrayOptions { count_reference_schema: CountReferenceSchema::DisjointReferenceCorrection }).unwrap();
+    assert!(
+        CompiledContract::compile(
+            validator(),
+            count_source,
+            "application/json",
+            Descriptor::Component,
+            ArrayOptions::default()
+        )
+        .is_err()
+    );
+    let corrected = CompiledContract::compile(
+        validator(),
+        count_source,
+        "application/json",
+        Descriptor::Component,
+        ArrayOptions {
+            count_reference_schema: CountReferenceSchema::DisjointReferenceCorrection,
+        },
+    )
+    .unwrap();
     assert_eq!(corrected.source(), count_source);
-    assert_eq!(corrected.plans()[0].graph().source_validation(), SourceValidation::CountReferenceCorrection);
-    assert!(corrected.plans()[0].nodes()[0].bindings().iter().any(|binding|
-        binding.slot() == BindingSlot::ElementCount && matches!(binding.target(), BindingTarget::Nonlocal(_))));
+    assert_eq!(
+        corrected.plans()[0].graph().source_validation(),
+        SourceValidation::CountReferenceCorrection
+    );
+    assert!(
+        corrected.plans()[0].nodes()[0]
+            .bindings()
+            .iter()
+            .any(|binding| binding.slot() == BindingSlot::ElementCount
+                && matches!(binding.target(), BindingTarget::Nonlocal(_)))
+    );
     let array: Value = serde_json::from_slice(count_source).unwrap();
-    let wrapper = bytes(&json!({"obsFormat":"application/swe+json","recordSchema":array,"encoding":{"type":"JSONEncoding"}}));
-    assert!(CompiledContract::compile(validator(), &wrapper, "application/json", Descriptor::ObservationSwe,
-        ArrayOptions::default()).is_err());
-    let wrapper_plan = CompiledContract::compile(validator(), &wrapper, "application/json", Descriptor::ObservationSwe,
-        ArrayOptions { count_reference_schema: CountReferenceSchema::DisjointReferenceCorrection }).unwrap();
+    let wrapper = bytes(
+        &json!({"obsFormat":"application/swe+json","recordSchema":array,"encoding":{"type":"JSONEncoding"}}),
+    );
+    assert!(
+        CompiledContract::compile(
+            validator(),
+            &wrapper,
+            "application/json",
+            Descriptor::ObservationSwe,
+            ArrayOptions::default()
+        )
+        .is_err()
+    );
+    let wrapper_plan = CompiledContract::compile(
+        validator(),
+        &wrapper,
+        "application/json",
+        Descriptor::ObservationSwe,
+        ArrayOptions {
+            count_reference_schema: CountReferenceSchema::DisjointReferenceCorrection,
+        },
+    )
+    .unwrap();
     assert_eq!(wrapper_plan.source(), wrapper);
-    assert_eq!(wrapper_plan.source_validation(), SourceValidation::CountReferenceCorrection);
-    assert_eq!(wrapper_plan.plans()[0].graph().source_validation(), SourceValidation::CountReferenceCorrection);
+    assert_eq!(
+        wrapper_plan.source_validation(),
+        SourceValidation::CountReferenceCorrection
+    );
+    assert_eq!(
+        wrapper_plan.plans()[0].graph().source_validation(),
+        SourceValidation::CountReferenceCorrection
+    );
 }
 
 #[test]
@@ -429,34 +821,100 @@ fn compiled_contract_retains_embedded_array_encoding_without_accepting_values() 
     let mut source = json!({"type":"DataArray","name":"samples","elementCount":{"value":2},
         "elementType":scalar("Count","count"),"encoding":encoding});
     let contract = compile(&bytes(&source), Descriptor::Component);
-    assert!(contract.encoding().is_none(), "an array descriptor is not a wrapper-level encoding");
+    assert!(
+        contract.encoding().is_none(),
+        "an array descriptor is not a wrapper-level encoding"
+    );
     let embedded = contract.plans()[0].nodes()[0].encoding().unwrap();
     assert_eq!(embedded.kind(), Encoding::Binary);
     assert_eq!(embedded.value(), &encoding);
     assert_eq!(embedded.source(), bytes(&encoding));
     source["encoding"] = json!({"type":"XMLEncoding"});
-    assert!(CompiledContract::compile(validator(), &bytes(&source), "application/json", Descriptor::Component,
-        ArrayOptions::default()).is_err(), "legacy XML is not an enabled encoding capability");
+    assert!(
+        CompiledContract::compile(
+            validator(),
+            &bytes(&source),
+            "application/json",
+            Descriptor::Component,
+            ArrayOptions::default()
+        )
+        .is_err(),
+        "legacy XML is not an enabled encoding capability"
+    );
     source["encoding"] = json!({"type":"JSONEncoding"});
-    source["values"] = json!([1,2]);
-    assert!(CompiledContract::compile(validator(), &bytes(&source), "application/json", Descriptor::Component,
-        ArrayOptions::default()).is_err(), "descriptor receipt must not pretend array payload values were decoded");
+    source["values"] = json!([1, 2]);
+    assert!(
+        CompiledContract::compile(
+            validator(),
+            &bytes(&source),
+            "application/json",
+            Descriptor::Component,
+            ArrayOptions::default()
+        )
+        .is_err(),
+        "descriptor receipt must not pretend array payload values were decoded"
+    );
 }
 
 #[test]
 fn compiled_contract_enforces_input_limits_and_media_before_publication() {
     let oversized = vec![b' '; validation::MAX_BYTES + 1];
-    assert_eq!(CompiledContract::compile(validator(), &oversized, "application/json", Descriptor::Component,
-        ArrayOptions::default()).err(), Some(CompileError::Syntax(validation::Failure::Size)));
-    let deep = format!("{}0{}", "[".repeat(validation::MAX_DEPTH + 1), "]".repeat(validation::MAX_DEPTH + 1));
-    assert_eq!(CompiledContract::compile(validator(), deep.as_bytes(), "application/json", Descriptor::Component,
-        ArrayOptions::default()).err(), Some(CompileError::Syntax(validation::Failure::Depth)));
-    for media in ["", "application/json\r\nx-secret: bad", "application/jso\u{0000}n", "application/é"] {
-        assert_eq!(CompiledContract::compile(validator(), A, media, Descriptor::Component,
-            ArrayOptions::default()).err(), Some(CompileError::MediaType));
+    assert_eq!(
+        CompiledContract::compile(
+            validator(),
+            &oversized,
+            "application/json",
+            Descriptor::Component,
+            ArrayOptions::default()
+        )
+        .err(),
+        Some(CompileError::Syntax(validation::Failure::Size))
+    );
+    let deep = format!(
+        "{}0{}",
+        "[".repeat(validation::MAX_DEPTH + 1),
+        "]".repeat(validation::MAX_DEPTH + 1)
+    );
+    assert_eq!(
+        CompiledContract::compile(
+            validator(),
+            deep.as_bytes(),
+            "application/json",
+            Descriptor::Component,
+            ArrayOptions::default()
+        )
+        .err(),
+        Some(CompileError::Syntax(validation::Failure::Depth))
+    );
+    for media in [
+        "",
+        "application/json\r\nx-secret: bad",
+        "application/jso\u{0000}n",
+        "application/é",
+    ] {
+        assert_eq!(
+            CompiledContract::compile(
+                validator(),
+                A,
+                media,
+                Descriptor::Component,
+                ArrayOptions::default()
+            )
+            .err(),
+            Some(CompileError::MediaType)
+        );
     }
-    assert_eq!(CompiledContract::compile(validator(), A, &"x".repeat(257), Descriptor::Component,
-        ArrayOptions::default()).err(), Some(CompileError::MediaType));
+    assert_eq!(
+        CompiledContract::compile(
+            validator(),
+            A,
+            &"x".repeat(257),
+            Descriptor::Component,
+            ArrayOptions::default()
+        )
+        .err(),
+        Some(CompileError::MediaType)
+    );
     let first = compile(A, Descriptor::Component);
     assert_eq!(first.source(), A);
     assert_eq!(count_value(&first), "9007199254740993");
