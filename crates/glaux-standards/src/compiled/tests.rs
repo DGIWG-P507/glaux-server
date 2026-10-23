@@ -935,21 +935,30 @@ fn compiled_contract_element_count_aliases_keep_declaration_semantics() {
         &source,
         "application/json",
         Descriptor::Component,
-        ArrayOptions { count_reference_schema: CountReferenceSchema::DisjointReferenceCorrection },
-    ).unwrap();
+        ArrayOptions {
+            count_reference_schema: CountReferenceSchema::DisjointReferenceCorrection,
+        },
+    )
+    .unwrap();
     let plan = &contract.plans()[0];
     let root = plan.nodes()[0].bindings();
     let first = &plan.nodes()[local(root[0].target())];
     let second = &plan.nodes()[local(root[2].target())];
     let count_target = |node: &super::CompiledNode| {
-        node.bindings().iter().find(|binding| binding.slot() == BindingSlot::ElementCount)
-            .unwrap().target()
+        node.bindings()
+            .iter()
+            .find(|binding| binding.slot() == BindingSlot::ElementCount)
+            .unwrap()
+            .target()
     };
     let target = count_target(first);
     assert_eq!(target, root[1].target());
     assert_eq!(target, count_target(second));
     let CompiledSemantics::ElementCount(glaux_domain::array::ElementCount::Inline(count)) =
-        plan.nodes()[local(target)].semantics() else { panic!("retained ElementCount declaration") };
+        plan.nodes()[local(target)].semantics()
+    else {
+        panic!("retained ElementCount declaration")
+    };
     assert_eq!(count.value.as_ref().unwrap().try_to_u64(), Ok(3));
     assert_eq!(contract.source(), source);
 }
@@ -966,7 +975,9 @@ fn compiled_contract_preserves_uninterpreted_aggregate_frame_extensions() {
         let source = bytes(&source);
         let contract = compile(&source, Descriptor::Component);
         let CompiledSemantics::Aggregate(meaning) = contract.plans()[0].nodes()[0].semantics()
-            else { panic!("aggregate meaning") };
+        else {
+            panic!("aggregate meaning")
+        };
         assert_eq!(meaning.reference_frame, None);
         assert_eq!(contract.source(), source);
     }

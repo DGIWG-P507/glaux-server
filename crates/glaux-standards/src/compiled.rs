@@ -400,11 +400,7 @@ struct Builder<'a> {
 }
 
 impl Builder<'_> {
-    fn node(
-        &mut self,
-        declaration: usize,
-        inherited: Option<&str>,
-    ) -> Result<usize, CompileError> {
+    fn node(&mut self, declaration: usize, inherited: Option<&str>) -> Result<usize, CompileError> {
         let key = (declaration, inherited.map(str::to_owned));
         if let Some(index) = self.indices.get(&key) {
             return Ok(*index);
@@ -420,9 +416,14 @@ impl Builder<'_> {
         let kind = self.graph.components()[declaration].kind;
         let own_frame = if matches!(
             kind,
-            Contract::Vector | Contract::Matrix | Contract::Count | Contract::Quantity | Contract::Time
+            Contract::Vector
+                | Contract::Matrix
+                | Contract::Count
+                | Contract::Quantity
+                | Contract::Time
         ) {
-            aggregate::optional_string(&source, "referenceFrame").map_err(CompileError::Aggregate)?
+            aggregate::optional_string(&source, "referenceFrame")
+                .map_err(CompileError::Aggregate)?
         } else {
             None
         };
